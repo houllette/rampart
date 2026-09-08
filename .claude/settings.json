@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mix compile:*)",
+      "Bash(mix credo:*)",
+      "Bash(mix deps.audit)",
+      "Bash(mix deps.get:*)",
+      "Bash(mix deps.tree:*)",
+      "Bash(mix deps.unlock --check-unused)",
+      "Bash(mix dialyzer:*)",
+      "Bash(mix docs:*)",
+      "Bash(mix format:*)",
+      "Bash(mix help:*)",
+      "Bash(mix hex.audit)",
+      "Bash(mix precommit)",
+      "Bash(mix sobelow:*)",
+      "Bash(mix test:*)",
+      "Bash(mix test.distributed)",
+      "Bash(mix usage_rules.search_docs:*)",
+      "Bash(mix usage_rules.sync)",
+      "Bash(mix xref:*)"
+    ]
+  }
+}

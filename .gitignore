@@ -1,0 +1,33 @@
+# Build artifacts
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+
+# Crash dumps and compiled artifacts
+erl_crash.dump
+*.ez
+*.beam
+
+# Escripts and release tarballs
+*.tar
+/tmp/
+
+# Secrets / local-only config
+/config/*.secret.exs
+.env
+.env.*
+!.env.example
+
+# Language server / editor caches
+/.elixir_ls/
+/.lexical/
+/.elixir-tools/
+.DS_Store
+
+# Phoenix / asset pipeline (harmless for non-Phoenix projects)
+/assets/node_modules/
+/priv/static/assets/
+/priv/static/cache_manifest.json
+.claude/settings.local.json

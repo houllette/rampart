@@ -1,0 +1,239 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MIX_ENV: test
+
+jobs:
+  # The template repo has no mix project until you run a generator.
+  # This job lets CI pass on the bare template and auto-enables the
+  # optional steps once the matching deps appear in mix.exs.
+  detect:
+    name: Detect project
+    runs-on: ubuntu-latest
+    outputs:
+      has_project: ${{ steps.check.outputs.has_project }}
+      has_credo: ${{ steps.check.outputs.has_credo }}
+      has_dialyxir: ${{ steps.check.outputs.has_dialyxir }}
+      has_ex_doc: ${{ steps.check.outputs.has_ex_doc }}
+      has_mix_audit: ${{ steps.check.outputs.has_mix_audit }}
+      has_sobelow: ${{ steps.check.outputs.has_sobelow }}
+      has_usage_rules: ${{ steps.check.outputs.has_usage_rules }}
+      has_local_cluster: ${{ steps.check.outputs.has_local_cluster }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: check
+        run: |
+          if [ -f mix.exs ]; then
+            echo "has_project=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_project=false" >> "$GITHUB_OUTPUT"
+            echo "No mix.exs found — repo not bootstrapped yet, skipping CI."
+          fi
+          for dep in credo dialyxir ex_doc mix_audit sobelow usage_rules local_cluster; do
+            if grep -q ":$dep" mix.exs 2>/dev/null; then
+              echo "has_$dep=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "has_$dep=false" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+  test:
+    name: Lint & test
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.has_project == 'true'
+
+    # Remove this block (and DATABASE_URL below) if the project doesn't use
+    # Ecto + Postgres. Defaults match what `mix phx.new` generates for test.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up BEAM
+        id: beam
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Cache deps and build
+        uses: actions/cache@v6
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check for unused dependencies
+        run: mix deps.unlock --check-unused
+
+      - name: Compile (warnings as errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      # Catches runtime deps quietly becoming compile-time deps, which turns
+      # small edits into full recompiles (and hides cyclic coupling).
+      - name: Check for compile-time dependencies
+        run: mix xref graph --label compile-connected --fail-above 0
+
+      - name: Credo
+        if: needs.detect.outputs.has_credo == 'true'
+        run: mix credo --strict
+
+      # AGENTS.md's usage-rules block is generated from deps; fail if a dep
+      # bump left it stale rather than letting agents read outdated rules.
+      # Needs usage_rules in the :test env — see README.
+      - name: Check AGENTS.md usage rules are in sync
+        if: needs.detect.outputs.has_usage_rules == 'true'
+        run: mix usage_rules.sync --check
+
+      - name: Docs (warnings as errors)
+        if: needs.detect.outputs.has_ex_doc == 'true'
+        run: mix docs --warnings-as-errors
+
+      - name: Run tests
+        run: mix test --warnings-as-errors
+
+      # Multi-node tests are tagged :distributed and excluded from `mix test`
+      # because spawning peer nodes is slow. Run them here so they can't rot.
+      - name: Run distributed tests
+        if: needs.detect.outputs.has_local_cluster == 'true'
+        run: mix test.distributed
+
+  # Dependency and application security live in their own job so a red build
+  # here reads as "audit this", not "your code is broken".
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.has_project == 'true'
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up BEAM
+        id: beam
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Cache deps and build
+        uses: actions/cache@v6
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Audit for retired packages
+        run: mix hex.audit
+
+      - name: Audit for known vulnerabilities
+        if: needs.detect.outputs.has_mix_audit == 'true'
+        run: mix deps.audit
+
+      - name: Sobelow
+        if: needs.detect.outputs.has_sobelow == 'true'
+        run: mix sobelow --exit --skip
+
+  dialyzer:
+    name: Dialyzer
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.has_project == 'true' && needs.detect.outputs.has_dialyxir == 'true'
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up BEAM
+        id: beam
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Cache deps and build
+        uses: actions/cache@v6
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      # PLTs are expensive to build; cache them separately so a mix.lock
+      # change doesn't force a full rebuild. Expects the dialyxir config in
+      # mix.exs to write PLTs to priv/plts (see README).
+      - name: Cache PLTs
+        uses: actions/cache@v6
+        with:
+          path: priv/plts
+          key: plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            plt-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Dialyzer
+        run: mix dialyzer --format github
+
+  # Workflows are code too, and nothing else type-checks the YAML or the
+  # shell embedded in `run:` blocks. Runs even on the un-bootstrapped template.
+  workflows:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
+
+  # Conventional Commits on the PR title, which becomes the squash-merge
+  # commit message. Delete this job if you don't want the convention.
+  pr-title:
+    name: Semantic PR title
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

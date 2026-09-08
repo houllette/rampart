@@ -1,0 +1,269 @@
+# Forgejo Actions port of .github/workflows/ci.yml.
+#
+# Keep the two in sync in intent, but NOT line by line — the differences below
+# are deliberate and each one is load-bearing. See README.md ("Forgejo") for
+# the full reasoning.
+#
+#   1. No `permissions:` block. Forgejo ignores it and logs a warning per job
+#      on every run. Use Settings -> Actions -> Authorized Integrations.
+#   2. Actions are referenced by full URL. Forgejo resolves a bare `owner/repo`
+#      against the instance's DEFAULT_ACTIONS_URL, which varies per instance.
+#   3. No erlef/setup-beam. It picks its prebuilt tarball from $ImageOS, which
+#      the runner injects from the job's label and which you cannot override
+#      from the workflow. The manual install below is label-agnostic and reads
+#      .tool-versions, so that stays the single source of truth.
+#   4. Jobs run in a container, so services are reached by name (`postgres`),
+#      not via a localhost port mapping.
+#   5. No semantic-PR-title job: that action talks to the GitHub API.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MIX_ENV: test
+  # Must match the container image below — builds.hex.pm publishes per-distro
+  # artifacts, and a mismatch produces a binary that won't link.
+  BEAM_TARGET: ubuntu-22.04
+
+jobs:
+  # Lets CI pass on the bare template and auto-enables the optional steps once
+  # the matching deps appear in mix.exs. Needs no BEAM, so it skips the install.
+  detect:
+    name: Detect project
+    runs-on: docker
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
+    outputs:
+      has_project: ${{ steps.check.outputs.has_project }}
+      has_credo: ${{ steps.check.outputs.has_credo }}
+      has_dialyxir: ${{ steps.check.outputs.has_dialyxir }}
+      has_ex_doc: ${{ steps.check.outputs.has_ex_doc }}
+      has_mix_audit: ${{ steps.check.outputs.has_mix_audit }}
+      has_sobelow: ${{ steps.check.outputs.has_sobelow }}
+      has_usage_rules: ${{ steps.check.outputs.has_usage_rules }}
+      has_local_cluster: ${{ steps.check.outputs.has_local_cluster }}
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+      - id: check
+        run: |
+          if [ -f mix.exs ]; then
+            echo "has_project=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_project=false" >> "$GITHUB_OUTPUT"
+            echo "No mix.exs found — repo not bootstrapped yet, skipping CI."
+          fi
+          for dep in credo dialyxir ex_doc mix_audit sobelow usage_rules local_cluster; do
+            if grep -q ":$dep" mix.exs 2>/dev/null; then
+              echo "has_$dep=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "has_$dep=false" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+  test:
+    name: Lint & test
+    runs-on: docker
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
+    needs: detect
+    if: needs.detect.outputs.has_project == 'true'
+
+    # Remove this block (and DB_HOST below) if the project doesn't use Ecto +
+    # Postgres. Note there is no `ports:` mapping: both containers share a
+    # network, so the host is the service name.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: postgres
+
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+
+      # Replaces erlef/setup-beam — see note 3 at the top of this file.
+      - name: Install Erlang/Elixir from .tool-versions
+        run: |
+          set -euo pipefail
+          otp=$(awk '$1 == "erlang" { print $2 }' .tool-versions)
+          elixir=$(awk '$1 == "elixir" { print $2 }' .tool-versions)
+          curl -fsSL "https://builds.hex.pm/builds/otp/${BEAM_TARGET}/OTP-${otp}.tar.gz" -o /tmp/otp.tar.gz
+          mkdir -p /opt/otp
+          # The tarball has a single OTP-<ver>/ root containing Install.
+          tar -xzf /tmp/otp.tar.gz -C /opt/otp --strip-components=1
+          (cd /opt/otp && ./Install -minimal /opt/otp)
+          echo /opt/otp/bin >> "$GITHUB_PATH"
+          # .tool-versions already carries the -otp-NN suffix the zip name wants.
+          curl -fsSL "https://builds.hex.pm/builds/elixir/v${elixir}.zip" -o /tmp/elixir.zip
+          mkdir -p /opt/elixir
+          unzip -q /tmp/elixir.zip -d /opt/elixir   # extracts flat, no strip
+          echo /opt/elixir/bin >> "$GITHUB_PATH"
+
+      - name: Install Hex and Rebar
+        run: mix local.hex --force && mix local.rebar --force
+
+      # No steps.beam.outputs.* without setup-beam, so key off the files.
+      # If the instance's cache server predates this API, pin to @v4.
+      - name: Cache deps and build
+        uses: https://code.forgejo.org/actions/cache@v6
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ hashFiles('.tool-versions') }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ hashFiles('.tool-versions') }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check for unused dependencies
+        run: mix deps.unlock --check-unused
+
+      - name: Compile (warnings as errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      - name: Check for compile-time dependencies
+        run: mix xref graph --label compile-connected --fail-above 0
+
+      - name: Credo
+        if: needs.detect.outputs.has_credo == 'true'
+        run: mix credo --strict
+
+      - name: Check AGENTS.md usage rules are in sync
+        if: needs.detect.outputs.has_usage_rules == 'true'
+        run: mix usage_rules.sync --check
+
+      - name: Docs (warnings as errors)
+        if: needs.detect.outputs.has_ex_doc == 'true'
+        run: mix docs --warnings-as-errors
+
+      - name: Run tests
+        run: mix test --warnings-as-errors
+
+      - name: Run distributed tests
+        if: needs.detect.outputs.has_local_cluster == 'true'
+        run: mix test.distributed
+
+  security:
+    name: Security
+    runs-on: docker
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
+    needs: detect
+    if: needs.detect.outputs.has_project == 'true'
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+
+      - name: Install Erlang/Elixir from .tool-versions
+        run: |
+          set -euo pipefail
+          otp=$(awk '$1 == "erlang" { print $2 }' .tool-versions)
+          elixir=$(awk '$1 == "elixir" { print $2 }' .tool-versions)
+          curl -fsSL "https://builds.hex.pm/builds/otp/${BEAM_TARGET}/OTP-${otp}.tar.gz" -o /tmp/otp.tar.gz
+          mkdir -p /opt/otp
+          tar -xzf /tmp/otp.tar.gz -C /opt/otp --strip-components=1
+          (cd /opt/otp && ./Install -minimal /opt/otp)
+          echo /opt/otp/bin >> "$GITHUB_PATH"
+          curl -fsSL "https://builds.hex.pm/builds/elixir/v${elixir}.zip" -o /tmp/elixir.zip
+          mkdir -p /opt/elixir
+          unzip -q /tmp/elixir.zip -d /opt/elixir
+          echo /opt/elixir/bin >> "$GITHUB_PATH"
+
+      - name: Install Hex and Rebar
+        run: mix local.hex --force && mix local.rebar --force
+
+      - name: Cache deps and build
+        uses: https://code.forgejo.org/actions/cache@v6
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ hashFiles('.tool-versions') }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ hashFiles('.tool-versions') }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Audit for retired packages
+        run: mix hex.audit
+
+      - name: Audit for known vulnerabilities
+        if: needs.detect.outputs.has_mix_audit == 'true'
+        run: mix deps.audit
+
+      - name: Sobelow
+        if: needs.detect.outputs.has_sobelow == 'true'
+        run: mix sobelow --exit --skip
+
+  dialyzer:
+    name: Dialyzer
+    runs-on: docker
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
+    needs: detect
+    if: needs.detect.outputs.has_project == 'true' && needs.detect.outputs.has_dialyxir == 'true'
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+
+      - name: Install Erlang/Elixir from .tool-versions
+        run: |
+          set -euo pipefail
+          otp=$(awk '$1 == "erlang" { print $2 }' .tool-versions)
+          elixir=$(awk '$1 == "elixir" { print $2 }' .tool-versions)
+          curl -fsSL "https://builds.hex.pm/builds/otp/${BEAM_TARGET}/OTP-${otp}.tar.gz" -o /tmp/otp.tar.gz
+          mkdir -p /opt/otp
+          tar -xzf /tmp/otp.tar.gz -C /opt/otp --strip-components=1
+          (cd /opt/otp && ./Install -minimal /opt/otp)
+          echo /opt/otp/bin >> "$GITHUB_PATH"
+          curl -fsSL "https://builds.hex.pm/builds/elixir/v${elixir}.zip" -o /tmp/elixir.zip
+          mkdir -p /opt/elixir
+          unzip -q /tmp/elixir.zip -d /opt/elixir
+          echo /opt/elixir/bin >> "$GITHUB_PATH"
+
+      - name: Install Hex and Rebar
+        run: mix local.hex --force && mix local.rebar --force
+
+      - name: Cache deps and build
+        uses: https://code.forgejo.org/actions/cache@v6
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ hashFiles('.tool-versions') }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            mix-${{ hashFiles('.tool-versions') }}-
+
+      - name: Cache PLTs
+        uses: https://code.forgejo.org/actions/cache@v6
+        with:
+          path: priv/plts
+          key: plt-${{ hashFiles('.tool-versions') }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            plt-${{ hashFiles('.tool-versions') }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Dialyzer
+        run: mix dialyzer --format short

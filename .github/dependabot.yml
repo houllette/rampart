@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Grouped so a week's bumps arrive as two PRs to review, not twelve.
+  # Dev/QA tooling is separated from runtime deps because the two carry very
+  # different risk: a Credo bump can only break CI, a runtime bump can break prod.
+  - package-ecosystem: mix
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-deps:
+        dependency-type: development
+      runtime-deps:
+        dependency-type: production
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
