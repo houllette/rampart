@@ -97,7 +97,7 @@ defmodule Portico.Serialization do
   end
 
   @spec host_from_map(map()) :: {:ok, Host.t()} | {:error, term()}
-  def host_from_map(%{"schema_version" => version} = map) when version == 1 do
+  def host_from_map(%{"schema_version" => 1} = map) do
     with {:ok, status} <- decode_status(map["status"]),
          {:ok, scanned_at} <- decode_datetime(map["scanned_at"]),
          {:ok, ports} <- map_list(map["ports"], &port_from_map/1),
@@ -106,7 +106,7 @@ defmodule Portico.Serialization do
          {:ok, os_matches} <- map_list(map["os_matches"], &os_match_from_map/1) do
       {:ok,
        %Host{
-         schema_version: version,
+         schema_version: 1,
          ip: map["ip"],
          hostname: map["hostname"],
          hostnames: hostnames,

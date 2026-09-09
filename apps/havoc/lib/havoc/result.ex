@@ -87,10 +87,23 @@ defmodule Havoc.Result do
   defp from_map(_map), do: {:error, :missing_schema_version}
 
   defp encode_locus(locus) do
-    Map.new(locus, fn
-      {key, value} when is_atom(key) -> {Atom.to_string(key), value}
-      {key, value} when is_binary(key) -> {key, value}
+    Enum.reduce(locus, %{}, fn {key, value}, encoded ->
+      normalized_key = normalize_locus_key!(key)
+
+      if Map.has_key?(encoded, normalized_key) do
+        raise ArgumentError,
+              "Havoc finding locus contains colliding atom/string key #{inspect(normalized_key)}"
+      end
+
+      Map.put(encoded, normalized_key, value)
     end)
+  end
+
+  defp normalize_locus_key!(key) when is_atom(key), do: Atom.to_string(key)
+  defp normalize_locus_key!(key) when is_binary(key), do: key
+
+  defp normalize_locus_key!(key) do
+    raise ArgumentError, "Havoc finding locus keys must be atoms or strings, got: #{inspect(key)}"
   end
 
   defp decode_locus(locus) when is_map(locus) do

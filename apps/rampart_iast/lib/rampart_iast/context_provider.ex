@@ -7,11 +7,27 @@ defmodule RampartIAST.ContextProvider do
   references.
   """
 
-  alias RampartIAST.{Sink, Source}
+  alias RampartIAST.{Sink, Source, StaticCandidate}
 
   @callback context() :: atom()
   @callback sources() :: [Source.t()]
   @callback sinks() :: [Sink.t()]
+  @callback candidates() :: [StaticCandidate.t()]
+
+  @optional_callbacks candidates: 0
+
+  @doc "Returns and validates a provider's declared context."
+  @spec context!(provider :: module()) :: atom()
+  def context!(provider) when is_atom(provider) do
+    ensure_provider!(provider)
+    context = provider.context()
+
+    if named_atom?(context) do
+      context
+    else
+      raise ArgumentError, "IAST provider #{inspect(provider)} returned an invalid context"
+    end
+  end
 
   @doc "Resolves and validates source and sink IDs for one provider context."
   @spec resolve!(
@@ -22,24 +38,40 @@ defmodule RampartIAST.ContextProvider do
         ) :: {Source.t(), Sink.t()}
   def resolve!(provider, context, source_id, sink_id) when is_atom(provider) do
     ensure_provider!(provider)
-    provider_context = provider.context()
-
-    unless named_atom?(provider_context) and provider_context == context do
-      raise ArgumentError,
-            "IAST provider #{inspect(provider)} does not serve context #{inspect(context)}"
-    end
-
+    provider_context = provider_context!(provider, context)
     sources = declarations!(provider.sources(), Source, provider)
     sinks = declarations!(provider.sinks(), Sink, provider)
 
     source = fetch!(sources, source_id, :source, provider)
     sink = fetch!(sinks, sink_id, :sink, provider)
 
-    unless source.context == provider_context and sink.context == provider_context do
-      raise ArgumentError, "IAST provider declarations must match their provider context"
+    ensure_context!(source, sink, provider_context)
+    {source, sink}
+  end
+
+  @doc "Resolves one provider-reviewed static candidate and its referenced declarations."
+  @spec resolve_candidate!(
+          provider :: module(),
+          context :: atom(),
+          candidate_id :: String.t()
+        ) :: {StaticCandidate.t(), Source.t(), Sink.t()}
+  def resolve_candidate!(provider, context, candidate_id) when is_atom(provider) do
+    ensure_provider!(provider)
+    provider_context = provider_context!(provider, context)
+
+    unless function_exported?(provider, :candidates, 0) do
+      raise ArgumentError, "IAST provider #{inspect(provider)} does not expose static candidates"
     end
 
-    {source, sink}
+    candidates = declarations!(provider.candidates(), StaticCandidate, provider)
+    candidate = fetch!(candidates, candidate_id, :static_candidate, provider)
+
+    unless candidate.context == provider_context do
+      raise ArgumentError, "IAST static candidates must match their provider context"
+    end
+
+    {source, sink} = resolve!(provider, context, candidate.source_id, candidate.sink_id)
+    {candidate, source, sink}
   end
 
   defp ensure_provider!(provider) do
@@ -49,6 +81,23 @@ defmodule RampartIAST.ContextProvider do
 
     unless valid?,
       do: raise(ArgumentError, "#{inspect(provider)} is not an IAST context provider")
+  end
+
+  defp provider_context!(provider, context) do
+    provider_context = context!(provider)
+
+    unless provider_context == context do
+      raise ArgumentError,
+            "IAST provider #{inspect(provider)} does not serve context #{inspect(context)}"
+    end
+
+    provider_context
+  end
+
+  defp ensure_context!(source, sink, provider_context) do
+    unless source.context == provider_context and sink.context == provider_context do
+      raise ArgumentError, "IAST provider declarations must match their provider context"
+    end
   end
 
   defp declarations!(declarations, module, provider) do

@@ -4,8 +4,10 @@ defmodule RampartIAST.ValidationTest do
   alias Core.Validation.{Result, Wire}
 
   alias RampartIAST.{
+    AmbiguousProvider,
     DeliveryFailureBackend,
     Limits,
+    StaticFixture,
     TeardownFailureBackend,
     TestProvider,
     TestSink,
@@ -20,6 +22,102 @@ defmodule RampartIAST.ValidationTest do
     assert action.side_effects == :test_execution
     assert action.meta.observation_level == :exact_marker
     assert action.meta.process_scope == :single_process
+  end
+
+  test "builds an inert hypothesis from a provider-reviewed static candidate" do
+    seed = seed()
+
+    hypothesis =
+      RampartIAST.hypothesis!(TestProvider, "test.callback-to-consume.v1", seed)
+
+    assert hypothesis.source == :iast
+    assert hypothesis.kind == :taint_reaches_sink
+    assert hypothesis.seed == seed
+    assert hypothesis.locus.context == :library
+    assert hypothesis.locus.source_id == "test.callback-argument.v1"
+    assert hypothesis.locus.sink_id == "test.consume.v1"
+    assert hypothesis.locus.static_candidate_id == "test.callback-to-consume.v1"
+    assert hypothesis.meta.observation_level == :exact_marker
+    assert hypothesis.meta.static_candidate_id == "test.callback-to-consume.v1"
+  end
+
+  test "confirms a static candidate with provenance and qualified unique localization" do
+    hypothesis =
+      RampartIAST.hypothesis!(TestProvider, "test.callback-to-consume.v1", seed())
+
+    assert %Result{
+             verdict: :confirmed,
+             findings: [finding],
+             evidence: evidence,
+             meta: meta
+           } =
+             result =
+             RampartIAST.validate(hypothesis,
+               provider: TestProvider,
+               execute: &StaticFixture.direct/1
+             )
+
+    assert finding.locus.static_candidate_id == "test.callback-to-consume.v1"
+    assert finding.locus.static_flow_basis == :value_dependence
+    assert finding.locus.static_sanitizer_status == :none_observed
+    assert finding.locus.sink_localization_basis == :unique_static_call_site
+    assert finding.locus.static_sink_candidate_count == 1
+
+    assert finding.locus.sink_source_span.file ==
+             "apps/rampart_iast/test/support/fixture.ex"
+
+    assert evidence.facts.static_candidate.provenance.analyzer == "reach"
+    assert evidence.facts.static_candidate.provenance.analyzer_version == "2.8.3"
+    assert evidence.facts.static_candidate.flow_basis == :value_dependence
+    assert meta.static_candidate_id == "test.callback-to-consume.v1"
+    assert meta.static_localization == :unique_static_call_site
+
+    projection = Wire.result(result)
+    encoded = Wire.encode!(projection)
+
+    assert projection["evidence"]["facts"]["static_candidate"]["provenance"]["analyzer"] ==
+             "reach"
+
+    refute encoded =~ hypothesis.seed.value
+  end
+
+  test "does not attach a static span when a runtime sink has ambiguous call sites" do
+    hypothesis =
+      RampartIAST.hypothesis!(AmbiguousProvider, "test.ambiguous-consume.v1", seed())
+
+    assert %Result{verdict: :confirmed, findings: [finding], evidence: evidence, meta: meta} =
+             RampartIAST.validate(hypothesis,
+               provider: AmbiguousProvider,
+               execute: fn marker -> StaticFixture.ambiguous(marker, true) end
+             )
+
+    assert finding.locus.sink_localization_basis == :ambiguous
+    assert finding.locus.static_sink_candidate_count == 2
+    assert finding.locus.static_flow_basis == :mixed_dependence
+    assert finding.locus.static_sanitizer_status == :observed
+    refute Map.has_key?(finding.locus, :sink_source_span)
+
+    assert evidence.facts.static_candidate.localization == :ambiguous
+    assert length(evidence.facts.static_candidate.sink_sites) == 2
+    assert meta.static_localization == :ambiguous
+  end
+
+  test "re-resolves static candidate declarations before executing" do
+    hypothesis =
+      TestProvider
+      |> RampartIAST.hypothesis!("test.callback-to-consume.v1", seed())
+      |> put_in([Access.key!(:locus), Access.key!(:source_id)], "transcript.supplied.v1")
+
+    test_process = self()
+
+    assert_raise ArgumentError, ~r/does not match the hypothesis declarations/, fn ->
+      RampartIAST.validate(hypothesis,
+        provider: TestProvider,
+        execute: fn marker -> send(test_process, {:executed, marker}) end
+      )
+    end
+
+    refute_receive {:executed, _marker}
   end
 
   test "confirms when the unchanged marker reaches the watched sink argument" do
@@ -301,8 +399,6 @@ defmodule RampartIAST.ValidationTest do
   end
 
   defp hypothesis do
-    marker = "rampart-iast-marker-#{System.unique_integer([:positive, :monotonic])}"
-
     %Core.Hypothesis{
       id: "hypothesis-#{System.unique_integer([:positive, :monotonic])}",
       source: :iast,
@@ -313,13 +409,17 @@ defmodule RampartIAST.ValidationTest do
         source_id: "test.callback-argument.v1",
         sink_id: "test.consume.v1"
       },
-      seed: %Core.Seed{
-        id: "seed-#{System.unique_integer([:positive, :monotonic])}",
-        value: marker,
-        classes: [:untrusted_input],
-        provenance: :generated
-      },
+      seed: seed(),
       meta: %{observation_level: :exact_marker}
+    }
+  end
+
+  defp seed do
+    %Core.Seed{
+      id: "seed-#{System.unique_integer([:positive, :monotonic])}",
+      value: "rampart-iast-marker-#{System.unique_integer([:positive, :monotonic])}",
+      classes: [:untrusted_input],
+      provenance: :generated
     }
   end
 

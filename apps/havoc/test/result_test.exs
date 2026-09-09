@@ -30,6 +30,22 @@ defmodule Havoc.ResultTest do
     assert decoded == finding
   end
 
+  test "rejects locus keys that collide after JSON normalization" do
+    finding = %Core.Finding{
+      id: "finding",
+      source: :havoc,
+      category: :crash,
+      locus: %{"module" => "Shadowed", module: "Expected"},
+      confidence: :high,
+      evidence: "crashed",
+      observed_at: DateTime.utc_now()
+    }
+
+    assert_raise ArgumentError, ~r/colliding atom\/string key "module"/, fn ->
+      Havoc.Result.encode!(finding)
+    end
+  end
+
   test "rejects unknown enums and unsupported schema versions" do
     finding = %Core.Finding{
       id: "finding",

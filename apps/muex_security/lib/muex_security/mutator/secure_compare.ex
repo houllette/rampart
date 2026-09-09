@@ -39,6 +39,9 @@ defmodule MuexSecurity.Mutator.SecureCompare do
     )
   end
 
-  defp module_name({:__aliases__, _metadata, names}), do: Module.concat(names) |> inspect()
+  defp module_name({:__aliases__, _metadata, names}) do
+    Enum.map_join(names, ".", &Atom.to_string/1)
+  end
+
   defp module_name(module), do: inspect(module)
 end

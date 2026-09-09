@@ -10,8 +10,11 @@ smallest useful runtime proof:
 - one versioned sink declaration;
 - one non-empty binary replay marker;
 - one controlled execution process;
-- one isolated OTP trace session; and
-- one exact-marker reachability verdict.
+- one isolated OTP trace session;
+- optional analyzer-independent static candidates with bounded source spans and
+  reproducible provenance; and
+- one exact-marker reachability verdict that static qualifications cannot
+  override.
 
 The trace collector records only sink identity, argument positions and sizes,
 matched positions, timestamps, counts, and limit state. Native execution errors
@@ -28,6 +31,8 @@ The action does not provide:
 - source extraction from a framework request;
 - exploitability or sanitizer-effect validation;
 - a Phoenix/Sobelow context provider;
+- a RampartSAST-to-IAST adapter for reviewed sink observations;
+- a version-pinned Reach adapter that emits reviewed static candidates;
 - artifact persistence for full path evidence; or
 - production-safety guarantees.
 
@@ -40,7 +45,8 @@ invent a provenance edge.
 1. Build independently reviewed vulnerable, fixed, and ambiguous fixtures for
    at least three sink classes.
 2. Add a structured Phoenix provider from versioned rule knowledge rather than
-   report strings.
+   report strings, then evaluate a separately publishable, version-pinned Reach
+   adapter against it.
 3. Measure disabled and targeted tracing overhead and reject broad
    configurations.
 4. Run the dedicated cross-process feasibility experiments in the root

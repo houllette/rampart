@@ -46,10 +46,11 @@ defmodule MuexSecurity do
     extract_mutator_names(rest, split_names(value), kept)
   end
 
-  defp extract_mutator_names([option | _rest], _selection, _kept)
-       when option == "--mutators" or
-              (is_binary(option) and
-                 binary_part(option, 0, min(byte_size(option), 11)) == "--mutators=") do
+  defp extract_mutator_names(["--mutators" | _rest], _selection, _kept) do
+    {:error, "--mutators may be specified only once"}
+  end
+
+  defp extract_mutator_names(["--mutators=" <> _value | _rest], _selection, _kept) do
     {:error, "--mutators may be specified only once"}
   end
 

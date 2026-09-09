@@ -2,9 +2,9 @@
 
 Rampart is an Elixir umbrella for composable, deterministic, BEAM-native
 security primitives spanning static, dynamic, and interactive analysis. The
-north star is an IAST foundation: static sink knowledge guides targeted runtime
-observation while Portico, Foray, Havoc, and real traffic drive the application
-paths that confirm or refute a vulnerability hypothesis.
+north star is autonomous Elixir/Erlang security research: high-recall static
+reconnaissance gives an external agent facts for concrete hypotheses, while
+Portico, Foray, Havoc, IAST, and real traffic confirm or refute those claims.
 
 Rampart is **not** an assessment platform, UI, or agent reasoning harness. It is
 the structured, replayable ground-truth layer those consumers drive. Every tool
@@ -31,12 +31,14 @@ its current tool, policy, transcript, and evidence contracts.
 | [`havoc`](apps/havoc/README.md) | in-process | StreamData adversarial generation, security oracles, durable regressions, and derived targets | v0.2 |
 | [`havoc_proper`](apps/havoc_proper/README.md) | optional research adapter | PropEr targeted PBT with OTP coverage fitness | experimental v0.1 |
 | [`muex_security`](apps/muex_security/README.md) | mutation extension | Focused security-control operators for Muex | v0.1 |
+| [`rampart_sast`](apps/rampart_sast/README.md) | static / source | High-recall Elixir/Erlang program/package inventory, optional rule signals, queries, and exact replay | experimental v0.1 |
 | [`rampart_iast`](apps/rampart_iast/README.md) | interactive / runtime | Process-scoped exact-marker reachability with pluggable source and sink maps | experimental spike |
 
 ```text
-static sink maps ───────────────┐
-Havoc / replay / real traffic ──┼─▶ RampartIAST sensor ─▶ confirmed runtime facts
-Portico / Foray DAST ───────────┘
+RampartSAST facts/signals ─▶ external agent hypothesis
+                                      │
+Havoc / replay / real traffic ────────┼─▶ RampartIAST sensor ─▶ confirmed facts
+Portico / Foray DAST ─────────────────┘
 
 security_core: findings · seeds · hypotheses · validation · scope · telemetry · runner
 ```
@@ -83,9 +85,9 @@ consumer still enforces its configured byte limit.
 
 ```text
                     security_core
-              ▲       ▲       ▲       ▲
-              │       │       │       │
-        portico     foray    havoc  rampart_iast
+              ▲       ▲       ▲       ▲       ▲
+              │       │       │       │       │
+        portico     foray    havoc  rampart_sast  rampart_iast
                               ▲
                          havoc_proper
 
@@ -100,6 +102,10 @@ consumer still enforces its configured byte limit.
 - `havoc_proper` optionally depends on Havoc plus GPL-3.0 PropEr/PropCheck; the
   base Havoc package remains StreamData-only.
 - `muex_security` extends Muex and intentionally does not depend on Core.
+- `rampart_sast` depends only on Core, keeps framework/package knowledge
+  pluggable, exposes noisy syntax and dependency-use facts, and replays exact
+  rule signals rather than claiming taint, reachability, abuse, or
+  exploitability.
 - `rampart_iast` depends only on Core and currently proves single-process,
   exact-marker reachability—not transformed taint or exploitability.
 - Each child is an independent Hex package. Tool consumers receive only their
@@ -117,6 +123,7 @@ authorization/lifecycle behavior.
 ```sh
 mix deps.get
 mix test
+mix rampart.sast --exit
 mix precommit
 mix dialyzer
 ```
@@ -129,6 +136,7 @@ mix test apps/foray/test
 mix test apps/havoc/test
 mix test apps/havoc_proper/test
 mix test apps/muex_security/test
+mix test apps/rampart_sast/test
 mix test apps/rampart_iast/test
 mix test apps/security_core/test
 ```
@@ -142,10 +150,11 @@ Before publishing, build each package independently from its child directory:
 (cd apps/havoc && mix hex.build --unpack)
 (cd apps/havoc_proper && mix hex.build --unpack)
 (cd apps/muex_security && mix hex.build --unpack)
+(cd apps/rampart_sast && mix hex.build --unpack)
 (cd apps/rampart_iast && mix hex.build --unpack)
 ```
 
 Publish dependency-first: `security_core`, then Portico, Foray, Havoc; publish
 `havoc_proper` after Havoc and `muex_security` independently after its Muex
-compatibility checks. Keep `rampart_iast` unpublished until its research and
-evaluation gates pass.
+compatibility checks. Keep `rampart_sast` and `rampart_iast` unpublished until
+their research and evaluation gates pass.

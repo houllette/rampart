@@ -1,18 +1,19 @@
 # Rampart north-star architecture
 
-## BEAM-native IAST as the foundation for agent-driven vulnerability discovery
+## BEAM-native deterministic analysis for agent-driven vulnerability discovery
 
 Rampart is a foundation of composable, deterministic, BEAM-native security
 primitives spanning static, dynamic, and interactive analysis. A human-facing
 platform or an autonomous agent harness may consume those primitives, but
 neither the platform nor the harness belongs in Rampart.
 
-The long-term target is an IAST foundation for Elixir applications. Static sink
-knowledge says where dangerous operations are. Portico, Foray, Havoc, and real
-traffic drive execution. A future BEAM sensor observes whether attacker-
-controlled input reaches a watched sink on an actual execution path. The same
-runtime fact that reduces static-analysis false positives also gives an agent
-ground truth instead of an opportunity to hallucinate.
+The long-term target is an autonomous security-research foundation for Elixir
+and Erlang applications. High-recall static reconnaissance exposes program and
+package relationships that may matter to insecurity or abuse. An external agent
+turns those noisy facts into concrete hypotheses; Portico, Foray, Havoc, IAST,
+and real traffic then drive deterministic confirmation or refutation. Runtime
+facts reduce static uncertainty and give the agent ground truth instead of an
+opportunity to hallucinate.
 
 ## Membership gates
 
@@ -96,11 +97,12 @@ observations cannot pre-populate independent confirmation evidence. See
 ## Converging analysis modes
 
 ```text
-static sink/context knowledge ───────┐
-                                     ▼
-Portico / Foray / Havoc drivers ─▶ RampartIAST sensor ─▶ localized confirmed finding
-                                     │
-real or replayed application traffic ┘
+RampartSAST facts + rule signals ─▶ external hypothesis reasoning
+                                           │
+                                           ▼
+Portico / Foray / Havoc drivers ─────▶ RampartIAST sensor ─▶ confirmed runtime fact
+                                           │
+real or replayed application traffic ──────┘
 ```
 
 - **Portico** discovers and rechecks reachable TCP/service surface.
@@ -110,27 +112,39 @@ real or replayed application traffic ┘
   exact-payload validation, generators, and durable corpus are the trust anchor.
 - **HavocProper** is an opt-in execution driver for coverage-guided research; it
   does not replace Havoc's oracle verdicts.
-- **Sobelow-derived knowledge** should become a pluggable Phoenix sink/context
-  map and a SAST-mode finding source rather than be rebuilt as another generic
-  static analyzer.
+- **RampartSAST** is the high-recall static reconnaissance and exact signal-
+  replay primitive. It parses Elixir and Erlang, inventories definitions, calls,
+  directives, dependency declarations/locks, and host-resolved package use, and
+  runs optional rule/provider packs. Sobelow-derived knowledge is one signal
+  pack, not the engine's shape. Inventory facts and rule matches prove syntax,
+  never taint, reachability, abuse, or exploitability.
 - **RampartIAST** currently implements the experimental single-process,
-  exact-marker trace-session spike. Future levels consume richer
-  context-specific source and sink knowledge only after their research gates.
+  exact-marker trace-session spike plus an analyzer-independent seam for
+  reviewed static candidates. Static provenance, dependence type, sanitizer
+  observations, and ambiguous spans qualify evidence but never override the
+  runtime verdict. Future levels consume richer context-specific knowledge only
+  after their research gates.
 - **Core** owns interchange and action contracts only. It never owns tool logic,
   sink knowledge, or harness reasoning.
 
 ## Contexts are pluggable
 
-Phoenix, LiveView, Nerves, plain libraries, and bare OTP services have different
-sources, sinks, trust boundaries, and execution drivers. RampartIAST models
-context providers behind behaviours rather than hardcoding an HTTP request
-shape. Sobelow-derived knowledge can seed the Phoenix provider; other contexts
-must be built and validated independently.
+Phoenix, LiveView, Nerves, plain libraries, Erlang applications, and bare OTP
+services have different sources, sinks, trust boundaries, package APIs, and
+execution drivers. RampartSAST and RampartIAST model context providers behind
+behaviours rather than hardcoding an HTTP request shape. RampartSAST's inventory
+is intentionally broad; providers add qualified ecosystem meaning without
+assigning trust. Sobelow-derived knowledge can seed a Phoenix signal/context
+pack, while package ownership comes from inspected artifacts rather than naming
+guesses.
 
 `Core.Hypothesis.locus` and `Core.Finding.locus` remain source-shaped maps so
 these contexts can carry useful identifiers without a premature web-only union.
-Sensor-owned source/sink/observation structs live in `rampart_iast`, not in
-Core.
+Scanner-owned source/match/observation types live in `rampart_sast`, and
+sensor-owned source/sink/observation and static-candidate types live in
+`rampart_iast`; neither belongs in Core. Conversion from reviewed SAST sink
+observations to IAST declarations belongs in a separate adapter so neither tool
+depends on its sister.
 
 ## Honest research boundaries
 
@@ -164,8 +178,10 @@ portico  foray   havoc ◀── havoc_proper
 
 muex ◀── muex_security
 
+rampart_sast ──▶ security_core
 rampart_iast ──▶ security_core
-future context providers ──▶ RampartIAST contracts + security_core
+future SAST rule/context packs ──▶ RampartSAST contracts + security_core
+future SAST-to-IAST adapters ──▶ both tool contracts + security_core
 ```
 
 Tools never depend on sister tools. Cross-tool workflows live in a separate
@@ -178,8 +194,12 @@ never depends on the sensor, a static analyzer, or an agent harness.
    derivation, and Muex work independently shippable.
 2. Mature the validation contract and adversarially review Havoc's oracles
    against real vulnerable/fixed examples.
-3. Extract a versioned, provenance-carrying Phoenix sink map from existing
-   static knowledge.
+3. Mature RampartSAST's project/package inventory, graph queries, and
+   Elixir/Erlang resolution before expanding rule count. Harden the initial
+   artifact-derived module ownership, checksummed cross-package source indexing,
+   callback/protocol facts, typed behavior vocabulary, and bounded graph slices;
+   then add parser isolation and extract provenance-carrying Sobelow and Reach
+   signal adapters without turning either into a verdict engine.
 4. Mature the intra-process exact-marker trace-session spike with real sink
    fixtures, measured overhead, and exact replay evidence.
 5. Gate any cross-process taint roadmap on a dedicated feasibility result.

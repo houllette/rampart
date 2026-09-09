@@ -23,6 +23,21 @@ on StreamData rather than rebuilding property-based testing. All tools project
 observations into Core findings only at the cross-tool boundary and advertise
 versioned actions through `Core.Validation`/`Core.Validator`.
 
+The experimental `rampart_sast` tool is the high-recall static reconnaissance
+and exact signal-replay engine, not a Sobelow clone or vulnerability verdict
+engine. It parses bounded Elixir/Erlang snapshots once and inventories ordinary
+definitions, calls, directives, callbacks/protocols, dependencies, versions,
+typed behavior candidates, and provenance-backed package use before optional
+source/project rules run. Preserve noisy facts and explicit uncertainty so an
+external agent can build hypotheses; prioritize package provenance, resolution,
+and bounded graph queries over adding another
+hard-coded rule catalog. Keep framework assumptions namespaced, failures
+explicit, execution bounded, output deterministic, and suppressions visible.
+Never upgrade a variable name, controller role, dangerous API, package edge, or
+static path into attacker control, runtime reachability, abuse, or
+exploitability. Cross-tool conversion belongs in a separate adapter so sister
+tools remain independent.
+
 The experimental `rampart_iast` sensor is a gated research track. Its first
 action proves only unchanged-marker reachability inside one traced execution
 process. Do not treat value equality as taint tracking, OTP Cover as a sensor,

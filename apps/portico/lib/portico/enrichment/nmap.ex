@@ -180,12 +180,7 @@ defmodule Portico.Enrichment.Nmap do
 
   defp valid_result?(_entry), do: false
 
-  defp valid_ip?(ip) do
-    case Portico.Target.parse(ip) do
-      {:ok, %Portico.Target{kind: :ip}} -> true
-      _other -> false
-    end
-  end
+  defp valid_ip?(ip), do: match?({:ok, %Portico.Target{kind: :ip}}, Portico.Target.parse(ip))
 
   defp validate_scan_type([first | _rest], :udp) when first.protocol == :udp, do: :ok
 

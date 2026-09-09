@@ -295,13 +295,18 @@ defmodule Foray do
   end
 
   defp normalize_wordlist!(seeds, keyword, class) when is_list(seeds) and seeds != [] do
-    unless Enum.all?(seeds, &match?(%Seed{value: value} when is_binary(value), &1)) do
-      raise ArgumentError, "seed wordlists require non-empty Core.Seed values"
-    end
+    {valid?, contains_separator?} =
+      Enum.reduce(seeds, {true, false}, fn
+        %Seed{value: value}, {valid?, contains_separator?} when is_binary(value) ->
+          {valid?, contains_separator? or String.contains?(value, ["\n", "\r"])}
 
-    if Enum.any?(seeds, &String.contains?(&1.value, ["\n", "\r"])) do
-      raise ArgumentError, "seed values cannot contain line separators"
-    end
+        _invalid_seed, {_valid?, contains_separator?} ->
+          {false, contains_separator?}
+      end)
+
+    unless valid?, do: raise(ArgumentError, "seed wordlists require non-empty Core.Seed values")
+
+    if contains_separator?, do: raise(ArgumentError, "seed values cannot contain line separators")
 
     %Wordlist{
       ref: "input:#{keyword}",

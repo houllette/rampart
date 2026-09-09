@@ -7,6 +7,7 @@ defmodule Foray.Finding do
   @spec from_match(Match.t(), Job.t()) :: Core.Finding.t()
   def from_match(%Match{} = match, %Job{} = job) do
     point = primary_point(job.fuzz_points, match.input)
+    point_name = point_name(point)
     category = category(point)
     url = normalize_url(match.url)
     {keyword, input} = primary_input(match.input, point)
@@ -18,7 +19,7 @@ defmodule Foray.Finding do
           job.method,
           url,
           category,
-          point_name(point),
+          point_name,
           input_signature(match.input)
         ]),
       source: :foray,
@@ -27,7 +28,7 @@ defmodule Foray.Finding do
         url: url,
         method: job.method,
         host: match.host,
-        param: point_name(point),
+        param: point_name,
         keyword: keyword,
         input: input,
         status: match.status,

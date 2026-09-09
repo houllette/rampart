@@ -22,7 +22,8 @@ defmodule Rampart.MixProject do
           "_build/#{Mix.env()}/lib/havoc/ebin",
           "_build/#{Mix.env()}/lib/havoc_proper/ebin",
           "_build/#{Mix.env()}/lib/muex_security/ebin",
-          "_build/#{Mix.env()}/lib/rampart_iast/ebin"
+          "_build/#{Mix.env()}/lib/rampart_iast/ebin",
+          "_build/#{Mix.env()}/lib/rampart_sast/ebin"
         ]
       ],
       usage_rules: [file: "AGENTS.md", usage_rules: :all]
@@ -59,7 +60,8 @@ defmodule Rampart.MixProject do
         Havoc: [~r/^Havoc(?:\.|$)/],
         "Havoc PropEr adapter": [~r/^HavocProper(?:\.|$)/],
         "Muex security operators": [~r/^MuexSecurity(?:\.|$)/],
-        "Experimental IAST sensor": [~r/^RampartIAST(?:\.|$)/]
+        "Experimental IAST sensor": [~r/^RampartIAST(?:\.|$)/],
+        "Static security analysis": [~r/^RampartSAST(?:\.|$)/]
       ]
     ]
   end
@@ -75,6 +77,7 @@ defmodule Rampart.MixProject do
         "compile --warnings-as-errors",
         "format",
         "credo --strict",
+        "rampart.sast --exit",
         "usage_rules.sync --yes",
         "xref graph --label compile-connected --fail-above 0",
         "docs --warnings-as-errors",

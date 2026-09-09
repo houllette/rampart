@@ -96,6 +96,9 @@ jobs:
         if: needs.detect.outputs.has_credo == 'true'
         run: mix credo --strict
 
+      - name: Rampart static reconnaissance integrity
+        run: mix rampart.sast --exit
+
       # AGENTS.md's usage-rules block is generated from deps; fail if a dep
       # bump left it stale rather than letting agents read outdated rules.
       # Needs usage_rules in the :test env — see README.
@@ -117,6 +120,7 @@ jobs:
           (cd apps/havoc && mix hex.build)
           (cd apps/havoc_proper && mix hex.build)
           (cd apps/muex_security && mix hex.build)
+          (cd apps/rampart_sast && mix hex.build)
           (cd apps/rampart_iast && mix hex.build)
 
       - name: Run tests

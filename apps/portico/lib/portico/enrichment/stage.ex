@@ -6,18 +6,18 @@ defmodule Portico.Enrichment.Stage do
   @spec run([Portico.Discovery.Result.t()], Portico.Scan.t()) :: {:ok, [Host.t()]}
   def run(entries, %{enrichment: %Stage{} = enrichment} = scan) do
     targets = discovered_targets!(entries)
-    target_values = Enum.map(targets, & &1.value)
+    target = targets |> Enum.map(& &1.value) |> telemetry_target()
 
     metadata = %{
       scan_id: scan.id,
-      target: telemetry_target(target_values),
+      target: target,
       engine: enrichment.engine,
       host_count: length(entries),
       port_count: Enum.reduce(entries, 0, &(length(&1.ports) + &2))
     }
 
     result =
-      Launch.run(scan, targets, telemetry_target(target_values), metadata, fn ->
+      Launch.run(scan, targets, target, metadata, fn ->
         safe_engine_call(enrichment, entries, metadata)
       end)
 

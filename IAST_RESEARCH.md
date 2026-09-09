@@ -9,8 +9,9 @@ tracking.
 The `apps/rampart_iast` package implements the first single-process,
 exact-marker vertical slice behind the versioned
 `iast.exact-marker-reaches-sink.v1` validation action. It uses provider-owned
-source and sink declarations, a host-owned execution callback, bounded OTP trace
-sessions, delivery barriers, exact replay seeds, and fail-closed verdicts.
+source and sink declarations, optional provider-reviewed static candidates, a
+host-owned execution callback, bounded OTP trace sessions, delivery barriers,
+exact replay seeds, and fail-closed verdicts.
 
 It remains experimental: transformed values, descendants, cross-process
 provenance, real Phoenix sink knowledge, exploitability, artifacts, and measured
@@ -108,7 +109,7 @@ reliable edges within the overhead budget.
 
 ## Static-knowledge extraction requirements
 
-A sink map imported from Sobelow or another source needs:
+A sink map imported from RampartSAST, Sobelow, or another source needs:
 
 - a stable sink ID and schema version;
 - package/tool version and rule provenance;
@@ -118,8 +119,55 @@ A sink map imported from Sobelow or another source needs:
 - fixtures for vulnerable, fixed, and ambiguous examples.
 
 Do not scrape human report strings into sensor configuration. Build a reviewed
-adapter over structured rule knowledge. Static findings may be emitted on their
-own, but IAST confirmation must point back to the exact sink declaration used.
+adapter over structured static knowledge. RampartSAST owns high-recall source
+and package inventory, optional syntactic signals, and exact static replay; a
+separate adapter must convert agent-selected, qualified sink facts into provider
+declarations so neither tool depends on its sister. Broad inventory facts may
+be emitted on their own, but IAST
+confirmation must point back to the exact sink declaration used.
+
+## Reach 2.8.3 evaluation
+
+Reach's source frontend and program-dependence graph are useful as an optional
+**hypothesis generator**, not as an IAST verdict engine. It lowers Elixir source
+to expression-level IR, builds per-function control- and data-dependence graphs,
+adds call/return summaries and selected OTP/plugin edges, and joins modules into
+a project graph with source spans. That can provide candidate source/sink paths,
+call-site spans, dependency context, and framework-specific semantics before a
+controlled runtime replay.
+
+Its current flow API is too broad for Rampart's trust boundary:
+`data_flows?/3` traverses the merged dependence graph rather than a value-only
+taint graph, so control dependence can count as flow; def-use resolution can
+retain an earlier binding after a later rebinding; and sanitizer reporting asks
+whether any node in the source/sink chop matches a sanitizer rather than proving
+that every realizable path is sanitized. A traced sink MFA also remains
+ambiguous when several static call sites invoke it. These are useful review
+leads, but none can confirm, refute, sanitize, or localize a runtime observation
+by themselves.
+
+RampartIAST now implements the analyzer-independent half of that boundary.
+Providers may expose versioned `StaticCandidate` declarations with bounded
+repository-relative `SourceSpan` values, exact `StaticProvenance`, explicit
+value/control/mixed dependence, sanitizer observation status, and localization
+qualification. `RampartIAST.hypothesis!/4` produces an inert hypothesis from a
+reviewed candidate; validation resolves it again under host authority. The
+candidate is retained as evidence, but the existing exact-marker action remains
+the sole authority for its narrowly stated runtime reachability verdict. A
+static span is attached to the confirmed finding only for one uniquely supported
+or instrumented sink call site; ambiguous spans remain evidence only.
+
+A Reach-specific integration is still optional and should live in a separately
+publishable, version-pinned context-map adapter, never in `security_core` or the
+runtime sensor. That adapter should:
+
+- retain Reach version, rule/plugin provenance, source revision, and source span;
+- convert only reviewed source/sink candidates into RampartIAST declarations;
+- distinguish value dependence from control-only or mixed graph paths;
+- treat static sanitizer and path results as qualifications requiring fixtures,
+  not as proof or automatic suppression; and
+- claim unique localization only with unique call-site evidence or added
+  instrumentation.
 
 ## Trust and evaluation gates
 

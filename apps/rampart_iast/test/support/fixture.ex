@@ -4,6 +4,17 @@ defmodule RampartIAST.TestSink do
   def consume(value), do: value
 end
 
+defmodule RampartIAST.StaticFixture do
+  @moduledoc false
+
+  alias RampartIAST.TestSink
+
+  def direct(value), do: TestSink.consume(value)
+
+  def ambiguous(value, true), do: TestSink.consume(value)
+  def ambiguous(value, false), do: TestSink.consume(value)
+end
+
 defmodule RampartIAST.TestProvider do
   @moduledoc false
   @behaviour RampartIAST.ContextProvider
@@ -42,6 +53,79 @@ defmodule RampartIAST.TestProvider do
         provenance: %{origin: :test_fixture}
       )
     ]
+  end
+
+  @impl true
+  def candidates do
+    [
+      RampartIAST.StaticCandidate.new!(
+        id: "test.callback-to-consume.v1",
+        schema_version: 1,
+        context: :library,
+        source_id: "test.callback-argument.v1",
+        sink_id: "test.consume.v1",
+        source_sites: [span(12)],
+        sink_sites: [span(12)],
+        flow_basis: :value_dependence,
+        sanitizer_status: :none_observed,
+        localization: :unique_static_call_site,
+        provenance:
+          RampartIAST.StaticProvenance.new!(
+            analyzer: "reach",
+            analyzer_version: "2.8.3",
+            rule_id: "fixture.direct-value-flow",
+            source_revision: "fixture-revision",
+            plugins: %{"fixture_context" => "1.0.0"}
+          )
+      )
+    ]
+  end
+
+  defp span(line) do
+    RampartIAST.SourceSpan.new!(
+      file: "apps/rampart_iast/test/support/fixture.ex",
+      start_line: line
+    )
+  end
+end
+
+defmodule RampartIAST.AmbiguousProvider do
+  @moduledoc false
+  @behaviour RampartIAST.ContextProvider
+
+  alias RampartIAST.{SourceSpan, StaticCandidate, TestProvider}
+
+  @impl true
+  defdelegate context(), to: TestProvider
+
+  @impl true
+  defdelegate sources(), to: TestProvider
+
+  @impl true
+  defdelegate sinks(), to: TestProvider
+
+  @impl true
+  def candidates do
+    [candidate] = TestProvider.candidates()
+
+    [
+      candidate
+      |> Map.merge(%{
+        id: "test.ambiguous-consume.v1",
+        sink_sites: [span(14), span(15)],
+        flow_basis: :mixed_dependence,
+        sanitizer_status: :observed,
+        localization: :ambiguous
+      })
+      |> StaticCandidate.validate!()
+    ]
+  end
+
+  defp span(line) do
+    SourceSpan.new!(
+      file: "apps/rampart_iast/test/support/fixture.ex",
+      start_line: line
+    )
   end
 end
 

@@ -11,7 +11,7 @@ defmodule RampartIAST.Validator do
 
   alias Core.Validation
   alias Core.Validation.{Action, Evidence, Request}
-  alias RampartIAST.{ContextProvider, Limits, Source, TraceSession}
+  alias RampartIAST.{ContextProvider, Limits, Source, StaticCandidate, TraceSession}
   alias RampartIAST.TraceSession.Result, as: TraceResult
 
   @action_id "iast.exact-marker-reaches-sink.v1"
@@ -58,14 +58,7 @@ defmodule RampartIAST.Validator do
     end
 
     details = hypothesis!(hypothesis)
-
-    {source, sink} =
-      ContextProvider.resolve!(
-        provider,
-        details.context,
-        details.source_id,
-        details.sink_id
-      )
+    {static_candidate, source, sink} = resolve_bindings!(provider, details)
 
     ensure_supported_source!(source)
     limits = opts |> Keyword.get(:limits, Limits.new!([])) |> Limits.new!()
@@ -83,16 +76,25 @@ defmodule RampartIAST.Validator do
         trace_backend: Keyword.get(opts, :trace_backend, RampartIAST.TraceBackend.OTP)
       )
 
-    verdict(request, hypothesis, replay_seed, source, sink, trace_result)
+    verdict(request, hypothesis, replay_seed, static_candidate, source, sink, trace_result)
   end
 
-  defp verdict(request, hypothesis, seed, source, sink, %TraceResult{} = trace_result) do
-    facts = facts(source, sink, trace_result)
+  defp verdict(
+         request,
+         hypothesis,
+         seed,
+         static_candidate,
+         source,
+         sink,
+         %TraceResult{} = trace_result
+       ) do
+    facts = facts(static_candidate, source, sink, trace_result)
     matched = Enum.filter(trace_result.observations, &(&1.matched_positions != []))
 
     cond do
       trace_result.envelope == :intact and matched != [] ->
-        finding = finding(hypothesis, seed, source, sink, matched, trace_result)
+        finding =
+          finding(hypothesis, seed, static_candidate, source, sink, matched, trace_result)
 
         Validation.confirmed(
           request,
@@ -104,7 +106,7 @@ defmodule RampartIAST.Validator do
             facts: facts,
             raw: trace_result
           },
-          %{observation_level: :exact_marker, process_scope: :single_process}
+          validation_meta(static_candidate)
         )
 
       trace_result.envelope == :intact and trace_result.execution == :completed ->
@@ -117,7 +119,7 @@ defmodule RampartIAST.Validator do
             facts: facts,
             raw: trace_result
           },
-          %{observation_level: :exact_marker, process_scope: :single_process}
+          validation_meta(static_candidate)
         )
 
       true ->
@@ -130,12 +132,12 @@ defmodule RampartIAST.Validator do
             facts: Map.put(facts, :reason, reason_code(trace_result)),
             raw: trace_result
           },
-          %{observation_level: :exact_marker, process_scope: :single_process}
+          validation_meta(static_candidate)
         )
     end
   end
 
-  defp finding(hypothesis, seed, source, sink, matched, trace_result) do
+  defp finding(hypothesis, seed, static_candidate, source, sink, matched, trace_result) do
     observed_at = DateTime.utc_now()
 
     %Core.Finding{
@@ -148,15 +150,7 @@ defmodule RampartIAST.Validator do
         ]),
       source: :iast,
       category: sink.category,
-      locus: %{
-        context: sink.context,
-        source_id: source.id,
-        sink_id: sink.id,
-        sink_mfa: sink.mfa,
-        argument_positions: sink.argument_positions,
-        observation_level: :exact_marker,
-        process_scope: :single_process
-      },
+      locus: finding_locus(static_candidate, source, sink),
       severity: sink.severity,
       confidence: :high,
       evidence:
@@ -167,7 +161,38 @@ defmodule RampartIAST.Validator do
     }
   end
 
-  defp facts(source, sink, trace_result) do
+  defp finding_locus(static_candidate, source, sink) do
+    %{
+      context: sink.context,
+      source_id: source.id,
+      sink_id: sink.id,
+      sink_mfa: sink.mfa,
+      argument_positions: sink.argument_positions,
+      observation_level: :exact_marker,
+      process_scope: :single_process
+    }
+    |> maybe_add_static_localization(static_candidate)
+  end
+
+  defp maybe_add_static_localization(locus, nil), do: locus
+
+  defp maybe_add_static_localization(locus, %StaticCandidate{} = candidate) do
+    locus =
+      Map.merge(locus, %{
+        static_candidate_id: candidate.id,
+        static_flow_basis: candidate.flow_basis,
+        static_sanitizer_status: candidate.sanitizer_status,
+        sink_localization_basis: candidate.localization,
+        static_sink_candidate_count: length(candidate.sink_sites)
+      })
+
+    case StaticCandidate.localized_sink_span(candidate) do
+      nil -> locus
+      span -> Map.put(locus, :sink_source_span, span)
+    end
+  end
+
+  defp facts(static_candidate, source, sink, trace_result) do
     matched = Enum.filter(trace_result.observations, &(&1.matched_positions != []))
 
     %{
@@ -192,6 +217,13 @@ defmodule RampartIAST.Validator do
       limit_failures: trace_result.limit_failures,
       exploitability: :not_evaluated
     }
+    |> maybe_add_static_candidate(static_candidate)
+  end
+
+  defp maybe_add_static_candidate(facts, nil), do: facts
+
+  defp maybe_add_static_candidate(facts, %StaticCandidate{} = candidate) do
+    Map.put(facts, :static_candidate, StaticCandidate.to_map(candidate))
   end
 
   defp hypothesis!(%Core.Hypothesis{
@@ -204,12 +236,21 @@ defmodule RampartIAST.Validator do
     context = Map.get(locus, :context)
     source_id = Map.get(locus, :source_id)
     sink_id = Map.get(locus, :sink_id)
+    static_candidate_id = Map.get(locus, :static_candidate_id)
 
-    if named_atom?(context) and nonempty_string?(source_id) and nonempty_string?(sink_id) do
-      %{context: context, source_id: source_id, sink_id: sink_id}
+    valid_candidate_id? = is_nil(static_candidate_id) or nonempty_string?(static_candidate_id)
+
+    if named_atom?(context) and nonempty_string?(source_id) and nonempty_string?(sink_id) and
+         valid_candidate_id? do
+      %{
+        context: context,
+        source_id: source_id,
+        sink_id: sink_id,
+        static_candidate_id: static_candidate_id
+      }
     else
       raise ArgumentError,
-            "IAST hypotheses require context, source_id, and sink_id in their locus"
+            "IAST hypotheses require context, source_id, sink_id, and an optional non-empty static_candidate_id in their locus"
     end
   end
 
@@ -221,6 +262,47 @@ defmodule RampartIAST.Validator do
   defp hypothesis!(hypothesis) do
     raise ArgumentError,
           "IAST validation requires a taint_reaches_sink hypothesis, got: #{inspect(hypothesis.kind)}"
+  end
+
+  defp resolve_bindings!(provider, %{static_candidate_id: nil} = details) do
+    {source, sink} =
+      ContextProvider.resolve!(
+        provider,
+        details.context,
+        details.source_id,
+        details.sink_id
+      )
+
+    {nil, source, sink}
+  end
+
+  defp resolve_bindings!(provider, details) do
+    {candidate, source, sink} =
+      ContextProvider.resolve_candidate!(
+        provider,
+        details.context,
+        details.static_candidate_id
+      )
+
+    unless candidate.source_id == details.source_id and candidate.sink_id == details.sink_id do
+      raise ArgumentError,
+            "IAST static candidate #{inspect(candidate.id)} does not match the hypothesis declarations"
+    end
+
+    {candidate, source, sink}
+  end
+
+  defp validation_meta(nil) do
+    %{observation_level: :exact_marker, process_scope: :single_process}
+  end
+
+  defp validation_meta(%StaticCandidate{} = candidate) do
+    Map.merge(validation_meta(nil), %{
+      static_candidate_id: candidate.id,
+      static_localization: candidate.localization,
+      static_flow_basis: candidate.flow_basis,
+      static_sanitizer_status: candidate.sanitizer_status
+    })
   end
 
   defp ensure_supported_source!(%Source{
