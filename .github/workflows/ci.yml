@@ -107,6 +107,17 @@ jobs:
         if: needs.detect.outputs.has_ex_doc == 'true'
         run: mix docs --warnings-as-errors
 
+      # The umbrella is only the development boundary. Keep every child
+      # application independently publishable as a Hex package.
+      - name: Build standalone Hex packages
+        run: |
+          (cd apps/security_core && mix hex.build)
+          (cd apps/portico && mix hex.build)
+          (cd apps/foray && mix hex.build)
+          (cd apps/havoc && mix hex.build)
+          (cd apps/havoc_proper && mix hex.build)
+          (cd apps/muex_security && mix hex.build)
+
       - name: Run tests
         run: mix test --warnings-as-errors
 

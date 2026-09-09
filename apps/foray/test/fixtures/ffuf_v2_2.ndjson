@@ -1,0 +1,2 @@
+{"input":{"FUZZ":"YWRtaW4="},"position":1,"status":200,"length":1234,"words":100,"lines":25,"content-type":"text/html","redirectlocation":"","url":"https://app.example/admin","duration":125000000,"scraper":{},"resultfile":"","host":"app.example"}
+{"input":{"FUZZ":"bG9naW4="},"position":2,"status":301,"length":0,"words":0,"lines":0,"content-type":"text/html","redirectlocation":"/login/","url":"https://app.example/login","duration":2500000,"scraper":{"links":["/login/"]},"resultfile":"","host":"app.example"}

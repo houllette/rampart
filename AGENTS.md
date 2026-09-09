@@ -2,12 +2,45 @@
 
 ## Project overview
 
-portico is an Elixir-native library that orchestrates a two-tier port-scanning
-pipeline — fast discovery (RustScan) feeding deep enrichment (nmap) — with
-real end-to-end backpressure, bounded concurrency, cancellation, and typed
-structured results. It's designed as an embeddable dependency with pluggable
-scanner engines behind clean behaviours, so it folds into higher-level
-security scanning infrastructure rather than being operated as a CLI.
+This repository is the Rampart Elixir security-tooling umbrella. The north star
+is a deterministic BEAM-native IAST foundation spanning static, dynamic, and
+interactive analysis; read `NORTH_STAR.md` before component briefs. Rampart is
+not the human platform or Lemieux agent harness. Every primitive must remain
+correct and useful without an LLM, and every analysis tool must expose a
+specific proof/refutation action rather than only report candidates.
+
+Each child under `apps/` is an independently versioned and publishable library.
+`security_core` is the suite's dependency-free-inside-the-suite contract spine;
+tools such as Portico depend on Core but never on sister tools. Cross-tool
+orchestration and agent reasoning belong outside Core and outside individual
+tools.
+
+Portico orchestrates a backpressured RustScan-to-nmap pipeline and keeps its rich
+native domain model. Foray orchestrates whole ffuf jobs and must never fan
+individual payloads into BEAM tasks. Havoc runs in-process: it builds security
+oracles, adversarial generators, durable regressions, and concrete validation
+on StreamData rather than rebuilding property-based testing. All tools project
+observations into Core findings only at the cross-tool boundary and advertise
+versioned actions through `Core.Validation`/`Core.Validator`.
+
+The future IAST sensor is a gated research track. Do not treat value equality as
+taint tracking, OTP Cover as a sensor, or a traced sink MFA as a unique call
+site. Start with intra-process trace sessions and pluggable context/sink maps;
+cross-process taint and production safety require evidence before becoming
+load-bearing. Sensor-owned source/sink/context types do not belong in Core.
+
+Lemieux is an external consumer, not an umbrella dependency; read
+`LEMIEUX_INTEGRATION.md` before changing an agent-facing contract. Model-facing
+inputs are inert subject references. Scope, scan plans, target functions,
+resolvers, and artifact access stay in host-owned `Core.Validation.Binding`
+values and are never restored from a transcript. Use `Core.Validation.Wire` for
+transcript-safe JSON and enforce the adapter's configured output limit; never
+serialize native `raw` fields or executable context. Treat all three validation
+verdicts as completed domain results, and keep scope
+denial, harness deadline/cancellation, and crashes as distinct tool failures. A
+probe timeout captured by a completed validator may be inconclusive evidence.
+Do not conflate Lemieux harness-candidate confirmation with vulnerability
+validation.
 
 ## Commands
 
@@ -21,8 +54,8 @@ means a green PR.
 | Install deps | `mix deps.get` |
 | Compile (warnings are errors in CI) | `mix compile --warnings-as-errors` |
 | Run all tests | `mix test` |
-| Run one test file | `mix test test/path/to/file_test.exs` |
-| Run one test | `mix test test/path/to/file_test.exs:LINE` |
+| Run one test file | `mix test apps/APP/test/path/to/file_test.exs` |
+| Run one test | `mix test apps/APP/test/path/to/file_test.exs:LINE` |
 | Format | `mix format` |
 | Lint | `mix credo --strict` |
 | Compile-time dependency check | `mix xref graph --label compile-connected --fail-above 0` |
@@ -58,6 +91,16 @@ alias in `mix.exs` is the authoritative list for this project.
 - **Don't add dependencies to solve small problems.** The standard library
   covers date and time (`Date`, `Time`, `DateTime`, `Calendar`), and every new
   dep is one more thing CI has to audit. Ask before adding one.
+- **Havoc builds on StreamData.** Base-package generators remain StreamData
+  generators and ordinary properties delegate generation and shrinking to
+  StreamData. Do not add a custom random/shrink loop, `Core.Runner`, or
+  `Core.Scope`. The optional `havoc_proper` app delegates search to PropEr and
+  must keep node-global Cover sessions serialized. Dynamic target providers
+  describe inputs conservatively; consumers still own execution and fixtures.
+- **Extend Muex, do not fork it.** `muex_security` contains focused custom
+  mutators only. Muex remains responsible for traversal, compilation, test
+  execution, optimization, and reports. Keep operators narrow enough that a
+  surviving mutant asks a specific security-control question.
 - **Pattern match at function heads** rather than with nested `case`/`cond`
   where it reads naturally; use `with` for chains of fallible calls. Never
   write a `case` whose only clauses are `true` and `false` — that's an `if`.

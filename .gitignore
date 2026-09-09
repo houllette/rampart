@@ -13,6 +13,7 @@ erl_crash.dump
 # Escripts and release tarballs
 *.tar
 /tmp/
+/apps/*/tmp/
 
 # Secrets / local-only config
 /config/*.secret.exs
