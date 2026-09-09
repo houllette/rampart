@@ -20,6 +20,8 @@ erl_crash.dump
 .env.*
 !.env.example
 
+/priv/plts/
+
 # Language server / editor caches
 /.elixir_ls/
 /.lexical/
