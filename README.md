@@ -31,11 +31,11 @@ its current tool, policy, transcript, and evidence contracts.
 | [`havoc`](apps/havoc/README.md) | in-process | StreamData adversarial generation, security oracles, durable regressions, and derived targets | v0.2 |
 | [`havoc_proper`](apps/havoc_proper/README.md) | optional research adapter | PropEr targeted PBT with OTP coverage fitness | experimental v0.1 |
 | [`muex_security`](apps/muex_security/README.md) | mutation extension | Focused security-control operators for Muex | v0.1 |
-| IAST sensor | interactive / runtime | Future trace-session observer driven by pluggable context and sink maps | gated research |
+| [`rampart_iast`](apps/rampart_iast/README.md) | interactive / runtime | Process-scoped exact-marker reachability with pluggable source and sink maps | experimental spike |
 
 ```text
 static sink maps ───────────────┐
-Havoc / replay / real traffic ──┼─▶ future IAST sensor ─▶ confirmed runtime facts
+Havoc / replay / real traffic ──┼─▶ RampartIAST sensor ─▶ confirmed runtime facts
 Portico / Foray DAST ───────────┘
 
 security_core: findings · seeds · hypotheses · validation · scope · telemetry · runner
@@ -82,12 +82,12 @@ consumer still enforces its configured byte limit.
 ## Dependency and boundary rules
 
 ```text
-             security_core
-              ▲    ▲    ▲
-              │    │    │
-        portico  foray  havoc
-                           ▲
-                      havoc_proper
+                    security_core
+              ▲       ▲       ▲       ▲
+              │       │       │       │
+        portico     foray    havoc  rampart_iast
+                              ▲
+                         havoc_proper
 
         muex ◀──── muex_security
 ```
@@ -100,8 +100,10 @@ consumer still enforces its configured byte limit.
 - `havoc_proper` optionally depends on Havoc plus GPL-3.0 PropEr/PropCheck; the
   base Havoc package remains StreamData-only.
 - `muex_security` extends Muex and intentionally does not depend on Core.
-- Each child is an independent Hex package. Portico consumers receive
-  `security_core`, not future tools.
+- `rampart_iast` depends only on Core and currently proves single-process,
+  exact-marker reachability—not transformed taint or exploitability.
+- Each child is an independent Hex package. Tool consumers receive only their
+  declared dependencies, not future suite components.
 
 Every analysis tool must pass the north-star gates: it is a focused BEAM-native
 primitive, speaks Core interchange, remains deterministic without an agent, and
@@ -127,6 +129,7 @@ mix test apps/foray/test
 mix test apps/havoc/test
 mix test apps/havoc_proper/test
 mix test apps/muex_security/test
+mix test apps/rampart_iast/test
 mix test apps/security_core/test
 ```
 
@@ -139,8 +142,10 @@ Before publishing, build each package independently from its child directory:
 (cd apps/havoc && mix hex.build --unpack)
 (cd apps/havoc_proper && mix hex.build --unpack)
 (cd apps/muex_security && mix hex.build --unpack)
+(cd apps/rampart_iast && mix hex.build --unpack)
 ```
 
 Publish dependency-first: `security_core`, then Portico, Foray, Havoc; publish
 `havoc_proper` after Havoc and `muex_security` independently after its Muex
-compatibility checks.
+compatibility checks. Keep `rampart_iast` unpublished until its research and
+evaluation gates pass.

@@ -185,9 +185,10 @@ The boundary is one-way and evidence-driven:
 Keeping the terms separate prevents search quality from laundering a security
 hypothesis—or generated harness code—into trusted proof.
 
-## Future IAST sensor
+## Experimental IAST sensor
 
-The reviewed Lemieux contracts sharpen the sensor's interface:
+RampartIAST remains unavailable to Lemieux while its research gates are open.
+The reviewed Lemieux contracts sharpen the sensor's eventual external interface:
 
 1. Persist full trace/path evidence as content-addressed artifacts; expose only
    bounded facts and references to the model.

@@ -98,7 +98,7 @@ observations cannot pre-populate independent confirmation evidence. See
 ```text
 static sink/context knowledge ───────┐
                                      ▼
-Portico / Foray / Havoc drivers ─▶ future IAST sensor ─▶ localized confirmed finding
+Portico / Foray / Havoc drivers ─▶ RampartIAST sensor ─▶ localized confirmed finding
                                      │
 real or replayed application traffic ┘
 ```
@@ -113,23 +113,24 @@ real or replayed application traffic ┘
 - **Sobelow-derived knowledge** should become a pluggable Phoenix sink/context
   map and a SAST-mode finding source rather than be rebuilt as another generic
   static analyzer.
-- **The future IAST sensor** consumes context-specific sources and sinks and
-  emits runtime observations and validation results.
+- **RampartIAST** currently implements the experimental single-process,
+  exact-marker trace-session spike. Future levels consume richer
+  context-specific source and sink knowledge only after their research gates.
 - **Core** owns interchange and action contracts only. It never owns tool logic,
   sink knowledge, or harness reasoning.
 
 ## Contexts are pluggable
 
 Phoenix, LiveView, Nerves, plain libraries, and bare OTP services have different
-sources, sinks, trust boundaries, and execution drivers. The future sensor must
-model context providers behind behaviours rather than hardcode an HTTP request
+sources, sinks, trust boundaries, and execution drivers. RampartIAST models
+context providers behind behaviours rather than hardcoding an HTTP request
 shape. Sobelow-derived knowledge can seed the Phoenix provider; other contexts
 must be built and validated independently.
 
 `Core.Hypothesis.locus` and `Core.Finding.locus` remain source-shaped maps so
 these contexts can carry useful identifiers without a premature web-only union.
-Sensor-owned source/sink/context structs should live in the future sensor
-package, not in Core.
+Sensor-owned source/sink/observation structs live in `rampart_iast`, not in
+Core.
 
 ## Honest research boundaries
 
@@ -163,13 +164,13 @@ portico  foray   havoc ◀── havoc_proper
 
 muex ◀── muex_security
 
-future sensor ──▶ security_core
-future context providers ──▶ sensor contracts + security_core
+rampart_iast ──▶ security_core
+future context providers ──▶ RampartIAST contracts + security_core
 ```
 
 Tools never depend on sister tools. Cross-tool workflows live in a separate
-integration application. The future sensor may consume context-provider data,
-but Core never depends on the sensor, a static analyzer, or an agent harness.
+integration application. RampartIAST consumes context-provider data, but Core
+never depends on the sensor, a static analyzer, or an agent harness.
 
 ## Roadmap gates
 
@@ -179,8 +180,8 @@ but Core never depends on the sensor, a static analyzer, or an agent harness.
    against real vulnerable/fixed examples.
 3. Extract a versioned, provenance-carrying Phoenix sink map from existing
    static knowledge.
-4. Run an intra-process trace-session spike with measured overhead and exact
-   replay evidence.
+4. Mature the intra-process exact-marker trace-session spike with real sink
+   fixtures, measured overhead, and exact replay evidence.
 5. Gate any cross-process taint roadmap on a dedicated feasibility result.
 6. Keep the transport-neutral binding and wire projection stable, then build an
    action-scoped Lemieux adapter outside Rampart; Lemieux remains the authority,

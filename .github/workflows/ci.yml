@@ -117,6 +117,7 @@ jobs:
           (cd apps/havoc && mix hex.build)
           (cd apps/havoc_proper && mix hex.build)
           (cd apps/muex_security && mix hex.build)
+          (cd apps/rampart_iast && mix hex.build)
 
       - name: Run tests
         run: mix test --warnings-as-errors

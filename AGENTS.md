@@ -23,11 +23,12 @@ on StreamData rather than rebuilding property-based testing. All tools project
 observations into Core findings only at the cross-tool boundary and advertise
 versioned actions through `Core.Validation`/`Core.Validator`.
 
-The future IAST sensor is a gated research track. Do not treat value equality as
-taint tracking, OTP Cover as a sensor, or a traced sink MFA as a unique call
-site. Start with intra-process trace sessions and pluggable context/sink maps;
+The experimental `rampart_iast` sensor is a gated research track. Its first
+action proves only unchanged-marker reachability inside one traced execution
+process. Do not treat value equality as taint tracking, OTP Cover as a sensor,
+or a traced sink MFA as a unique call site. Keep context/sink maps pluggable;
 cross-process taint and production safety require evidence before becoming
-load-bearing. Sensor-owned source/sink/context types do not belong in Core.
+load-bearing. Sensor-owned source/sink/observation types do not belong in Core.
 
 Lemieux is an external consumer, not an umbrella dependency; read
 `LEMIEUX_INTEGRATION.md` before changing an agent-facing contract. Model-facing

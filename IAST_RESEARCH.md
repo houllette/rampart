@@ -1,8 +1,20 @@
 # IAST sensor research gates
 
-This document fixes the boundary for Rampart's future IAST sensor without
-prematurely publishing a sensor API. It is a spike plan, not a claim that BEAM
-tracing already provides complete taint tracking.
+This document fixes the boundary for Rampart's experimental IAST sensor. It is
+a gated research plan, not a claim that BEAM tracing provides complete taint
+tracking.
+
+## Current implementation
+
+The `apps/rampart_iast` package implements the first single-process,
+exact-marker vertical slice behind the versioned
+`iast.exact-marker-reaches-sink.v1` validation action. It uses provider-owned
+source and sink declarations, a host-owned execution callback, bounded OTP trace
+sessions, delivery barriers, exact replay seeds, and fail-closed verdicts.
+
+It remains experimental: transformed values, descendants, cross-process
+provenance, real Phoenix sink knowledge, exploitability, artifacts, and measured
+production safety are not implemented.
 
 ## Goal of the first spike
 

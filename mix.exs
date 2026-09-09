@@ -21,7 +21,8 @@ defmodule Rampart.MixProject do
           "_build/#{Mix.env()}/lib/foray/ebin",
           "_build/#{Mix.env()}/lib/havoc/ebin",
           "_build/#{Mix.env()}/lib/havoc_proper/ebin",
-          "_build/#{Mix.env()}/lib/muex_security/ebin"
+          "_build/#{Mix.env()}/lib/muex_security/ebin",
+          "_build/#{Mix.env()}/lib/rampart_iast/ebin"
         ]
       ],
       usage_rules: [file: "AGENTS.md", usage_rules: :all]
@@ -57,7 +58,8 @@ defmodule Rampart.MixProject do
         Foray: [~r/^Foray(?:\.|$)/],
         Havoc: [~r/^Havoc(?:\.|$)/],
         "Havoc PropEr adapter": [~r/^HavocProper(?:\.|$)/],
-        "Muex security operators": [~r/^MuexSecurity(?:\.|$)/]
+        "Muex security operators": [~r/^MuexSecurity(?:\.|$)/],
+        "Experimental IAST sensor": [~r/^RampartIAST(?:\.|$)/]
       ]
     ]
   end
