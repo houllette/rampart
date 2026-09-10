@@ -7,13 +7,16 @@ defmodule Foray.OutputError do
 
   @impl true
   def exception(opts) do
-    line = Keyword.get(opts, :line)
+    line = preview(Keyword.get(opts, :line))
     reason = Keyword.fetch!(opts, :reason)
 
     %__MODULE__{
       line: line,
       reason: reason,
-      message: "invalid ffuf NDJSON output: #{inspect(reason)}"
+      message: "invalid ffuf NDJSON output: #{inspect(reason, limit: 10, printable_limit: 256)}"
     }
   end
+
+  defp preview(nil), do: nil
+  defp preview(line), do: :binary.copy(binary_part(line, 0, min(byte_size(line), 1_024)))
 end

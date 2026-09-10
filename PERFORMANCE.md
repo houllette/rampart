@@ -6,6 +6,10 @@ architecture remains deterministic and independent of an LLM. This comparison
 describes the first implementation pass. The external integration follow-up
 below records the subsequent package, native, search and resource validation.
 
+For current limit units, enforcement points and source-review follow-ups, see
+[RESOURCE_LIMITS.md](RESOURCE_LIMITS.md). That inventory adds no measurements
+and does not expand the operating profile demonstrated here.
+
 The same harness ran against reviewed commit `9817fe9` in an isolated checkout
 and the updated implementation, sequentially on Apple ARM64 with Elixir 1.20.4,
 OTP 29 / ERTS 17.0.6 and ten schedulers. Each case used two warmups and seven

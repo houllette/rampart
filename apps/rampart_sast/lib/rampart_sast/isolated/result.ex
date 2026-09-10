@@ -70,7 +70,7 @@ defmodule RampartSAST.Isolated.Result do
           "level" => "error",
           "phase" => "isolation",
           "code" => code,
-          "message" => truncate(message),
+          "message" => RampartSAST.Diagnostic.bounded_message(message),
           "file" => nil,
           "rule_id" => nil
         }
@@ -131,11 +131,5 @@ defmodule RampartSAST.Isolated.Result do
     :sha256
     |> :crypto.hash(["isolated-failure\0", code, "\0", message])
     |> Base.encode16(case: :lower)
-  end
-
-  defp truncate(message) do
-    if String.length(message) > 1_024,
-      do: String.slice(message, 0, 1_024) <> "...",
-      else: message
   end
 end

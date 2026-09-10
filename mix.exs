@@ -67,11 +67,19 @@ defmodule Rampart.MixProject do
         "LEMIEUX_INTEGRATION.md",
         "EVALUATION.md",
         "PERFORMANCE.md",
-        "evaluation/HISTORICAL_CVE_FRONTIER.md"
+        "RESOURCE_LIMITS.md",
+        "evaluation/HISTORICAL_CVE_FRONTIER.md",
+        "evaluation/CVE_CAPABILITY_CATALOG.md"
       ],
       groups_for_extras: [
         Architecture: ["NORTH_STAR.md", "IAST_RESEARCH.md", "LEMIEUX_INTEGRATION.md"],
-        Evaluation: ["EVALUATION.md", "PERFORMANCE.md", "evaluation/HISTORICAL_CVE_FRONTIER.md"]
+        Evaluation: [
+          "EVALUATION.md",
+          "PERFORMANCE.md",
+          "RESOURCE_LIMITS.md",
+          "evaluation/HISTORICAL_CVE_FRONTIER.md",
+          "evaluation/CVE_CAPABILITY_CATALOG.md"
+        ]
       ],
       groups_for_modules: [
         "Shared spine": [~r/^Core(?:\.|$)/],

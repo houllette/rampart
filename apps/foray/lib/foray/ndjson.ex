@@ -3,54 +3,22 @@ defmodule Foray.NDJSON do
 
   alias Foray.{Match, OutputError}
 
-  @max_fragment_bytes 1_048_576
   @required_integer_fields ~w(position status length words lines duration)
   @required_string_fields ~w(content-type redirectlocation url resultfile host)
 
   @doc "Parses partial binary chunks into validated match structs."
   @spec stream(Enumerable.t()) :: Enumerable.t(Match.t())
-  def stream(chunks) do
-    Stream.transform(
-      chunks,
-      fn -> "" end,
-      &split_chunk/2,
-      &flush_fragment/1,
-      fn _fragment -> :ok end
-    )
-  end
+  def stream(chunks), do: Foray.LineStream.transform(chunks, &parse_line/1)
 
   @doc "Parses one complete ffuf NDJSON line. Blank lines are ignored."
   @spec parse_line(String.t()) :: {:ok, Match.t()} | :ignore | {:error, OutputError.t()}
   def parse_line(line) when is_binary(line) do
-    case String.trim(line) do
-      "" -> :ignore
-      line -> decode_line(line)
-    end
-  end
-
-  defp split_chunk(chunk, fragment) do
-    chunk = IO.iodata_to_binary(chunk)
-    parts = String.split(fragment <> chunk, "\n")
-    next_fragment = List.last(parts)
-
-    if byte_size(next_fragment) > @max_fragment_bytes do
-      raise OutputError, line: next_fragment, reason: :line_too_long
-    end
-
-    {parse_lines(Enum.drop(parts, -1)), next_fragment}
-  end
-
-  defp flush_fragment(""), do: {[], ""}
-  defp flush_fragment(fragment), do: {parse_lines([fragment]), ""}
-
-  defp parse_lines(lines) do
-    Enum.flat_map(lines, fn line ->
-      case parse_line(String.trim_trailing(line, "\r")) do
-        {:ok, match} -> [match]
-        :ignore -> []
-        {:error, error} -> raise error
+    with {:ok, line} <- Foray.LineStream.check_line(line) do
+      case String.trim(line) do
+        "" -> :ignore
+        line -> decode_line(line)
       end
-    end)
+    end
   end
 
   defp decode_line(line) do

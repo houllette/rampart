@@ -134,6 +134,13 @@ Parse, context, inventory, rule, and limit failures become diagnostics and make
 the scan incomplete; they never become findings or a false clean result. Output
 order is deterministic.
 
+Diagnostic messages are capped at 4,096 UTF-8 bytes, including a truncation
+suffix. Constructors and isolated failures normalize a bounded prefix and
+replace invalid bytes with U+FFFD; direct struct validation rejects oversized
+or malformed messages. Isolated failure IDs continue hashing the original
+message to preserve identity, so this display bound does not bound hashing
+work or the complete serialized response.
+
 The in-process API is intended for trusted snapshots. Elixir and Erlang parsers
 intern source atoms in the VM-global atom table, so task timeouts alone cannot
 protect a long-lived node from hostile input. Use the disposable worker API for

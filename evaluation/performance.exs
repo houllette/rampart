@@ -1,3 +1,5 @@
+Code.require_file("runtime.exs", __DIR__)
+
 defmodule RampartPerformance.Sink do
   @moduledoc false
   def observe(value), do: value
@@ -18,13 +20,14 @@ defmodule RampartPerformance do
       schema_version: 1,
       fixture_version: "rampart-performance.v1",
       harness_sha256: digest(File.read!(__ENV__.file)),
-      runtime: %{
-        elixir: System.version(),
-        otp: System.otp_release(),
-        erts: List.to_string(:erlang.system_info(:version)),
-        schedulers: System.schedulers_online(),
-        architecture: :erlang.system_info(:system_architecture) |> List.to_string()
-      },
+      runtime:
+        Map.merge(RampartEvaluation.Runtime.provenance(), %{
+          elixir: System.version(),
+          otp: System.otp_release(),
+          erts: List.to_string(:erlang.system_info(:version)),
+          schedulers: System.schedulers_online(),
+          architecture: :erlang.system_info(:system_architecture) |> List.to_string()
+        }),
       policy: %{
         samples: samples,
         warmups: 2,

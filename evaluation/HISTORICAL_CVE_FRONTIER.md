@@ -8,6 +8,12 @@ contracts identified by the review have since graduated into the executable
 evaluation gate; the per-advisory table preserves the baseline result from
 before those changes.
 
+The [2026-09-09 capability extension](CVE_CAPABILITY_CATALOG.md) adds eight
+separate advisories covering resource units, incremental parsing, protocol
+state, canonicalization and native arithmetic. Its structured records contain
+proposed contracts only; they do not change the empirical results or executed
+coverage described here.
+
 ## What `mix hex.audit` does
 
 Hex 2.5.1's `Mix.Tasks.Hex.Audit` reads locked Hex packages, asks the Hex

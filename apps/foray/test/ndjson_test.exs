@@ -31,4 +31,27 @@ defmodule Foray.NDJSONTest do
     assert {:error, %OutputError{reason: {:invalid_base64_input, "FUZZ"}}} =
              NDJSON.parse_line(line)
   end
+
+  test "complete lines and direct parsing enforce raw bytes before whitespace or decoding" do
+    line = String.duplicate(" ", 1_048_577)
+    assert {:error, %OutputError{reason: :line_too_long, line: preview}} = NDJSON.parse_line(line)
+    assert byte_size(preview) <= 1_024
+
+    for suffix <- ["", "\n"], split <- [1, 65_535, 1_048_576] do
+      input = line <> suffix
+      chunks = [binary_part(input, 0, split), binary_part(input, split, byte_size(input) - split)]
+      error = assert_raise OutputError, fn -> Enum.to_list(NDJSON.stream(chunks)) end
+      assert error.reason == :line_too_long
+      assert byte_size(error.line) <= 1_024
+    end
+  end
+
+  test "exact raw limits account for CRLF and retain valid records across tiny chunks" do
+    record = @fixture |> File.read!() |> String.split("\n") |> hd()
+    padded = record <> String.duplicate(" ", 1_048_575 - byte_size(record))
+    assert {:ok, expected} = NDJSON.parse_line(padded <> "\r\n")
+    assert [^expected] = Enum.to_list(NDJSON.stream([padded, "\r", "\n"]))
+    assert [^expected] = Enum.to_list(NDJSON.stream([padded <> " "]))
+    assert {:error, %OutputError{reason: :line_too_long}} = NDJSON.parse_line(padded <> " \r\n")
+  end
 end

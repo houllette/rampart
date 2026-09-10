@@ -81,6 +81,24 @@ config :portico,
 With no explicit or configured policy, Portico uses
 `Core.Scope.DenyAll` and refuses to scan.
 
+## Resource budgets
+
+Nmap enrichment accepts host-owned `xml_limits: [...]` options. Defaults bound
+each document to 16 MiB, depth 64, 100,000 elements, 1,024 hosts, 65,536 ports,
+16,384 scripts, 65,536 script nodes, 8 MiB of decoded attribute/character text,
+and 64 KiB per attribute or accumulated text value. See
+`Portico.NmapXML.Limits.schema/0` for exact option names. Direct parser calls
+use `limits: [...]`. Limits remain cumulative with `collect: false`.
+
+An exceeded XML budget returns an explicit error and makes endpoint validation
+inconclusive. Host callbacks are provisional until parsing completes. These
+input/model budgets do not promise a hard VM memory limit.
+
+RustScan lines are limited to 1,048,576 raw bytes, excluding LF and including
+CR, before parsing both complete and unfinished lines. Output errors retain
+only a copied 1,024-byte line preview. Early parser termination reaps the
+native process; ordinary nonzero completion remains an error.
+
 ## Result serialization
 
 ```elixir

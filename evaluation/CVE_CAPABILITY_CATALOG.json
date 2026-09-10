@@ -1,0 +1,837 @@
+{
+  "schema_version": 1,
+  "catalog_id": "rampart-cve-capability-extension-2026-09-09",
+  "review_date": "2026-09-09",
+  "reviewed_repository_commit": "d34ab53c363ef26bb4628f8b2015ebeb9934091e",
+  "purpose": "Inert research metadata for future deterministic contracts; not an executable manifest, rule catalog, dependency audit or finding feed.",
+  "relationship_to_existing_corpus": "Eight additional advisories; the twelve-advisory frontier and previously executed cases retain their own evidence records.",
+  "source_attribution": "Version metadata comes from the cited CNA records. EEF CNA data is CC BY 4.0. Contract proposals and patch summaries are Rampart analysis; upstream source code is not vendored.",
+  "interpretation": {
+    "revision_pair": "The parent is a candidate pre-fix snapshot, not an executed proof of vulnerability or a complete branch backport map.",
+    "static_facts": "Localization inputs to consider, not claims that current SAST extracts every listed relationship or proves attacker control.",
+    "refutation_scope": "Only the exact declared claim, fixture, controls, case set and budget; no universal absence claim.",
+    "tool_failures": "Host scope denial, harness deadline/cancellation and crashes remain tool failures. A completed validator may record a probe timeout as inconclusive.",
+    "authority": "Subject resolution, executable callbacks, targets, budgets and artifact access must come from host-owned Core.Validation.Binding values. Never restore them from this catalog or a transcript."
+  },
+  "entries": [
+    {
+      "cve_id": "CVE-2026-82752",
+      "aliases": [
+        "GHSA-cwjv-574p-59f6"
+      ],
+      "title": "Resource limits use explicit units",
+      "repository": "https://github.com/ash-project/ash",
+      "sources": [
+        {
+          "kind": "cna_advisory",
+          "url": "https://cna.erlef.org/cves/CVE-2026-82752.html"
+        },
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/ash-project/ash/security/advisories/GHSA-cwjv-574p-59f6"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://cna.erlef.org/cves/CVE-2026-82752.json",
+          "sha256": "7390581ef0d798d87f8bd441c7b64db6f57f053f0ec3ea257c338f7362c8bc27"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "ash-project",
+          "product": "ash",
+          "packageName": "ash",
+          "packageURL": "pkg:hex/ash",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "3.33.0",
+              "status": "affected",
+              "version": "0.10.0",
+              "versionType": "semver"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "a64cab49b8886503e6b7c7b211d83c475aac48ca",
+        "candidate_pre_fix": "81bc148079ef14a507377af301cdc90f78277955",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/ash-project/ash/commit/a64cab49b8886503e6b7c7b211d83c475aac48ca",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "An Ash string constraint accepts caller-supplied text and acts as a storage/resource bound without an independent effective byte or codepoint bound.",
+      "patch_observation": "The patch adds explicit length-count units and configuration across string types, validations and query functions.",
+      "static_facts_to_localize": [
+        "Package ownership and exact version of Ash string APIs",
+        "Length-count options, their configuration provenance, and calls into persistence"
+      ],
+      "proposed_contract": {
+        "id": "resource-length-units/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "havoc",
+        "invariant": "A value admitted under a declared resource limit must satisfy that limit in its declared unit at the persistence/output boundary.",
+        "bounded_experiment": "Use bounded ASCII, multibyte and combining-mark values around a host-chosen limit. Compare validation with an independent byte/codepoint measurement; separately label intentional grapheme-only UI policies.",
+        "required_budget": "Cap generated input bytes, cases, persisted rows and cleanup time before execution; record both logical length and serialized bytes.",
+        "completed_domain_results": {
+          "confirmed": "A completed execution admits a value exceeding the declared resource bound and demonstrates the relevant downstream write or output.",
+          "refuted": "All declared cases satisfy the resource policy, with accepted in-budget and rejected over-budget controls.",
+          "inconclusive": "The storage policy, downstream effect, unit configuration or required execution is unavailable."
+        },
+        "required_controls": [
+          "ASCII limit minus one, equal and plus one",
+          "Multibyte codepoints and bounded combining sequences",
+          "Independent downstream byte constraint",
+          "Literal versus atomic expression paths"
+        ]
+      },
+      "uncertainty": [
+        "A grapheme count is not a byte bound. The local SAST diagnostic analogy is a source-review follow-up, not a demonstrated denial of service."
+      ]
+    },
+    {
+      "cve_id": "CVE-2026-82728",
+      "aliases": [
+        "GHSA-g83f-2j6r-q6m4"
+      ],
+      "title": "Every incremental parser state has a buffer budget",
+      "repository": "https://github.com/elixir-mint/mint",
+      "sources": [
+        {
+          "kind": "cna_advisory",
+          "url": "https://cna.erlef.org/cves/CVE-2026-82728.html"
+        },
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/elixir-mint/mint/security/advisories/GHSA-g83f-2j6r-q6m4"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://cna.erlef.org/cves/CVE-2026-82728.json",
+          "sha256": "86642631f9826173e4666027a98fdec9351b2e44cb944747fe7ee138f1e0de72"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "elixir-mint",
+          "product": "mint",
+          "packageName": "mint",
+          "packageURL": "pkg:hex/mint",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "1.10.0",
+              "status": "affected",
+              "version": "0.1.0",
+              "versionType": "semver"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "19be5558b6a317e271c78666498dd78b151e490a",
+        "candidate_pre_fix": "d996244f432ef67fe7556b277da0d697f06e840d",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/elixir-mint/mint/commit/19be5558b6a317e271c78666498dd78b151e490a",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "A Mint HTTP/1 client consumes an untrusted response with an incomplete status line or chunk metadata.",
+      "patch_observation": "The patch applies the configured response-line size check before retaining additional incomplete status/chunk metadata.",
+      "static_facts_to_localize": [
+        "Mint package ownership and HTTP/1 option provenance",
+        "Parser state transitions, concatenation and retained-buffer writes"
+      ],
+      "proposed_contract": {
+        "id": "incremental-buffer-budget/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "havoc",
+        "invariant": "Every incomplete parser state rejects input beyond its declared retained-byte budget, regardless of transport segmentation.",
+        "bounded_experiment": "A host-owned response driver delivers the same bounded byte stream under several chunk partitions and inspects parser acceptance, retained bytes and cleanup.",
+        "required_budget": "Cap input bytes, chunk count, driver processes and scenario duration. Enforce a buffer bound independently of elapsed-time limits.",
+        "completed_domain_results": {
+          "confirmed": "A completed scenario retains more bytes than the declared state budget under the stated configuration.",
+          "refuted": "All declared partitions respect the state budget, including valid and exact-boundary controls.",
+          "inconclusive": "Retained state cannot be measured or a harness failure prevents observing the boundary."
+        },
+        "required_controls": [
+          "Complete valid line",
+          "Incomplete status and chunk-extension states",
+          "Limit minus one, equal and plus one",
+          "One chunk versus many chunks"
+        ]
+      },
+      "uncertainty": [
+        "This fix does not establish a bound on numeric parse work; preserve the separate CVE-2026-82729 contract."
+      ]
+    },
+    {
+      "cve_id": "CVE-2026-82729",
+      "aliases": [
+        "GHSA-7p8w-j234-7qc8"
+      ],
+      "title": "Numeric parsing bounds work before conversion",
+      "repository": "https://github.com/elixir-mint/mint",
+      "sources": [
+        {
+          "kind": "cna_advisory",
+          "url": "https://cna.erlef.org/cves/CVE-2026-82729.html"
+        },
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/elixir-mint/mint/security/advisories/GHSA-7p8w-j234-7qc8"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://cna.erlef.org/cves/CVE-2026-82729.json",
+          "sha256": "3eaeb4f9e46c7fc916a4a0eed58aadf6bc529b3a831abcb34cf528fe029b1aaa"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "elixir-mint",
+          "product": "mint",
+          "packageName": "mint",
+          "packageURL": "pkg:hex/mint",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "1.10.0",
+              "status": "affected",
+              "version": "1.9.3",
+              "versionType": "semver"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "bd2a4e7513594997c140cfef9fe0e968712fb588",
+        "candidate_pre_fix": "19be5558b6a317e271c78666498dd78b151e490a",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/elixir-mint/mint/commit/bd2a4e7513594997c140cfef9fe0e968712fb588",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "A Mint HTTP/1 client parses a chunk-size digit sequence supplied by a remote peer.",
+      "patch_observation": "The parser rejects an additional hexadecimal digit after sixteen digits, bounding the integer accumulator.",
+      "static_facts_to_localize": [
+        "Numeric-fold recursion and incremental parser re-entry",
+        "Digit-count guards and package/version provenance"
+      ],
+      "proposed_contract": {
+        "id": "numeric-parser-work-budget/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "havoc",
+        "invariant": "Numeric fields are bounded before arbitrary-precision conversion, and fragmented delivery stays within a declared work budget.",
+        "bounded_experiment": "Generate bounded numeric fields around the accepted digit limit and replay bounded partitions. Check rejection independently of parser output; record work counters where available.",
+        "required_budget": "Cap digits, total bytes, partitions, cases and reductions or elapsed time. Timing observations alone do not prove asymptotic complexity.",
+        "completed_domain_results": {
+          "confirmed": "A completed execution violates the declared digit or measured-work contract under an independently calibrated oracle.",
+          "refuted": "The declared case set respects the digit/work budgets with valid numeric controls.",
+          "inconclusive": "Instrumentation cannot distinguish target work from harness noise, or execution does not complete with usable evidence."
+        },
+        "required_controls": [
+          "Largest allowed digit count and one extra digit",
+          "Valid small chunks",
+          "Complete versus fragmented field",
+          "Bounded leading-zero variants"
+        ]
+      },
+      "uncertainty": [
+        "The selected first parent is exactly the CVE-2026-82728 buffer fix. Preserve this ordering so the CPU contract is evaluated independently."
+      ]
+    },
+    {
+      "cve_id": "CVE-2026-69664",
+      "aliases": [
+        "GHSA-mr35-8h7w-w3gq"
+      ],
+      "title": "Malformed input releases workers across segmentation",
+      "repository": "https://github.com/erlang/otp",
+      "sources": [
+        {
+          "kind": "cna_advisory",
+          "url": "https://cna.erlef.org/cves/CVE-2026-69664.html"
+        },
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/erlang/otp/security/advisories/GHSA-mr35-8h7w-w3gq"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://cna.erlef.org/cves/CVE-2026-69664.json",
+          "sha256": "f309708caf78f94530f9942e1601cf467f31d81b1016ee0bddf020e2e071e4de"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "Erlang",
+          "product": "OTP",
+          "packageName": "otp",
+          "packageURL": "pkg:software-id/erlang.org/otp",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "27.3.4.17",
+              "status": "affected",
+              "version": "18.1.4",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "28.5.0.6",
+              "status": "affected",
+              "version": "28.0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "29.0.6",
+              "status": "affected",
+              "version": "29.0",
+              "versionType": "otp"
+            }
+          ]
+        },
+        {
+          "vendor": "Erlang",
+          "product": "OTP",
+          "packageName": "inets",
+          "packageURL": "pkg:otp/inets",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "9.3.2.7",
+              "status": "affected",
+              "version": "6.0.3",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "9.6.2.3",
+              "status": "affected",
+              "version": "9.4",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "9.7.2",
+              "status": "affected",
+              "version": "9.7",
+              "versionType": "otp"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "a3adf63078438c86527d704e23282b7721d8ca12",
+        "candidate_pre_fix": "e9f49f57cef6e38fd13c4b0cee1eb5509ef471e8",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/erlang/otp/commit/a3adf63078438c86527d704e23282b7721d8ca12",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "The OTP inets httpd service accepts chunked request bodies; malformed chunk data reaches the continuation path after headers.",
+      "patch_observation": "The request continuation changes from a bare catch to structured exception handling that stops the request worker on a chunk decoding error.",
+      "static_facts_to_localize": [
+        "inets ownership and exact component/runtime version",
+        "Continuation callbacks, timer cancellation and termination paths"
+      ],
+      "proposed_contract": {
+        "id": "segmentation-cleanup-equivalence/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "havoc",
+        "invariant": "Equivalent malformed requests terminate their request workers and release associated resources within a declared cleanup interval under every declared partition.",
+        "bounded_experiment": "In a disposable local httpd fixture, establish baseline workers, deliver bounded malformed requests with controlled segmentation, and inspect worker lifecycle and connection cleanup.",
+        "required_budget": "Cap connections, input bytes, partitions and worker count; use separate execution and cleanup deadlines plus external process termination.",
+        "completed_domain_results": {
+          "confirmed": "A completed lifecycle observation shows a request worker surviving beyond the declared cleanup contract with attributable request state.",
+          "refuted": "All declared partitions release their workers and resources, while a valid request control succeeds.",
+          "inconclusive": "Worker attribution or delivery partitioning is unobserved, or cleanup observation is interrupted."
+        },
+        "required_controls": [
+          "Headers and body together",
+          "Body arriving after headers",
+          "Valid chunked request",
+          "Peer disconnect and ordinary request timeout"
+        ]
+      },
+      "uncertainty": [
+        "A harness timeout alone does not prove a worker leak. A pure reduced contract is a separate evidence level from executing the OTP service."
+      ]
+    },
+    {
+      "cve_id": "CVE-2026-66835",
+      "aliases": [
+        "GHSA-r4vv-vc2c-2fw6"
+      ],
+      "title": "Equivalent resource names retain authorization",
+      "repository": "https://github.com/erlang/otp",
+      "sources": [
+        {
+          "kind": "cna_advisory",
+          "url": "https://cna.erlef.org/cves/CVE-2026-66835.html"
+        },
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/erlang/otp/security/advisories/GHSA-r4vv-vc2c-2fw6"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://cna.erlef.org/cves/CVE-2026-66835.json",
+          "sha256": "6f3042b278361d4a32d3dae446dd499139f504ef52f3d58a2a6fc959aa1fb74c"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "Erlang",
+          "product": "OTP",
+          "packageName": "otp",
+          "packageURL": "pkg:software-id/erlang.org/otp",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "17.0",
+              "status": "unknown",
+              "version": "0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "27.3.4.17",
+              "status": "affected",
+              "version": "17.0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "28.5.0.6",
+              "status": "affected",
+              "version": "28.0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "29.0.6",
+              "status": "affected",
+              "version": "29.0",
+              "versionType": "otp"
+            }
+          ]
+        },
+        {
+          "vendor": "Erlang",
+          "product": "OTP",
+          "packageName": "inets",
+          "packageURL": "pkg:otp/inets",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "5.10",
+              "status": "unknown",
+              "version": "0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "9.3.2.7",
+              "status": "affected",
+              "version": "5.10",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "9.6.2.3",
+              "status": "affected",
+              "version": "9.4",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "9.7.2",
+              "status": "affected",
+              "version": "9.7",
+              "versionType": "otp"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "bac19eb3dbd96cc49b6d8cabc1c04248bf8c79f6",
+        "candidate_pre_fix": "e9f49f57cef6e38fd13c4b0cee1eb5509ef471e8",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/erlang/otp/commit/bac19eb3dbd96cc49b6d8cabc1c04248bf8c79f6",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "An inets httpd installation uses mod_auth to protect a directory whose files remain reachable through an alternate path spelling.",
+      "patch_observation": "The patch collapses repeated path slashes before authorization/file resolution and adjusts directory matching.",
+      "static_facts_to_localize": [
+        "httpd mod_auth configuration and module ownership",
+        "Path normalization, alias resolution and authorization call candidates"
+      ],
+      "proposed_contract": {
+        "id": "canonical-resource-authorization/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "havoc",
+        "invariant": "Two requests independently shown to address the same protected resource must retain the same authorization requirement.",
+        "bounded_experiment": "Create a local protected canary file, prove resource identity with an authorized control, and compare unauthenticated requests across host-approved equivalent path spellings.",
+        "required_budget": "Cap local requests and path bytes; use a temporary fixture root, explicit canary identity, connection deadlines and deterministic teardown.",
+        "completed_domain_results": {
+          "confirmed": "An unauthenticated variant returns the protected canary while the canonical unauthenticated control is denied.",
+          "refuted": "All declared equivalent variants preserve the authorization requirement and authorized controls reach the canary.",
+          "inconclusive": "Resource equivalence, protected-directory configuration or response identity cannot be established."
+        },
+        "required_controls": [
+          "Authorized canonical path",
+          "Denied unauthenticated canonical path",
+          "Repeated path separators",
+          "Non-equivalent path kept outside the equivalence class"
+        ]
+      },
+      "uncertainty": [
+        "Do not assume encoded slashes, case changes or dot segments identify the same resource on every platform. The native filesystem semantics are part of the fixture."
+      ]
+    },
+    {
+      "cve_id": "CVE-2026-64941",
+      "aliases": [
+        "GHSA-36m4-rm57-3prf"
+      ],
+      "title": "Destination policy matches the consuming parser",
+      "repository": "https://github.com/phoenixframework/phoenix_live_view",
+      "sources": [
+        {
+          "kind": "cna_advisory",
+          "url": "https://cna.erlef.org/cves/CVE-2026-64941.html"
+        },
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/phoenixframework/phoenix_live_view/security/advisories/GHSA-36m4-rm57-3prf"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://cna.erlef.org/cves/CVE-2026-64941.json",
+          "sha256": "4a7d0b26581fcbcd5461111d91458e77a3df1230568f5b5f9c1fbeac05118f50"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "phoenixframework",
+          "product": "phoenix_live_view",
+          "packageName": "phoenix_live_view",
+          "packageURL": "pkg:hex/phoenix_live_view",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "1.0.19",
+              "status": "affected",
+              "version": "0.5.0",
+              "versionType": "semver"
+            },
+            {
+              "lessThan": "1.1.33",
+              "status": "affected",
+              "version": "1.1.0-rc.0",
+              "versionType": "semver"
+            },
+            {
+              "lessThan": "1.2.9",
+              "status": "affected",
+              "version": "1.2.0-rc.0",
+              "versionType": "semver"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "2068b304d71907064b159b6bc60c5ad85a876ecf",
+        "candidate_pre_fix": "491ed7234dff2043c942ba9f143e082d2d614bfe",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/phoenixframework/phoenix_live_view/commit/2068b304d71907064b159b6bc60c5ad85a876ecf",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "Caller-controlled text reaches LiveView redirect/2 as a local destination and the browser consumes the LiveView redirect message.",
+      "patch_observation": "The local URL rejection list gains control-character and tab-related forms that affect browser URL interpretation.",
+      "static_facts_to_localize": [
+        "LiveView redirect/2 ownership and package version",
+        "Destination construction and local-policy guard candidates"
+      ],
+      "proposed_contract": {
+        "id": "consumer-normalized-destination/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "havoc",
+        "invariant": "Every accepted local redirect remains within the declared destination policy after the actual consumer resolves it.",
+        "bounded_experiment": "A host-owned LiveView fixture captures the redirect message and a reviewed browser/WHATWG-compatible consumer resolves it against a fixed origin; compare the resolved destination with an independent origin policy.",
+        "required_budget": "Cap destination bytes, cases, browser processes and navigation time; record destination resolution without visiting external hosts.",
+        "completed_domain_results": {
+          "confirmed": "An accepted local redirect resolves outside the declared origin policy under the specified consumer.",
+          "refuted": "All declared cases remain within policy, with valid local and ordinary rejected external controls.",
+          "inconclusive": "The actual consumer semantics or redirect route is unavailable, or the fixture substitutes an unverified URL parser."
+        },
+        "required_controls": [
+          "Valid local redirect",
+          "Ordinary external destination",
+          "Bounded tab, CR and LF forms",
+          "Each redirect API classified separately"
+        ]
+      },
+      "uncertainty": [
+        "The GitHub affected-version table includes 1.0.19 while also listing it as patched; the EEF structured record uses lessThan 1.0.19. Preserve the discrepancy and prefer exact revisions for future fixtures.",
+        "The advisory details distinguish redirect/2 from push_navigate, push_patch and push_redirect. Do not transfer the external-navigation claim to every API sharing a helper.",
+        "Elixir URI.parse alone is not a browser-semantics oracle."
+      ]
+    },
+    {
+      "cve_id": "CVE-2025-32433",
+      "aliases": [
+        "GHSA-37cp-fgq5-7wc2"
+      ],
+      "title": "Effects require the authenticated protocol state",
+      "repository": "https://github.com/erlang/otp",
+      "sources": [
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/erlang/otp/security/advisories/GHSA-37cp-fgq5-7wc2"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/2025/32xxx/CVE-2025-32433.json",
+          "sha256": "f56d1a7360da99ab5414e51904c3a5c01fbc2bde301ad0724ef9a718af5165ba"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "erlang",
+          "product": "otp",
+          "versions": [
+            {
+              "version": ">= OTP-27.0-rc1, < OTP-27.3.3",
+              "status": "affected"
+            },
+            {
+              "version": ">= OTP-26.0-rc1, < OTP-26.2.5.11",
+              "status": "affected"
+            },
+            {
+              "version": "< OTP-25.3.2.20",
+              "status": "affected"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "0fcd9c56524b28615e8ece65fc0c3f66ef6e4c12",
+        "candidate_pre_fix": "6cbc096a58ace1904a42944be1b6e89c4f59cc18",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/erlang/otp/commit/0fcd9c56524b28615e8ece65fc0c3f66ef6e4c12",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "An OTP SSH server accepts a protocol sequence before authentication and exposes connection-layer operations.",
+      "patch_observation": "The connection handler rejects server-side connection messages while the authenticated flag is false.",
+      "static_facts_to_localize": [
+        "SSH server configuration and package/runtime ownership",
+        "Protocol handlers, state guards and effect callback candidates"
+      ],
+      "proposed_contract": {
+        "id": "authentication-state-gating/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "havoc",
+        "invariant": "Connection-layer effects cannot occur before authentication, including when messages arrive in an unexpected order.",
+        "bounded_experiment": "Use bounded StreamData event lists and a host-owned disposable SSH fixture with a harmless callback counter. Inspect effects before and after an explicit authentication transition.",
+        "required_budget": "Cap event count, encoded bytes, connections and execution time; prohibit arbitrary target command callbacks in the fixture.",
+        "completed_domain_results": {
+          "confirmed": "A completed unauthenticated sequence invokes the protected harmless callback.",
+          "refuted": "All declared unauthenticated sequences produce no protected effect and the authenticated positive control invokes the callback.",
+          "inconclusive": "Authentication state, callback attribution or sequence delivery is not observable."
+        },
+        "required_controls": [
+          "Authenticated permitted operation",
+          "Unauthenticated connection operation",
+          "Unexpected ordering and repeats",
+          "Disconnect before authentication"
+        ]
+      },
+      "uncertainty": [
+        "Generate scenarios on StreamData; do not introduce a replacement state-machine or shrinking engine. The full SSH service requires an external fixture, not Core-owned protocol types."
+      ]
+    },
+    {
+      "cve_id": "CVE-2026-75538",
+      "aliases": [
+        "GHSA-8m6r-2pj2-25pm"
+      ],
+      "title": "Native length arithmetic rejects unrepresentable totals",
+      "repository": "https://github.com/erlang/otp",
+      "sources": [
+        {
+          "kind": "cna_advisory",
+          "url": "https://cna.erlef.org/cves/CVE-2026-75538.html"
+        },
+        {
+          "kind": "maintainer_advisory",
+          "url": "https://github.com/erlang/otp/security/advisories/GHSA-8m6r-2pj2-25pm"
+        },
+        {
+          "kind": "canonical_cve_json",
+          "url": "https://cna.erlef.org/cves/CVE-2026-75538.json",
+          "sha256": "31103615362a27dbf971d63bd26004fab1fd9016eaefe601e60f1fea1fe0044e"
+        }
+      ],
+      "affected_version_metadata": [
+        {
+          "vendor": "Erlang",
+          "product": "OTP",
+          "packageName": "otp",
+          "packageURL": "pkg:software-id/erlang.org/otp",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "17.0",
+              "status": "unknown",
+              "version": "0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "27.3.4.17",
+              "status": "affected",
+              "version": "17.0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "28.5.0.6",
+              "status": "affected",
+              "version": "28.0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "29.0.6",
+              "status": "affected",
+              "version": "29.0",
+              "versionType": "otp"
+            }
+          ]
+        },
+        {
+          "vendor": "Erlang",
+          "product": "OTP",
+          "packageName": "erts",
+          "packageURL": "pkg:otp/erts",
+          "defaultStatus": "unaffected",
+          "versions": [
+            {
+              "lessThan": "6.0",
+              "status": "unknown",
+              "version": "0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "15.2.7.13",
+              "status": "affected",
+              "version": "6.0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "16.4.0.6",
+              "status": "affected",
+              "version": "16.0",
+              "versionType": "otp"
+            },
+            {
+              "lessThan": "17.0.6",
+              "status": "affected",
+              "version": "17.0",
+              "versionType": "otp"
+            }
+          ]
+        }
+      ],
+      "revision_pair": {
+        "fix": "08e8efdba8500d2d6f54c6b1de1492b228017c9b",
+        "candidate_pre_fix": "c388a2d1b3f9918652276d4798692dd4d8ef97fc",
+        "relationship": "verified_first_parent",
+        "fix_url": "https://github.com/erlang/otp/commit/08e8efdba8500d2d6f54c6b1de1492b228017c9b",
+        "execution_status": "not_executed"
+      },
+      "evidence": {
+        "level": "advisory_and_patch_review",
+        "upstream_static_scan": "not_run",
+        "reduced_contract": "not_implemented",
+        "full_package_execution": "not_run",
+        "retained_execution_artifacts": []
+      },
+      "prerequisite": "A TCP socket uses the inet driver with packet mode 4 and processes lengths that reach signed native buffer arithmetic.",
+      "patch_observation": "Native packet and buffer code checks representable limits before length addition.",
+      "static_facts_to_localize": [
+        "Literal packet-mode options where available",
+        "ERTS version provenance and the native boundary associated with socket calls"
+      ],
+      "proposed_contract": {
+        "id": "native-length-arithmetic/v1",
+        "status": "proposed",
+        "registered_action_id": null,
+        "implementation_owner": "external_disposable_runtime_fixture",
+        "invariant": "Length headers and accumulated buffer sizes are rejected before native arithmetic overflow or allocation beyond the host budget.",
+        "bounded_experiment": "First model bounded integer boundaries with an independent arithmetic oracle. Any later native reproduction requires a disposable process and explicit OS memory/process/time limits; label model evidence separately.",
+        "required_budget": "Never allocate payloads near the native integer limit in an in-process Rampart run. Native execution remains blocked on a reviewed externally bounded fixture.",
+        "completed_domain_results": {
+          "confirmed": "A completed model case violates the model invariant, or an isolated native case produces an attributable failure; these must be different claim scopes.",
+          "refuted": "All declared boundary cases satisfy the particular model or native contract; neither scope establishes universal runtime safety.",
+          "inconclusive": "Native isolation, version provenance or attribution is unavailable; a model-only result cannot resolve the native claim."
+        },
+        "required_controls": [
+          "Representable header plus payload length",
+          "First unrepresentable sum in the arithmetic model",
+          "Configured packet-size rejection",
+          "Ordinary small valid native packet, if later authorized"
+        ]
+      },
+      "uncertainty": [
+        "The patched C sources are outside the current Elixir/Erlang SAST parser.",
+        "The advisory establishes a VM-crash concern; do not label this a demonstrated RCE capability."
+      ]
+    }
+  ]
+}

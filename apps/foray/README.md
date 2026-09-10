@@ -22,6 +22,14 @@ request-level concurrency.
 - Pluggable fuzz engines and synchronous audit/result hooks
 - Versioned Foray finding persistence
 
+## Output limits
+
+The NDJSON parser caps every raw line at 1,048,576 bytes before trimming or
+decoding, including complete lines and direct `Foray.NDJSON.parse_line/1`
+calls. LF is excluded from the count; CR is included. Output errors retain a
+copied preview of at most 1,024 bytes. Invalid or oversized output cannot
+establish a completed negative validation result.
+
 ## Installation
 
 ```elixir

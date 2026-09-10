@@ -153,10 +153,10 @@ jobs:
       matrix:
         include:
           - profile: otp-28-elixir-1.20
-            otp: 28.3.1
+            otp: 28.5.0.6
             elixir: 1.20.2-otp-28
           - profile: otp-29-elixir-1.20
-            otp: 29.0.2
+            otp: 29.0.6
             elixir: 1.20.2-otp-29
 
     steps:

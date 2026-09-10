@@ -1,12 +1,27 @@
+Code.require_file("../runtime.exs", __DIR__)
+
 defmodule Integration.Assertions do
   @moduledoc false
   import ExUnit.Assertions
 
   def finish(details \\ %{}) do
+    runtime = runtime()
+
     File.write!(
       System.fetch_env!("RAMPART_GATE_REPORT"),
-      JSON.encode!(Map.put(details, :status, "passed"))
+      details
+      |> Map.update(:runtime, runtime, &Map.merge(&1, runtime))
+      |> Map.put(:status, "passed")
+      |> JSON.encode!()
     )
+  end
+
+  defp runtime do
+    Map.merge(RampartEvaluation.Runtime.provenance(), %{
+      elixir: System.version(),
+      otp: System.otp_release(),
+      erts: to_string(:erlang.system_info(:version))
+    })
   end
 
   def isolated! do

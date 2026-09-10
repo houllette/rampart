@@ -5,6 +5,7 @@ defmodule Portico.Enrichment.Nmap do
 
   alias Portico.Discovery.Result
   alias Portico.{Host, NmapXML, Timeout}
+  alias Portico.NmapXML.Limits
 
   @impl true
   def option_schema do
@@ -13,6 +14,7 @@ defmodule Portico.Enrichment.Nmap do
       runner: [type: :atom, default: Core.Runner.backend()],
       runner_options: [type: :keyword_list, default: []],
       timeout: [type: :pos_integer, default: 120_000],
+      xml_limits: [type: :keyword_list, keys: Limits.schema(), default: []],
       scan_type: [type: {:in, [:auto, :connect, :syn, :udp]}, default: :auto],
       service_detection: [type: :boolean, default: true],
       version_intensity: [type: {:in, 0..9}, default: 7],
@@ -112,6 +114,7 @@ defmodule Portico.Enrichment.Nmap do
     runner_opts =
       Keyword.merge(opts[:runner_options],
         stderr: :consume,
+        ignore_epipe: true,
         max_chunk_size: opts[:max_chunk_size],
         exit_timeout: opts[:exit_timeout]
       )
@@ -120,7 +123,7 @@ defmodule Portico.Enrichment.Nmap do
     |> command(opts)
     |> Core.Runner.stream(Keyword.put(runner_opts, :backend, opts[:runner]))
     |> Stream.transform(nil, &stdout_chunk/2)
-    |> NmapXML.parse_stream(scanned_at: started_at)
+    |> NmapXML.parse_stream(scanned_at: started_at, limits: opts[:xml_limits])
   end
 
   defp stdout_chunk({:stdout, chunk}, state), do: {[IO.iodata_to_binary(chunk)], state}

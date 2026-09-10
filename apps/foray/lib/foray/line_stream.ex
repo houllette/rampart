@@ -1,7 +1,5 @@
-defmodule Portico.Discovery.LineStream do
+defmodule Foray.LineStream do
   @moduledoc false
-
-  alias Portico.Engine.OutputError
 
   @max_line_bytes 1_048_576
   @chunk_bytes 16_384
@@ -95,6 +93,5 @@ defmodule Portico.Discovery.LineStream do
     end
   end
 
-  defp output_error(line),
-    do: OutputError.exception(engine: :unknown, line: line, reason: :line_too_long)
+  defp output_error(line), do: Foray.OutputError.exception(line: line, reason: :line_too_long)
 end

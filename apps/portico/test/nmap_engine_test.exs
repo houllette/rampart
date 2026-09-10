@@ -69,6 +69,52 @@ defmodule Portico.NmapEngineTest do
     assert List.last(command) == "192.0.2.10"
   end
 
+  test "XML budget errors survive the engine boundary without aligning partial hosts" do
+    xml = "<nmaprun><host/><host/></nmaprun>"
+    entry = %Result{ip: "192.0.2.10", ports: [443]}
+
+    assert {:error, {:xml_parse_error, {:xml_limit, :max_hosts, 1}}} =
+             Nmap.enrich([entry],
+               runner: Portico.TestNmapRunner,
+               runner_options: [chunks: [xml]],
+               xml_limits: [max_hosts: 1]
+             )
+  end
+
+  @tag :requires_native_process
+  @tag :tmp_dir
+  test "native limit cleanup retains its cause and normal nonzero completion remains an error", %{
+    tmp_dir: tmp_dir
+  } do
+    executable = Path.join(tmp_dir, "nmap")
+
+    File.write!(executable, """
+    #!/bin/sh
+    echo $$ > "$(dirname "$0")/pid"
+    printf '<nmaprun><host/><host/>'
+    exec sleep 30
+    """)
+
+    File.chmod!(executable, 0o755)
+    entry = %Result{ip: "192.0.2.10", ports: [443]}
+
+    assert {:error, {:xml_parse_error, {:xml_limit, :max_hosts, 1}}} =
+             Nmap.enrich([entry],
+               executable: executable,
+               exit_timeout: 200,
+               xml_limits: [max_hosts: 1]
+             )
+
+    pid = tmp_dir |> Path.join("pid") |> File.read!() |> String.trim()
+    {_output, status} = System.cmd("kill", ["-0", pid], stderr_to_stdout: true)
+    assert status != 0
+
+    File.write!(executable, "#!/bin/sh\nprintf '<nmaprun><host/></nmaprun>'\nexit 7\n")
+
+    assert {:error, {:runner_exit, reason}} = Nmap.enrich([entry], executable: executable)
+    assert inspect(reason) =~ "7"
+  end
+
   test "returns a typed timeout host and kills the owner task" do
     entry = %Result{ip: "192.0.2.20", ports: [80]}
 

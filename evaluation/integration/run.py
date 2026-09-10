@@ -225,7 +225,7 @@ def main():
               "lock_sha256": sha256(ROOT / "mix.lock")}
     paths = subprocess.check_output(["git", "ls-files", "-co", "--exclude-standard", "-z"], cwd=ROOT).decode().split("\0")
     source_hashes = {name: sha256(ROOT / name) for name in sorted(set(paths)) if name and (ROOT / name).is_file()
-                     and (name.startswith(("apps/", "evaluation/integration/", "examples/")) or name in ("mix.exs", "mix.lock"))}
+                     and (name.startswith(("apps/", "evaluation/integration/", "examples/")) or name in ("mix.exs", "mix.lock", "evaluation/runtime.exs"))}
     report["source_snapshot_sha256"] = hashlib.sha256(json.dumps(source_hashes, sort_keys=True).encode()).hexdigest()
     try:
         gate.build()

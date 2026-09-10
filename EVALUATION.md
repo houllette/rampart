@@ -6,6 +6,13 @@ turn noisy static reconnaissance into a bounded, replayable deterministic
 validation without collapsing syntax, reachability, and exploitability into one
 score.
 
+The [CVE capability catalog](evaluation/CVE_CAPABILITY_CATALOG.md) maps eight
+additional reviewed advisories to proposed deterministic contracts, with
+machine-readable provenance and explicit evidence status. The
+[resource-limit inventory](RESOURCE_LIMITS.md) distinguishes current controls
+from remaining implementation work. Neither document adds executed cases or
+changes the gate's coverage count.
+
 Run the current gate with:
 
 ```sh
@@ -17,7 +24,8 @@ mix rampart.eval.compare report-otp-28.json report-otp-29.json
 
 `mix precommit` runs the human-readable gate. JSON reports use a versioned,
 string-keyed projection and include the exact OTP, ERTS, Elixir, architecture,
-and scheduler manifest. They are suitable for retaining benchmark history in
+and scheduler manifest. New reports also record the full installed OTP version
+and inets/SSH component versions; unavailable metadata stays null. They are suitable for retaining benchmark history in
 CI. Timing budgets are deliberately broad enough for shared runners; semantic
 and fail-closed checks remain strict.
 
@@ -196,8 +204,8 @@ measurements can be trended rather than inferred from one local run. The atom
 delta from the trusted in-process fixture is observational; the security gate for
 untrusted source is the disposable worker test described below.
 
-CI runs the full evaluation with OTP 28.3.1/Elixir 1.20.2-otp-28 and OTP
-29.0.2/Elixir 1.20.2-otp-29. `mix rampart.eval.compare` requires every report to
+CI runs the full evaluation with OTP 28.5.0.6/Elixir 1.20.2-otp-28 and OTP
+29.0.6/Elixir 1.20.2-otp-29. `mix rampart.eval.compare` requires every report to
 pass with zero false confirmations, verifies identical case IDs and check names,
 and rejects duplicate runtime identities. Latency, reductions, and memory remain
 per-runtime observations rather than equality gates. The comparison artifact

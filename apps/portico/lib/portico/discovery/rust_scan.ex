@@ -52,6 +52,7 @@ defmodule Portico.Discovery.RustScan do
     runner_opts =
       Keyword.merge(opts[:runner_options],
         stderr: :consume,
+        ignore_epipe: true,
         max_chunk_size: opts[:max_chunk_size],
         exit_timeout: opts[:exit_timeout]
       )
@@ -83,9 +84,11 @@ defmodule Portico.Discovery.RustScan do
   @spec parse_line(String.t(), Target.t() | nil) ::
           {:ok, Result.t()} | :ignore | {:error, Exception.t()}
   def parse_line(line, target \\ nil) when is_binary(line) do
-    case Regex.run(~r/^(.+?)\s*->\s*\[\s*([0-9,\s]*)\s*\]\s*$/, String.trim(line)) do
-      [_, ip, ports_string] -> parse_result(String.trim(ip), ports_string, line, target)
-      nil -> invalid_or_ignored(line)
+    with {:ok, line} <- LineStream.check_line(line) do
+      case Regex.run(~r/^(.+?)\s*->\s*\[\s*([0-9,\s]*)\s*\]\s*$/, String.trim(line)) do
+        [_, ip, ports_string] -> parse_result(String.trim(ip), ports_string, line, target)
+        nil -> invalid_or_ignored(line)
+      end
     end
   end
 

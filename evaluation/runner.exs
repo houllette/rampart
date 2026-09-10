@@ -1,3 +1,5 @@
+Code.require_file("runtime.exs", __DIR__)
+
 defmodule RampartEvaluation.Runner do
   @moduledoc false
 
@@ -83,7 +85,7 @@ defmodule RampartEvaluation.Runner do
         _unset -> "local"
       end
 
-    %{
+    Map.merge(RampartEvaluation.Runtime.provenance(), %{
       profile: profile,
       runtime_id: "otp-#{otp_release}-erts-#{erts_version}-elixir-#{elixir_version}",
       otp_release: otp_release,
@@ -91,7 +93,7 @@ defmodule RampartEvaluation.Runner do
       elixir_version: elixir_version,
       architecture: List.to_string(:erlang.system_info(:system_architecture)),
       schedulers_online: :erlang.system_info(:schedulers_online)
-    }
+    })
   end
 
   defp evaluate(%{kind: :exact_marker} = evaluation_case),

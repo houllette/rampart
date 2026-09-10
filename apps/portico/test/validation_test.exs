@@ -24,6 +24,25 @@ defmodule Portico.ValidationTest do
     end
   end
 
+  defmodule XMLRunner do
+    @behaviour Core.Runner
+    @impl true
+    def stream(_command, _opts), do: ["<nmaprun><host/><host/></nmaprun>"]
+    @impl true
+    def run(_command, _opts), do: {"", 0}
+  end
+
+  test "an XML limit is inconclusive even after a complete host was parsed" do
+    assert %Result{verdict: :inconclusive, findings: [], evidence: evidence} =
+             Portico.validate(candidate(),
+               scope: Allowlist.new!(["192.0.2.10"]),
+               engine: :nmap,
+               engine_options: [runner: XMLRunner, xml_limits: [max_hosts: 1]]
+             )
+
+    assert inspect(evidence.facts) =~ "max_hosts"
+  end
+
   test "advertises and confirms a narrowly scoped endpoint validation" do
     assert [%Core.Validation.Action{id: "portico.endpoint-reachable.v1"} = action] =
              Portico.validation_actions()
