@@ -2,7 +2,7 @@ defmodule Foray.Result do
   @moduledoc "Versioned JSON persistence for Foray-normalized findings."
 
   @schema_version 1
-  @locus_keys ~w(url method host param keyword input status length words lines content_type)
+  @locus_keys ~w(url method host param keyword input status length words lines content_type identity_version)a
   @categories ~w(exposed_path param_injection vhost matched_response)
   @severities ~w(info low medium high critical)
   @confidences ~w(low medium high)
@@ -119,7 +119,7 @@ defmodule Foray.Result do
   defp decode_origin(_origin), do: {:error, :invalid_origin}
 
   defp decode_locus(locus) when is_map(locus) do
-    unknown = Map.keys(locus) -- @locus_keys
+    unknown = Map.keys(locus) -- Enum.map(@locus_keys, &Atom.to_string/1)
 
     if unknown == [] do
       {:ok, Map.new(locus, fn {key, value} -> {String.to_existing_atom(key), value} end)}

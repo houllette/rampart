@@ -37,7 +37,8 @@ defmodule Foray.Pipeline do
         sink: sink,
         on_complete: on_complete,
         remaining: remaining,
-        completion: completion
+        completion: completion,
+        cancel_bridge: Keyword.get(opts, :cancel_bridge)
       },
       producer: producer_options(scan, jobs),
       processors: [
@@ -101,13 +102,12 @@ defmodule Foray.Pipeline do
     }
 
     try do
+      counter = :atomics.new(1, [])
+
       summary =
         Core.Telemetry.span(:foray, :job, metadata, fn ->
-          Core.Scope.ensure_authorized!(job.target, context.scan.scope)
-          Audit.emit(context.scan.audit, :job_launch, metadata)
-          Core.Telemetry.launch(:foray, job.target.url)
-          {outcome, finding_count} = consume_findings(job, context)
-          summary = %{job_id: job.id, outcome: outcome, finding_count: finding_count}
+          outcome = execute_job(job, context, metadata, counter)
+          summary = %{job_id: job.id, outcome: outcome, finding_count: :atomics.get(counter, 1)}
           {summary, Map.merge(metadata, summary)}
         end)
 
@@ -119,7 +119,33 @@ defmodule Foray.Pipeline do
     end
   end
 
-  defp consume_findings(job, context) do
+  defp execute_job(job, context, metadata, counter) do
+    result =
+      Foray.JobExecution.run(
+        fn -> attempt_job(job, context, metadata, counter) end,
+        context.cancel_bridge,
+        {:ok, :cancelled}
+      )
+
+    case result do
+      {:ok, outcome} -> outcome
+      {:error, kind, reason, stacktrace} -> :erlang.raise(kind, reason, stacktrace)
+    end
+  end
+
+  defp attempt_job(job, context, metadata, counter) do
+    Core.Scope.ensure_authorized!(job.target, context.scan.scope)
+    Audit.emit(context.scan.audit, :job_launch, metadata)
+    Core.Telemetry.launch(:foray, job.target.url)
+    {outcome, _count} = consume_findings(job, context, counter)
+    {:ok, outcome}
+  rescue
+    exception -> {:error, :error, exception, __STACKTRACE__}
+  catch
+    kind, reason -> {:error, kind, reason, __STACKTRACE__}
+  end
+
+  defp consume_findings(job, context, counter) do
     engine = context.scan.engine.module
 
     job
@@ -130,6 +156,7 @@ defmodule Foray.Pipeline do
 
         case Sink.deliver(context.sink, finding) do
           :ok ->
+            :atomics.add(counter, 1, 1)
             Core.Telemetry.finding(:foray, finding)
             {:cont, {:ok, count + 1}}
 

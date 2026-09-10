@@ -77,6 +77,10 @@ materializes it lazily into a temporary, owner-lifetime corpus and removes the
 file when the job stream closes. When ffuf reports the matching payload, the
 original seed is attached to `%Core.Finding.seed`.
 
+Seed provenance is indexed once while preparing jobs. Duplicate values retain
+the first seed in a wordlist, and matching wordlists retain their plan order.
+An independent file owner removes materialized corpora even if a job is killed.
+
 ```elixir
 seeds = [
   %Core.Seed{
@@ -119,6 +123,16 @@ stable finding identity appears. A replayed matcher result proves that the HTTP
 observation reproduced; it does not upgrade an error signal into exploitability
 that the matcher did not establish. The result carries a concrete input-map
 seed. `Foray.validation_actions/0` exposes the machine-discoverable action.
+
+The built-in ffuf projection now uses identity version 2, recorded in
+`finding.locus.identity_version`. It hashes an unambiguous encoding of sorted
+input pairs; embedded NULs and `=` bytes cannot merge distinct observations.
+IDs intentionally change from the earlier delimiter encoding. Existing
+`Foray.Result` documents remain readable, but ffuf replay of a finding without
+version 2 returns `:inconclusive` with `:unsupported_identity_version` before
+launch. Re-observe under the authorized plan and retain the new finding; do not
+rewrite an old ID and assume its provenance is still unique. Versioned result
+persistence preserves the identity version and supports exact replay after load.
 
 ## Rate governance: two different controls
 
@@ -213,6 +227,13 @@ Processor concurrency is whole ffuf-process concurrency. Each processor runs
 one job and streams its findings synchronously; it never fans payloads into
 additional tasks. The producer implements `prepare_for_draining/1` and drops
 queued jobs while in-flight processes finish or reach their bounded `-maxtime`.
+
+The high-level `Foray.stream/1` additionally owns one cancellable task per whole
+job. Halting enumeration or losing the consumer allows 750 ms for stream
+finalizers, then stops blocked workers, including silent native reads. This
+cancellation grace is independent of ffuf's job duration. Custom engines should
+tie external resources to the executing process; process kills cannot run
+Elixir `after` blocks. Direct supervised pipelines retain graceful draining.
 
 ## Custom engines
 

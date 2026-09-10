@@ -8,6 +8,7 @@ defmodule Foray.JobBuilder do
   def build(%Scan{} = scan) do
     concurrency = effective_concurrency(scan)
     request_rate = div(scan.aggregate_rate, concurrency)
+    seed_index = Foray.Wordlist.index(scan.wordlists)
 
     scan.targets
     |> Enum.with_index(1)
@@ -21,6 +22,7 @@ defmodule Foray.JobBuilder do
         cookies: scan.cookies,
         fuzz_points: scan.fuzz_points,
         wordlists: scan.wordlists,
+        seed_index: seed_index,
         oracle: scan.oracle,
         mode: scan.mode,
         threads: scan.threads,

@@ -9,7 +9,7 @@ defmodule RampartSAST.Inventory do
   """
 
   alias RampartSAST.{AST, Behavior, Expression, Fact, Source, Span}
-  alias RampartSAST.Inventory.Page
+  alias RampartSAST.Inventory.{Index, Page}
 
   @elixir_control_forms [:case, :cond, :for, :if, :receive, :try, :unless, :with]
 
@@ -76,11 +76,12 @@ defmodule RampartSAST.Inventory do
           facts: [Fact.t()],
           diagnostics: [RampartSAST.Diagnostic.t()],
           source_count: non_neg_integer(),
-          module_owners: %{optional(String.t()) => String.t()}
+          module_owners: %{optional(String.t()) => String.t()},
+          index: map() | nil
         }
 
   @enforce_keys [:id, :facts, :diagnostics, :source_count, :module_owners]
-  defstruct @enforce_keys
+  defstruct @enforce_keys ++ [index: nil]
 
   @doc "Builds a deterministic inventory from already parsed source snapshots."
   @spec build([Source.t()], keyword()) :: t()
@@ -119,7 +120,8 @@ defmodule RampartSAST.Inventory do
       facts: facts,
       diagnostics: diagnostics,
       source_count: length(sources),
-      module_owners: module_owners
+      module_owners: module_owners,
+      index: Index.build(facts)
     }
   end
 
@@ -135,10 +137,9 @@ defmodule RampartSAST.Inventory do
     filters = validate_query_filters!(filters)
     limit = filters[:limit]
     offset = filters[:offset]
-    matches = Enum.filter(inventory.facts, &matches?(&1, filters))
-    facts = matches |> Enum.drop(offset) |> Enum.take(limit)
+    {facts, total} = inventory |> index() |> Index.page(filters, &matches?(&1, filters))
     returned = length(facts)
-    next_offset = if offset + returned < length(matches), do: offset + returned
+    next_offset = if offset + returned < total, do: offset + returned
 
     %Page{
       inventory_id: inventory.id,
@@ -146,28 +147,55 @@ defmodule RampartSAST.Inventory do
       offset: offset,
       limit: limit,
       returned: returned,
-      total: length(matches),
+      total: total,
       next_offset: next_offset
     }
   end
 
-  @doc "Returns all normalized remote calls to a module, optionally narrowed to a function."
+  @doc "Returns complete remote calls within one page; use calls_to_page/4 for larger answers."
   @spec calls_to(t(), module_name :: String.t(), function_name :: String.t() | nil) :: [Fact.t()]
   def calls_to(%__MODULE__{} = inventory, module_name, function_name \\ nil)
       when is_binary(module_name) and (is_binary(function_name) or is_nil(function_name)) do
-    inventory
-    |> query(kind: :call, object_prefix: module_name <> ".")
-    |> Enum.filter(fn fact ->
-      fact.attributes.target_module == module_name and
-        (is_nil(function_name) or fact.attributes.target_function == function_name)
-    end)
+    inventory |> calls_to_page(module_name, function_name) |> complete_page!(:calls_to_page)
+  end
+
+  @doc "Returns calls filtered by module and function before bounded pagination."
+  @spec calls_to_page(
+          inventory :: t(),
+          module_name :: String.t(),
+          function_name :: String.t() | nil,
+          options :: keyword()
+        ) :: Page.t()
+  def calls_to_page(inventory, module_name, function_name \\ nil, options \\ []) do
+    filters = Keyword.merge(options, kind: :call, target_module: module_name)
+
+    filters =
+      if function_name, do: Keyword.put(filters, :target_function, function_name), else: filters
+
+    query_page(inventory, filters)
   end
 
   @doc "Returns host-resolved references to one dependency package."
   @spec package_usage(t(), package :: String.t()) :: [Fact.t()]
   def package_usage(%__MODULE__{} = inventory, package) when is_binary(package) do
-    query(inventory, kind: :package_use, object: package)
+    inventory |> package_usage_page(package) |> complete_page!(:package_usage_page)
   end
+
+  @doc "Returns a bounded page of references to one dependency package."
+  @spec package_usage_page(inventory :: t(), package :: String.t(), options :: keyword()) ::
+          Page.t()
+  def package_usage_page(inventory, package, options \\ []),
+    do: query_page(inventory, Keyword.merge(options, kind: :package_use, object: package))
+
+  @doc false
+  @spec index(inventory :: t()) :: Index.t()
+  def index(%__MODULE__{index: nil, facts: facts}), do: Index.build(facts)
+  def index(%__MODULE__{index: index}), do: index
+
+  defp complete_page!(%Page{next_offset: nil, facts: facts}, _helper), do: facts
+
+  defp complete_page!(_page, helper),
+    do: raise(ArgumentError, "answer exceeds one page; use #{helper} to retrieve all facts")
 
   @doc "Projects the complete inventory into plain data for host-owned artifact storage."
   @spec to_map(t()) :: map()
@@ -1405,6 +1433,8 @@ defmodule RampartSAST.Inventory do
   defp matches?(fact, filters) do
     exact_match?(fact, filters, :kind) and exact_match?(fact, filters, :subject) and
       exact_match?(fact, filters, :relation) and exact_match?(fact, filters, :object) and
+      attribute_match?(fact, filters, :target_module) and
+      attribute_match?(fact, filters, :target_function) and
       file_match?(fact, filters[:file]) and prefix_match?(fact.subject, filters[:subject_prefix]) and
       prefix_match?(fact.object, filters[:object_prefix])
   end
@@ -1419,6 +1449,8 @@ defmodule RampartSAST.Inventory do
         :file,
         :subject_prefix,
         :object_prefix,
+        :target_module,
+        :target_function,
         limit: 100,
         offset: 0
       ])
@@ -1431,6 +1463,13 @@ defmodule RampartSAST.Inventory do
   defp exact_match?(fact, filters, key) do
     case Keyword.fetch(filters, key) do
       {:ok, expected} -> Map.fetch!(fact, key) == expected
+      :error -> true
+    end
+  end
+
+  defp attribute_match?(fact, filters, key) do
+    case Keyword.fetch(filters, key) do
+      {:ok, expected} -> Map.get(fact.attributes, key) == expected
       :error -> true
     end
   end

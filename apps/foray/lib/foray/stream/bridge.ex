@@ -26,12 +26,31 @@ defmodule Foray.Stream.Bridge do
   @spec watch(pid(), pid()) :: :ok
   def watch(bridge, pipeline), do: GenServer.cast(bridge, {:watch, pipeline})
 
+  @spec subscribe(bridge :: pid()) :: :ok | :stop
+  def subscribe(bridge) do
+    GenServer.call(bridge, {:subscribe, self()})
+  catch
+    :exit, {:noproc, _call} -> :stop
+    :exit, {:normal, _call} -> :stop
+    :exit, {:shutdown, _call} -> :stop
+    :exit, {:killed, _call} -> :stop
+  end
+
+  @spec unsubscribe(bridge :: pid()) :: :ok
+  def unsubscribe(bridge), do: GenServer.cast(bridge, {:unsubscribe, self()})
+
   @impl GenServer
   def init(:ok) do
-    {:ok, %{waiting: nil, pending: :queue.new(), terminal: nil, monitor: nil}}
+    {:ok, %{waiting: nil, pending: :queue.new(), terminal: nil, monitor: nil, subscribers: %{}}}
   end
 
   @impl GenServer
+  def handle_call({:subscribe, pid}, _from, %{terminal: nil} = state) do
+    {:reply, :ok, %{state | subscribers: Map.put(state.subscribers, pid, Process.monitor(pid))}}
+  end
+
+  def handle_call({:subscribe, _pid}, _from, state), do: {:reply, :stop, state}
+
   def handle_call({:deliver, _finding}, _from, %{terminal: terminal} = state)
       when not is_nil(terminal) do
     {:reply, :stop, state}
@@ -74,6 +93,12 @@ defmodule Foray.Stream.Bridge do
   end
 
   @impl GenServer
+  def handle_cast({:unsubscribe, pid}, state) do
+    {monitor, subscribers} = Map.pop(state.subscribers, pid)
+    if monitor, do: Process.demonitor(monitor, [:flush])
+    {:noreply, %{state | subscribers: subscribers}}
+  end
+
   def handle_cast(:complete, state), do: {:noreply, terminate_waiters(state, :done)}
 
   def handle_cast({:fail, reason}, state) do
@@ -96,6 +121,10 @@ defmodule Foray.Stream.Bridge do
     {:noreply, state}
   end
 
+  def handle_info({:DOWN, _monitor, :process, pid, _reason}, state) do
+    {:noreply, %{state | subscribers: Map.delete(state.subscribers, pid)}}
+  end
+
   defp terminate_waiters(%{terminal: terminal} = state, _new_terminal)
        when not is_nil(terminal),
        do: state
@@ -107,6 +136,7 @@ defmodule Foray.Stream.Bridge do
     end
 
     drain_deliveries(state.pending)
+    Enum.each(state.subscribers, fn {pid, _monitor} -> send(pid, {:foray_cancel, self()}) end)
     %{state | waiting: nil, pending: :queue.new(), terminal: terminal}
   end
 

@@ -334,6 +334,35 @@ defmodule RampartIAST.ValidationTest do
     assert evidence.facts.trace_envelope == :incomplete
   end
 
+  test "stops inspecting a sink flood after the event budget" do
+    result =
+      RampartIAST.validate(hypothesis(),
+        provider: TestProvider,
+        limits: Limits.new!(max_events: 1, max_mailbox_messages: 100_000),
+        execute: fn marker ->
+          Enum.each(1..5_000, fn _ -> TestSink.consume(marker) end)
+        end
+      )
+
+    assert result.verdict == :inconclusive
+    assert :event_limit in result.evidence.facts.limit_failures
+    assert result.evidence.facts.event_count == 2
+  end
+
+  test "rejects wide containers without expanding every child" do
+    result =
+      RampartIAST.validate(hypothesis(),
+        provider: TestProvider,
+        limits: Limits.new!(max_argument_terms: 4),
+        execute: fn marker ->
+          TestSink.consume(List.to_tuple([marker | List.duplicate(0, 100_000)]))
+        end
+      )
+
+    assert result.verdict == :inconclusive
+    assert :argument_terms in result.evidence.facts.limit_failures
+  end
+
   test "returns inconclusive when the declared sink cannot be traced" do
     hypothesis = put_in(hypothesis().locus.sink_id, "test.missing.v1")
 

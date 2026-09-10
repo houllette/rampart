@@ -161,5 +161,19 @@ Each invocation:
 - destroys the session after success, callback failure, timeout, limit failure,
   or caller death.
 
+On event, mailbox, or argument overflow, the collector stops detailed inspection
+and tells the owner to cancel the controlled execution. Event counts describe
+inspected events, including the first overflow event, rather than the entire
+discarded backlog. Tuple and map cursors enforce term/depth limits before
+computing an encoded size. Closures and non-byte-aligned bitstrings return
+`:unsupported_argument`; they cannot silently hide uninspected marker data.
+Size metadata on an incomplete argument describes the inspected prefix, not a
+complete encoded-size measurement.
+
+Trace messages can already contain copied arguments or queued events before
+the collector observes a limit. These controls bound retained evidence and
+subsequent inspection; they do not establish a hard VM memory ceiling or
+production safety. The sensor remains a gated research primitive.
+
 See [RESEARCH.md](RESEARCH.md) and the repository-level
 [`IAST_RESEARCH.md`](../../IAST_RESEARCH.md) for the remaining gates.

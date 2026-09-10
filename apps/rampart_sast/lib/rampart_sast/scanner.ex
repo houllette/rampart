@@ -165,7 +165,7 @@ defmodule RampartSAST.Scanner do
 
     jobs
     |> Task.async_stream(
-      &safe_run_rule(&1, sources, context, known_paths),
+      &safe_run_rule(&1, context, known_paths),
       max_concurrency: limits.max_concurrency,
       ordered: true,
       on_timeout: :kill_task,
@@ -193,11 +193,11 @@ defmodule RampartSAST.Scanner do
         Enum.map(sources, &{:source, rule, &1})
 
       %{descriptor: %{scope: :project}} = rule ->
-        [{:project, rule}]
+        [{:project, rule, sources}]
     end)
   end
 
-  defp safe_run_rule({:source, rule, source}, _sources, context, known_paths) do
+  defp safe_run_rule({:source, rule, source}, context, known_paths) do
     rule.module.run_source(source, context, rule.options)
     |> validate_matches(rule, known_paths, source.path)
   rescue
@@ -208,7 +208,7 @@ defmodule RampartSAST.Scanner do
        rule_failed_diagnostic(rule, source.path, "#{kind}: #{inspect(reason, limit: 20)}")}
   end
 
-  defp safe_run_rule({:project, rule}, sources, context, known_paths) do
+  defp safe_run_rule({:project, rule, sources}, context, known_paths) do
     rule.module.run_project(sources, context, rule.options)
     |> validate_matches(rule, known_paths, nil)
   rescue
@@ -380,7 +380,7 @@ defmodule RampartSAST.Scanner do
   end
 
   defp job_identity({:source, rule, source}), do: {rule, source.path}
-  defp job_identity({:project, rule}), do: {rule, nil}
+  defp job_identity({:project, rule, _sources}), do: {rule, nil}
 
   defp validate_entries!(entries) do
     unless Enum.all?(

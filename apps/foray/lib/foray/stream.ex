@@ -27,11 +27,12 @@ defmodule Foray.Stream do
              scan: scan,
              name: name,
              on_finding: &Bridge.deliver(bridge, &1),
+             cancel_bridge: bridge,
              on_complete: on_complete
            ) do
         {:ok, pipeline} ->
           Process.unlink(pipeline)
-          shutdown = scan.max_time * 1_000 + 10_000
+          shutdown = 5_000
           Bridge.watch(bridge, pipeline)
           watch_consumer(bridge, pipeline, name, shutdown)
 

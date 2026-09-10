@@ -2,8 +2,9 @@ defmodule Foray.Wordlist.Materializer do
   @moduledoc false
 
   alias Foray.{Job, Wordlist}
+  alias Foray.Wordlist.Lease
 
-  @spec materialize(Job.t()) :: {Job.t(), [Path.t()]}
+  @spec materialize(Job.t()) :: {Job.t(), [pid()]}
   def materialize(%Job{} = job) do
     if Enum.any?(job.wordlists, &match?(%Wordlist{source: {:seeds, _seeds}}, &1)) do
       materialize_seeds(job)
@@ -12,20 +13,12 @@ defmodule Foray.Wordlist.Materializer do
     end
   end
 
-  @spec cleanup([Path.t()]) :: :ok
-  def cleanup(paths) do
-    Enum.each(paths, fn path ->
-      case File.rm_rf(path) do
-        {:ok, _removed} -> :ok
-        {:error, reason, failed_path} -> raise File.Error, reason: reason, path: failed_path
-      end
-    end)
-  end
+  @spec cleanup(leases :: [pid()]) :: :ok
+  def cleanup(leases), do: Enum.each(leases, &Lease.release/1)
 
   defp materialize_seeds(job) do
     directory = temporary_directory()
-    File.mkdir!(directory)
-    File.chmod!(directory, 0o700)
+    {:ok, lease} = Lease.start(directory)
 
     try do
       {wordlists, _next_index} =
@@ -39,10 +32,10 @@ defmodule Foray.Wordlist.Materializer do
             {wordlist, index}
         end)
 
-      {%{job | wordlists: wordlists}, [directory]}
+      {%{job | wordlists: wordlists}, [lease]}
     rescue
       exception ->
-        cleanup([directory])
+        cleanup([lease])
         reraise exception, __STACKTRACE__
     end
   end

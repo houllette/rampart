@@ -60,6 +60,9 @@ consumer needs Rampart's proof/refutation contract.
 - OTP Cover is global and has no per-process coverage. The adapter serializes its
   own sessions and refuses to overwrite an existing non-empty Cover session,
   but unrelated async code can still contaminate measurements.
+- A monitored session owner restores code after callback exceptions or caller
+  death before releasing the lock. Nested sessions are refused while the
+  outer session remains usable. The callback still executes in its caller.
 - Cover measures executable lines, not true branches. Equal-length alternate
   paths may have equal fitness.
 - Targeted PropEr properties do not have StreamData's shrink-tree guarantees.

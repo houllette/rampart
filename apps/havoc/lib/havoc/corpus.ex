@@ -182,7 +182,11 @@ defmodule Havoc.Corpus do
       end)
 
     locked(corpus_path, fn ->
-      merged = Enum.reduce(seeds, load(path: corpus_path), &upsert(&2, &1))
+      merged =
+        seeds
+        |> Enum.reduce(Map.new(load(path: corpus_path), &{&1.id, &1}), &Map.put(&2, &1.id, &1))
+        |> Map.values()
+
       write_seeds!(corpus_path, merged)
     end)
 
@@ -281,12 +285,18 @@ defmodule Havoc.Corpus do
       "seeds" => seeds |> Enum.sort_by(& &1.id) |> Enum.map(&seed_to_map/1)
     }
 
+    encoded = Jason.encode_to_iodata!(document)
+
+    if IO.iodata_length(encoded) > @max_corpus_bytes do
+      raise Error, reason: :corpus_too_large, path: corpus_path
+    end
+
     parent = Path.dirname(corpus_path)
     File.mkdir_p!(parent)
     temporary = corpus_path <> ".tmp.#{System.unique_integer([:positive, :monotonic])}"
 
     try do
-      File.write!(temporary, Jason.encode!(document), [:binary, :exclusive])
+      File.write!(temporary, encoded, [:binary, :exclusive])
       File.chmod!(temporary, 0o600)
       File.rename!(temporary, corpus_path)
       :ok

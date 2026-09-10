@@ -17,6 +17,25 @@ defmodule Foray.Wordlist do
   defstruct [:ref, :keyword, :source, classes: []]
 
   @doc false
+  @spec index(wordlists :: [t()]) :: [{String.t(), map()}]
+  def index(wordlists) do
+    for %__MODULE__{keyword: keyword, source: {:seeds, seeds}} <- wordlists do
+      values =
+        Enum.reduce(seeds, %{}, fn seed, acc ->
+          Map.put_new(acc, seed_value(seed), seed)
+        end)
+
+      {keyword, Map.delete(values, nil)}
+    end
+  end
+
+  @doc false
+  @spec indexed_seed(index :: [{String.t(), map()}], inputs :: map()) :: Core.Seed.t() | nil
+  def indexed_seed(index, inputs) do
+    Enum.find_value(index, fn {keyword, values} -> Map.get(values, inputs[keyword]) end)
+  end
+
+  @doc false
   @spec seed_for([t()], map()) :: Core.Seed.t() | nil
   def seed_for(wordlists, inputs) when is_list(wordlists) and is_map(inputs) do
     Enum.find_value(wordlists, fn

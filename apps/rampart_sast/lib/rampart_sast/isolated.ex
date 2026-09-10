@@ -15,6 +15,7 @@ defmodule RampartSAST.Isolated do
   never compiled or executed.
   """
 
+  alias RampartSAST.Inventory.Index
   alias RampartSAST.Isolated.{Limits, Result, Wire}
 
   @type rule_specification :: RampartSAST.Rule.specification()
@@ -67,7 +68,38 @@ defmodule RampartSAST.Isolated do
         failure("elixir_not_found", "could not find the Elixir executable", started_at, %{})
 
       executable ->
-        run_worker(executable, request, rules, scanner_options, tmp_dir, limits, started_at)
+        caller = self()
+        reference = make_ref()
+
+        {owner, monitor} =
+          spawn_monitor(fn ->
+            result =
+              run_worker(
+                {executable, caller},
+                request,
+                rules,
+                scanner_options,
+                tmp_dir,
+                limits,
+                started_at
+              )
+
+            send(caller, {reference, result})
+          end)
+
+        receive do
+          {^reference, result} ->
+            Process.demonitor(monitor, [:flush])
+            result
+
+          {:DOWN, ^monitor, :process, ^owner, reason} ->
+            failure(
+              "worker_owner_failed",
+              "isolated worker owner exited: #{inspect(reason, limit: 10)}",
+              started_at,
+              %{}
+            )
+        end
     end
   end
 
@@ -81,6 +113,8 @@ defmodule RampartSAST.Isolated do
         :relation,
         :object,
         :file,
+        :target_module,
+        :target_function,
         :subject_prefix,
         :object_prefix,
         limit: 100,
@@ -89,8 +123,8 @@ defmodule RampartSAST.Isolated do
 
     limit = positive_integer!(filters[:limit], :limit)
     offset = non_negative_integer!(filters[:offset], :offset)
-    matches = Enum.filter(result.inventory["facts"], &matches?(&1, filters))
-    facts = matches |> Enum.drop(offset) |> Enum.take(limit)
+    index = result.index || Index.build(result.inventory["facts"])
+    {facts, total} = Index.page(index, filters, &matches?(&1, filters))
     returned = length(facts)
 
     %{
@@ -99,8 +133,8 @@ defmodule RampartSAST.Isolated do
       offset: offset,
       limit: limit,
       returned: returned,
-      total: length(matches),
-      next_offset: if(offset + returned < length(matches), do: offset + returned)
+      total: total,
+      next_offset: if(offset + returned < total, do: offset + returned)
     }
   end
 
@@ -112,10 +146,12 @@ defmodule RampartSAST.Isolated do
 
   defp run_worker(executable, request, rules, scanner_options, tmp_dir, limits, started_at) do
     with :ok <- portable_request?(request),
-         {:ok, paths} <- temporary_paths(tmp_dir),
-         :ok <- write_request(paths.request, request) do
+         {:ok, paths} <- temporary_paths(tmp_dir) do
       try do
-        execute_worker(executable, paths, rules, scanner_options, limits, started_at)
+        case write_request(paths.request, request) do
+          :ok -> execute_worker(executable, paths, rules, scanner_options, limits, started_at)
+          {:error, message} -> failure("worker_setup_failed", message, started_at, %{})
+        end
       after
         cleanup(paths)
       end
@@ -125,30 +161,37 @@ defmodule RampartSAST.Isolated do
     end
   end
 
-  defp execute_worker(executable, paths, rules, scanner_options, limits, started_at) do
+  defp execute_worker({executable, owner}, paths, rules, scanner_options, limits, started_at) do
     arguments = worker_arguments(paths, rules, scanner_options, limits)
 
-    case open_worker(executable, arguments) do
-      {:ok, port} ->
-        case await_worker(port, limits.timeout_ms, limits.max_log_bytes) do
-          {:ok, 0, log} ->
-            read_response(paths.response, log, limits, started_at)
+    case Core.Runner.run([executable | arguments],
+           owner: owner,
+           timeout: limits.timeout_ms,
+           max_output_bytes: limits.max_log_bytes,
+           exit_timeout: 1_000
+         ) do
+      {log, 0} ->
+        read_response(paths.response, log, limits, started_at)
 
-          {:ok, status, log} ->
-            failure(
-              "worker_failed",
-              "isolated SAST worker exited with status #{status}#{format_log(log)}",
-              started_at,
-              %{"exit_status" => status}
-            )
-
-          {:error, code, message, log} ->
-            failure(code, message <> format_log(log), started_at, %{})
-        end
-
-      {:error, message} ->
-        failure("worker_start_failed", message, started_at, %{})
+      {log, status} ->
+        failure(
+          "worker_failed",
+          "isolated SAST worker exited with status #{status}#{format_log(log)}",
+          started_at,
+          %{"exit_status" => status}
+        )
     end
+  rescue
+    _error in Core.Runner.TimeoutError ->
+      failure("worker_timeout", "isolated SAST worker exceeded its deadline", started_at, %{})
+
+    error in Core.Runner.Error ->
+      code =
+        if match?({:output_limit, _limit}, error.reason),
+          do: "worker_log_limit",
+          else: "worker_failed"
+
+      failure(code, Exception.message(error), started_at, %{})
   end
 
   defp read_response(path, log, limits, started_at) do
@@ -261,54 +304,6 @@ defmodule RampartSAST.Isolated do
     end
   end
 
-  defp open_worker(executable, arguments) do
-    port =
-      Port.open({:spawn_executable, String.to_charlist(executable)}, [
-        :binary,
-        :exit_status,
-        :stderr_to_stdout,
-        {:args, Enum.map(arguments, &String.to_charlist/1)}
-      ])
-
-    {:ok, port}
-  rescue
-    error in ArgumentError -> {:error, Exception.message(error)}
-  end
-
-  defp await_worker(port, timeout_ms, max_log_bytes) do
-    deadline = System.monotonic_time(:millisecond) + timeout_ms
-    collect_worker(port, deadline, max_log_bytes, <<>>)
-  end
-
-  defp collect_worker(port, deadline, max_log_bytes, log) do
-    remaining = max(deadline - System.monotonic_time(:millisecond), 0)
-
-    receive do
-      {^port, {:data, data}} ->
-        updated = log <> data
-
-        if byte_size(updated) > max_log_bytes do
-          close_port(port)
-          {:error, "worker_log_limit", "isolated SAST worker exceeded its log limit", log}
-        else
-          collect_worker(port, deadline, max_log_bytes, updated)
-        end
-
-      {^port, {:exit_status, status}} ->
-        {:ok, status, log}
-    after
-      remaining ->
-        close_port(port)
-        {:error, "worker_timeout", "isolated SAST worker exceeded its deadline", log}
-    end
-  end
-
-  defp close_port(port) do
-    Port.close(port)
-  rescue
-    ArgumentError -> :ok
-  end
-
   defp temporary_paths(tmp_dir) do
     case File.mkdir_p(tmp_dir) do
       :ok ->
@@ -369,6 +364,8 @@ defmodule RampartSAST.Isolated do
   defp matches?(fact, filters) do
     exact_match?(fact, filters, :kind) and exact_match?(fact, filters, :subject) and
       exact_match?(fact, filters, :relation) and exact_match?(fact, filters, :object) and
+      exact_match?(fact["attributes"], filters, :target_module) and
+      exact_match?(fact["attributes"], filters, :target_function) and
       exact_file?(fact, filters[:file]) and
       prefix_match?(fact["subject"], filters[:subject_prefix]) and
       prefix_match?(fact["object"], filters[:object_prefix])

@@ -172,6 +172,15 @@ Core.Runner.run(["scanner", "--version"], timeout: 2_000)
 
 `stream/2` emits bounded chunks; scanner-specific record parsing stays in the tool. `run/2` is bounded and returns `{output, exit_status}`.
 
+The Exile `run/2` backend defaults to a 5,000 ms execution deadline and a
+1,048,576-byte total output limit. Set `:timeout` and `:max_output_bytes` for a
+particular command. Output overflow raises `Core.Runner.Error` with reason
+`{:output_limit, limit}`; timeout raises `Core.Runner.TimeoutError`. Both await
+child termination before returning, with up to `:exit_timeout` (default 1,000
+ms) additional cleanup time. Caller death also triggers cleanup. A host may
+bind a different lifecycle PID with `:owner`; it is an execution option, not
+transcript data. The streaming API continues to apply backpressure per chunk.
+
 Override the backend globally:
 
 ```elixir

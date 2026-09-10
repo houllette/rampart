@@ -36,7 +36,9 @@ defmodule Rampart.MixProject do
         precommit: :test,
         "havoc.replay": :test,
         "rampart.eval": :test,
-        "rampart.eval.compare": :test
+        "rampart.eval.compare": :test,
+        "rampart.perf": :test,
+        "rampart.perf.compare": :test
       ]
     ]
   end
@@ -63,11 +65,12 @@ defmodule Rampart.MixProject do
         "IAST_RESEARCH.md",
         "LEMIEUX_INTEGRATION.md",
         "EVALUATION.md",
+        "PERFORMANCE.md",
         "evaluation/HISTORICAL_CVE_FRONTIER.md"
       ],
       groups_for_extras: [
         Architecture: ["NORTH_STAR.md", "IAST_RESEARCH.md", "LEMIEUX_INTEGRATION.md"],
-        Evaluation: ["EVALUATION.md", "evaluation/HISTORICAL_CVE_FRONTIER.md"]
+        Evaluation: ["EVALUATION.md", "PERFORMANCE.md", "evaluation/HISTORICAL_CVE_FRONTIER.md"]
       ],
       groups_for_modules: [
         "Shared spine": [~r/^Core(?:\.|$)/],
@@ -88,6 +91,8 @@ defmodule Rampart.MixProject do
         "run --no-halt -e 'Agent.start(fn -> Bandit.start_link(plug: Tidewave, port: 4000) end)'",
       "rampart.eval": &run_evaluation/1,
       "rampart.eval.compare": &compare_evaluations/1,
+      "rampart.perf": &run_performance/1,
+      "rampart.perf.compare": &compare_performance/1,
       precommit: [
         "deps.unlock --check-unused",
         "hex.audit",
@@ -142,5 +147,17 @@ defmodule Rampart.MixProject do
   defp compare_evaluations(arguments) do
     Code.require_file("evaluation/runtime_comparator.exs")
     RampartEvaluation.RuntimeComparator.run!(arguments)
+  end
+
+  defp run_performance(arguments) do
+    Mix.Task.run("app.start")
+    Code.require_file("evaluation/performance.exs")
+    RampartPerformance.run!(arguments)
+  end
+
+  defp compare_performance(arguments) do
+    Mix.Task.run("compile", ["--warnings-as-errors"])
+    Code.require_file("evaluation/performance.exs")
+    RampartPerformance.compare!(arguments)
   end
 end

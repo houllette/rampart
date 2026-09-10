@@ -221,6 +221,12 @@ payload_seeds =
 The exported seeds can become a Foray wordlist. Portico and Foray are not Havoc
 dependencies; all interchange goes through Core.
 
+Imports merge seeds by ID once, retaining the last occurrence of an ID in the
+batch and preserving other stored seeds. The complete encoded corpus must fit
+16,777,216 bytes. An oversized update raises `Havoc.Corpus.Error` with
+`:corpus_too_large` before replacing the existing file, so accepted durable
+proof remains reloadable.
+
 ## Important oracle posture
 
 Havoc reports invariant violations and high-value signals, not automatic exploit

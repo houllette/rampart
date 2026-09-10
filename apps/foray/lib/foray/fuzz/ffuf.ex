@@ -103,6 +103,7 @@ defmodule Foray.Fuzz.Ffuf do
   end
 
   defp start_stream(job, opts) do
+    job = %{job | seed_index: job.seed_index || Wordlist.index(job.wordlists)}
     {materialized_job, paths} = Materializer.materialize(job)
 
     try do
@@ -139,6 +140,7 @@ defmodule Foray.Fuzz.Ffuf do
 
   defp close_stream(state) do
     Cursor.halt(state.cursor)
+  after
     Materializer.cleanup(state.paths)
   end
 

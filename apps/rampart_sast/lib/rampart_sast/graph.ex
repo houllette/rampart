@@ -3,6 +3,7 @@ defmodule RampartSAST.Graph do
 
   alias RampartSAST.{Fact, Inventory}
   alias RampartSAST.Graph.Slice
+  alias RampartSAST.Inventory.Index
 
   @default_relations [
     :calls,
@@ -24,7 +25,10 @@ defmodule RampartSAST.Graph do
         direction: :out,
         relations: @default_relations,
         max_depth: 3,
-        max_nodes: 200
+        max_nodes: 200,
+        max_edges: 500,
+        max_work: 10_000,
+        max_bytes: 256_000
       )
 
     roots = validate_roots!(roots)
@@ -34,29 +38,54 @@ defmodule RampartSAST.Graph do
     max_nodes = positive_integer!(options[:max_nodes], :max_nodes)
     validate_root_capacity!(roots, max_nodes)
 
-    graph_edges =
-      inventory.facts
-      |> Enum.filter(&(&1.relation in relations))
-      |> Enum.map(&edge/1)
+    limits = %{
+      max_depth: max_depth,
+      max_nodes: max_nodes,
+      max_edges: positive_integer!(options[:max_edges], :max_edges),
+      max_work: positive_integer!(options[:max_work], :max_work),
+      max_bytes: positive_integer!(options[:max_bytes], :max_bytes)
+    }
 
-    {nodes, edges, truncated} =
-      walk(
-        Enum.map(roots, &{&1, 0}),
-        MapSet.new(roots),
-        %{},
-        graph_edges,
-        direction,
-        max_depth,
-        max_nodes
-      )
-
-    %Slice{
+    base = %Slice{
       inventory_id: inventory.id,
       roots: roots,
-      nodes: nodes |> MapSet.to_list() |> Enum.sort(),
-      edges: edges |> Map.values() |> Enum.sort_by(& &1.id),
+      nodes: Enum.sort(roots),
+      edges: [],
       max_depth: max_depth,
-      truncated: truncated
+      truncated: false
+    }
+
+    reserved = %{
+      base
+      | truncated: true,
+        work_count: limits.max_work,
+        limit_reasons: [:max_nodes, :max_depth, :max_edges, :max_work, :max_bytes]
+    }
+
+    bytes = reserved |> Slice.to_map() |> JSON.encode!() |> byte_size()
+
+    if bytes > limits.max_bytes,
+      do: raise(ArgumentError, "graph roots and metadata exceed max_bytes")
+
+    state = %{
+      queue: :queue.from_list(Enum.map(roots, &{&1, 0})),
+      nodes: MapSet.new(roots),
+      edges: %{},
+      reasons: MapSet.new(),
+      work: 0,
+      bytes: bytes,
+      stopped: false
+    }
+
+    state = walk(state, Inventory.index(inventory), direction, relations, limits)
+
+    %{
+      base
+      | nodes: state.nodes |> MapSet.to_list() |> Enum.sort(),
+        edges: state.edges |> Map.values() |> Enum.sort_by(& &1.id),
+        truncated: MapSet.size(state.reasons) > 0,
+        limit_reasons: state.reasons |> MapSet.to_list() |> Enum.sort(),
+        work_count: state.work
     }
   end
 
@@ -78,14 +107,15 @@ defmodule RampartSAST.Graph do
       when is_binary(fact_id) and is_list(options) do
     options = Keyword.validate!(options, limit: 100)
     limit = positive_integer!(options[:limit], :limit)
-    selected = Enum.find(inventory.facts, &(&1.id == fact_id))
+    selected = inventory |> Inventory.index() |> Index.fetch(fact_id)
 
     case selected do
       %Fact{kind: kind} = fact when kind in [:call, :unqualified_call] ->
         contexts = MapSet.new(Map.get(fact.attributes, :control_contexts, []))
 
-        inventory.facts
-        |> Enum.filter(&shares_control_context?(&1, fact, contexts))
+        Inventory.index(inventory)
+        |> Index.candidates(subject: fact.subject)
+        |> Stream.filter(&shares_control_context?(&1, fact, contexts))
         |> Enum.take(limit)
 
       _other ->
@@ -99,14 +129,15 @@ defmodule RampartSAST.Graph do
       when is_binary(fact_id) and is_list(options) do
     options = Keyword.validate!(options, limit: 100)
     limit = positive_integer!(options[:limit], :limit)
-    selected = Enum.find(inventory.facts, &(&1.id == fact_id))
+    selected = inventory |> Inventory.index() |> Index.fetch(fact_id)
 
     case selected do
       %Fact{kind: kind} = fact when kind in [:call, :unqualified_call] ->
         variables = MapSet.new(Map.get(fact.attributes, :argument_variables, []))
 
-        inventory.facts
-        |> Enum.filter(&shares_variables?(&1, fact, variables))
+        Inventory.index(inventory)
+        |> Index.candidates(subject: fact.subject)
+        |> Stream.filter(&shares_variables?(&1, fact, variables))
         |> Enum.take(limit)
 
       _other ->
@@ -114,58 +145,79 @@ defmodule RampartSAST.Graph do
     end
   end
 
-  defp walk([], nodes, edges, _graph_edges, _direction, _max_depth, _max_nodes) do
-    {nodes, edges, false}
-  end
+  defp walk(%{stopped: true} = state, _index, _direction, _relations, _limits), do: state
 
-  defp walk([{node, depth} | queue], nodes, edges, graph_edges, direction, max_depth, max_nodes) do
-    cond do
-      MapSet.size(nodes) >= max_nodes ->
-        {nodes, edges, true}
+  defp walk(state, index, direction, relations, limits) do
+    case :queue.out(state.queue) do
+      {:empty, _queue} ->
+        state
 
-      depth >= max_depth ->
-        walk(queue, nodes, edges, graph_edges, direction, max_depth, max_nodes)
-
-      true ->
-        adjacent = Enum.filter(graph_edges, &adjacent?(&1, node, direction))
-
-        {queue, nodes, edges} =
-          Enum.reduce(adjacent, {queue, nodes, edges}, fn {from, to, fact}, accumulator ->
-            add_edge(from, to, fact, node, depth, direction, max_nodes, accumulator)
+      {{:value, {node, depth}}, queue} ->
+        state =
+          index
+          |> Index.adjacent(node, direction)
+          |> Enum.reduce_while(%{state | queue: queue}, fn fact, acc ->
+            next = visit(fact, node, depth, direction, relations, limits, acc)
+            continue_walk(next)
           end)
 
-        walk(queue, nodes, edges, graph_edges, direction, max_depth, max_nodes)
+        walk(state, index, direction, relations, limits)
     end
   end
 
-  defp add_edge(from, to, fact, node, depth, direction, max_nodes, {queue, nodes, edges}) do
-    neighbor = neighbor(from, to, node, direction)
+  defp continue_walk(%{stopped: true} = state), do: {:halt, state}
+  defp continue_walk(state), do: {:cont, state}
+
+  defp visit(_fact, _node, _depth, _direction, _relations, limits, state)
+       when state.work >= limits.max_work, do: stop(state, :max_work)
+
+  defp visit(fact, node, depth, direction, relations, limits, state) do
+    state = %{state | work: state.work + 1}
 
     cond do
-      MapSet.member?(nodes, neighbor) ->
-        {queue, nodes, Map.put(edges, fact.id, fact)}
-
-      MapSet.size(nodes) >= max_nodes ->
-        {queue, nodes, edges}
-
-      true ->
-        edges = Map.put(edges, fact.id, fact)
-        {queue ++ [{neighbor, depth + 1}], MapSet.put(nodes, neighbor), edges}
+      fact.relation not in relations or Map.has_key?(state.edges, fact.id) -> state
+      depth >= limits.max_depth -> qualify(state, :max_depth)
+      map_size(state.edges) >= limits.max_edges -> stop(state, :max_edges)
+      true -> add_edge(fact, node, depth, direction, limits, state)
     end
   end
 
-  defp adjacent?({from, _to, _fact}, node, :out), do: from == node
-  defp adjacent?({_from, to, _fact}, node, :in), do: to == node
-  defp adjacent?({from, to, _fact}, node, :both), do: from == node or to == node
+  defp add_edge(fact, node, depth, direction, limits, state) do
+    neighbor = neighbor(Index.nodes(fact), node, direction)
+    known? = MapSet.member?(state.nodes, neighbor)
 
-  defp neighbor(_from, to, _node, :out), do: to
-  defp neighbor(from, _to, _node, :in), do: from
-  defp neighbor(from, to, node, :both), do: if(from == node, do: to, else: from)
+    bytes =
+      byte_size(JSON.encode!(Fact.to_map(fact))) + 1 + node_bytes(neighbor, known?)
 
-  defp edge(%Fact{kind: :package_use} = fact), do: {fact.subject, "package:#{fact.object}", fact}
-  defp edge(%Fact{kind: :behavior} = fact), do: {fact.subject, "behavior:#{fact.object}", fact}
-  defp edge(%Fact{kind: :dependency} = fact), do: {fact.subject, "package:#{fact.object}", fact}
-  defp edge(%Fact{} = fact), do: {fact.subject, fact.object, fact}
+    cond do
+      not known? and MapSet.size(state.nodes) >= limits.max_nodes ->
+        qualify(state, :max_nodes)
+
+      state.bytes + bytes > limits.max_bytes ->
+        stop(state, :max_bytes)
+
+      true ->
+        queue = if known?, do: state.queue, else: :queue.in({neighbor, depth + 1}, state.queue)
+
+        %{
+          state
+          | queue: queue,
+            nodes: MapSet.put(state.nodes, neighbor),
+            edges: Map.put(state.edges, fact.id, fact),
+            bytes: state.bytes + bytes
+        }
+    end
+  end
+
+  defp neighbor({_from, to}, _node, :out), do: to
+  defp neighbor({from, _to}, _node, :in), do: from
+  defp neighbor({node, to}, node, :both), do: to
+  defp neighbor({from, _to}, _node, :both), do: from
+  defp node_bytes(_node, true), do: 0
+  defp node_bytes(node, false), do: byte_size(JSON.encode!(node)) + 1
+
+  defp qualify(state, reason), do: %{state | reasons: MapSet.put(state.reasons, reason)}
+  defp stop(state, reason), do: %{qualify(state, reason) | stopped: true}
 
   defp shares_control_context?(candidate, selected, contexts) do
     candidate.id != selected.id and candidate.kind in [:call, :unqualified_call] and

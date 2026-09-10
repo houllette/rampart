@@ -1,5 +1,6 @@
 defmodule RampartSAST.Isolated.Result do
   @moduledoc "Portable output from a disposable RampartSAST worker."
+  alias RampartSAST.Inventory.Index
 
   @type status :: :complete | :incomplete
   @type t :: %__MODULE__{
@@ -10,7 +11,8 @@ defmodule RampartSAST.Isolated.Result do
           suppressed: [map()],
           diagnostics: [map()],
           metrics: map(),
-          worker: map()
+          worker: map(),
+          index: map() | nil
         }
 
   @enforce_keys [
@@ -23,15 +25,18 @@ defmodule RampartSAST.Isolated.Result do
     :metrics,
     :worker
   ]
-  defstruct @enforce_keys
+  defstruct @enforce_keys ++ [index: nil]
 
   @doc false
   @spec from_wire!(wire :: map(), worker :: map()) :: t()
   def from_wire!(%{"schema_version" => 1} = wire, worker) when is_map(worker) do
+    inventory = validate_inventory!(wire["inventory"])
+
     %__MODULE__{
       schema_version: 1,
       status: parse_status!(wire["status"]),
-      inventory: validate_inventory!(wire["inventory"]),
+      inventory: inventory,
+      index: Index.build(inventory["facts"]),
       observations: validate_maps!(wire["observations"], "observations"),
       suppressed: validate_maps!(wire["suppressed"], "suppressions"),
       diagnostics: validate_maps!(wire["diagnostics"], "diagnostics"),

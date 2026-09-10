@@ -76,6 +76,9 @@ defmodule RampartIAST.TraceSession do
     {tracer, tracer_monitor} =
       spawn_monitor(fn ->
         collect(%{
+          owner: owner,
+          run_ref: state.run_ref,
+          stopped: false,
           tracee: target,
           session_id: state.session_id,
           source: state.source,
@@ -206,6 +209,10 @@ defmodule RampartIAST.TraceSession do
 
       {:rampart_iast_execution, ^run_ref, {:callback_failed, reason}} ->
         {:callback_failed, reason, true}
+
+      {:rampart_iast_limit, ^run_ref} ->
+        terminate_process(target, target_monitor)
+        {:limit_exceeded, :trace_limit, true}
 
       {:DOWN, ^caller_monitor, :process, _caller, reason} ->
         {:caller_stopped, {:caller_exit, reason}, false}
@@ -354,7 +361,9 @@ defmodule RampartIAST.TraceSession do
     end
   end
 
-  defp record_call(state, {module, function, arguments}, timestamp) do
+  defp record_call(%{stopped: true} = state, _call, _timestamp), do: state
+
+  defp record_call(state, call, timestamp) do
     event_count = state.event_count + 1
     queue_length = self() |> Process.info(:message_queue_len) |> elem(1)
 
@@ -363,6 +372,14 @@ defmodule RampartIAST.TraceSession do
       |> maybe_limit(event_count > state.limits.max_events, :event_limit)
       |> maybe_limit(queue_length > state.limits.max_mailbox_messages, :mailbox_limit)
 
+    state = %{state | event_count: event_count, limit_failures: limit_failures}
+
+    if MapSet.size(limit_failures) > 0,
+      do: stop_capture(state),
+      else: inspect_call(state, call, timestamp)
+  end
+
+  defp inspect_call(state, {module, function, arguments}, timestamp) do
     {argument_bytes, matched_positions, argument_failures} =
       inspect_arguments(arguments, state.sink.argument_positions, state.marker, state.limits)
 
@@ -379,16 +396,22 @@ defmodule RampartIAST.TraceSession do
     }
 
     observations =
-      if event_count <= state.limits.max_events,
+      if state.event_count <= state.limits.max_events,
         do: [observation | state.observations],
         else: state.observations
 
-    %{
+    state = %{
       state
-      | event_count: event_count,
-        observations: observations,
-        limit_failures: Enum.reduce(argument_failures, limit_failures, &MapSet.put(&2, &1))
+      | observations: observations,
+        limit_failures: Enum.reduce(argument_failures, state.limit_failures, &MapSet.put(&2, &1))
     }
+
+    if argument_failures == [], do: state, else: stop_capture(state)
+  end
+
+  defp stop_capture(state) do
+    send(state.owner, {:rampart_iast_limit, state.run_ref})
+    %{state | stopped: true}
   end
 
   defp inspect_arguments(arguments, positions, marker, limits) do
@@ -404,17 +427,8 @@ defmodule RampartIAST.TraceSession do
   end
 
   defp inspect_argument({:ok, argument}, position, marker, limits, {sizes, matched, failures}) do
-    size = argument_size(argument)
-
-    {marker_present?, argument_failures} =
-      if size > limits.max_argument_bytes do
-        {false, [:argument_bytes]}
-      else
-        case marker_present?(argument, marker, limits) do
-          {:ok, present?} -> {present?, []}
-          {:error, failure} -> {false, [failure]}
-        end
-      end
+    {size, marker_present?, argument_failures} =
+      RampartIAST.Argument.inspect_marker(argument, marker, limits)
 
     {
       Map.put(sizes, position, size),
@@ -426,64 +440,6 @@ defmodule RampartIAST.TraceSession do
   defp inspect_argument(:error, _position, _marker, _limits, {sizes, matched, failures}) do
     {sizes, matched, [:invalid_argument_position | failures]}
   end
-
-  defp marker_present?(argument, marker, limits) do
-    find_marker(
-      [{argument, 0}],
-      marker,
-      limits.max_argument_depth,
-      limits.max_argument_terms,
-      0
-    )
-  end
-
-  defp find_marker([], _marker, _max_depth, _max_terms, _visited), do: {:ok, false}
-
-  defp find_marker(_stack, _marker, _max_depth, max_terms, visited)
-       when visited >= max_terms,
-       do: {:error, :argument_terms}
-
-  defp find_marker([{_term, depth} | _rest], _marker, max_depth, _max_terms, _visited)
-       when depth > max_depth,
-       do: {:error, :argument_depth}
-
-  defp find_marker([{argument, _depth} | rest], marker, max_depth, max_terms, visited)
-       when is_binary(argument) do
-    if :binary.match(argument, marker) == :nomatch,
-      do: find_marker(rest, marker, max_depth, max_terms, visited + 1),
-      else: {:ok, true}
-  end
-
-  defp find_marker([{[head | tail], depth} | rest], marker, max_depth, max_terms, visited) do
-    find_marker(
-      [{head, depth + 1}, {tail, depth} | rest],
-      marker,
-      max_depth,
-      max_terms,
-      visited + 1
-    )
-  end
-
-  defp find_marker([{argument, depth} | rest], marker, max_depth, max_terms, visited)
-       when is_tuple(argument) do
-    children = Enum.map(Tuple.to_list(argument), &{&1, depth + 1})
-    find_marker(children ++ rest, marker, max_depth, max_terms, visited + 1)
-  end
-
-  defp find_marker([{argument, depth} | rest], marker, max_depth, max_terms, visited)
-       when is_map(argument) do
-    children =
-      Enum.flat_map(argument, fn {key, value} -> [{key, depth + 1}, {value, depth + 1}] end)
-
-    find_marker(children ++ rest, marker, max_depth, max_terms, visited + 1)
-  end
-
-  defp find_marker([_argument | rest], marker, max_depth, max_terms, visited) do
-    find_marker(rest, marker, max_depth, max_terms, visited + 1)
-  end
-
-  defp argument_size(argument) when is_binary(argument), do: byte_size(argument)
-  defp argument_size(argument), do: :erlang.external_size(argument)
 
   defp maybe_limit(failures, true, reason), do: MapSet.put(failures, reason)
   defp maybe_limit(failures, false, _reason), do: failures

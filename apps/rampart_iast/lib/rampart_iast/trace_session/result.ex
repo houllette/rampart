@@ -1,7 +1,13 @@
 defmodule RampartIAST.TraceSession.Result do
   @moduledoc false
 
-  @type execution :: :completed | :timeout | :callback_failed | :setup_failed | :owner_failed
+  @type execution ::
+          :completed
+          | :timeout
+          | :callback_failed
+          | :setup_failed
+          | :owner_failed
+          | :limit_exceeded
   @type envelope :: :intact | :incomplete
 
   @type t :: %__MODULE__{

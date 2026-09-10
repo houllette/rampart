@@ -15,6 +15,19 @@ defmodule Core.RunnerExileTest do
     assert {"collected", 0} = ExileRunner.run(["sh", "-c", "printf collected"], timeout: 1_000)
   end
 
+  test "collection budgets include stderr and preserve ordinary exit statuses" do
+    command = ["sh", "-c", "printf 1234; printf 5678 >&2; exit 7"]
+    assert {output, 7} = ExileRunner.run(command, stderr: :consume, max_output_bytes: 8)
+    assert output |> String.graphemes() |> Enum.sort() == String.graphemes("12345678")
+
+    error =
+      assert_raise Core.Runner.Error, fn ->
+        ExileRunner.run(command, stderr: :consume, max_output_bytes: 7)
+      end
+
+    assert error.reason == {:output_limit, 7}
+  end
+
   @tag :tmp_dir
   test "bounded collection times out and reaps the command", %{tmp_dir: tmp_dir} do
     pid_file = Path.join(tmp_dir, "child.pid")
@@ -40,6 +53,42 @@ defmodule Core.RunnerExileTest do
     assert os_process_alive?(os_pid)
     assert Task.shutdown(owner, :brutal_kill) == nil
     assert eventually(fn -> not os_process_alive?(os_pid) end, 5_000)
+  end
+
+  @tag :tmp_dir
+  test "output overflow is explicit and reaps a silent child before returning", %{
+    tmp_dir: tmp_dir
+  } do
+    pid_file = Path.join(tmp_dir, "overflow.pid")
+
+    command = [
+      "sh",
+      "-c",
+      ~s(echo $$ > "$1"; printf 123456789; exec sleep 30),
+      "runner-test",
+      pid_file
+    ]
+
+    error =
+      assert_raise Core.Runner.Error, fn ->
+        ExileRunner.run(command, max_output_bytes: 8, exit_timeout: 1_000)
+      end
+
+    assert error.reason == {:output_limit, 8}
+    os_pid = pid_file |> File.read!() |> String.trim() |> String.to_integer()
+    refute os_process_alive?(os_pid)
+    assert {"12345678", 0} = ExileRunner.run(["printf", "12345678"], max_output_bytes: 8)
+  end
+
+  @tag :tmp_dir
+  test "bounded collection cleans up when its caller dies", %{tmp_dir: tmp_dir} do
+    pid_file = Path.join(tmp_dir, "caller.pid")
+    command = ["sh", "-c", ~s(echo $$ > "$1"; exec sleep 30), "runner-test", pid_file]
+    caller = Task.async(fn -> ExileRunner.run(command, timeout: 30_000, exit_timeout: 1_000) end)
+    assert eventually(fn -> File.exists?(pid_file) end, 2_000)
+    os_pid = pid_file |> File.read!() |> String.trim() |> String.to_integer()
+    assert Task.shutdown(caller, :brutal_kill) == nil
+    assert eventually(fn -> not os_process_alive?(os_pid) end, 3_000)
   end
 
   defp eventually(predicate, timeout) do

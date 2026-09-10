@@ -1,0 +1,1908 @@
+{
+  "runtime": {
+    "otp": "29",
+    "schedulers": 10,
+    "elixir": "1.20.4",
+    "erts": "17.0.6",
+    "architecture": "aarch64-apple-darwin25.6.0"
+  },
+  "policy": {
+    "memory": "process and VM endpoints; not peak RSS",
+    "reductions": "node-wide, includes child work and VM noise",
+    "scope": "trusted synthetic fixtures; latency includes result construction; no production IAST claim",
+    "samples": 7,
+    "warmups": 2,
+    "gc_before_sample": true
+  },
+  "schema_version": 1,
+  "fixture_version": "rampart-performance.v1",
+  "harness_sha256": "2097670928894683f25a4aba12399b4281ef0b66458d125e9c4181e531a7617c",
+  "cases": [
+    {
+      "input": {
+        "depth": 5,
+        "facts": 5000,
+        "fixture_hash": "66f676aa577bc1599b9c7d195bf7464ce207aeecca69d50cf6ce6052d480a2b8",
+        "index_build_us": 19001
+      },
+      "name": "graph/5000/5",
+      "samples": [
+        {
+          "elapsed_us": 42,
+          "node_reductions": 8028,
+          "node_gcs": 0,
+          "process_memory_before": 6666752,
+          "process_memory_after": 6717872,
+          "vm_memory_before": 60249690,
+          "vm_memory_after": 60305106
+        },
+        {
+          "elapsed_us": 35,
+          "node_reductions": 5953,
+          "node_gcs": 0,
+          "process_memory_before": 4121248,
+          "process_memory_after": 4167368,
+          "vm_memory_before": 57717034,
+          "vm_memory_after": 57754986
+        },
+        {
+          "elapsed_us": 26,
+          "node_reductions": 6309,
+          "node_gcs": 0,
+          "process_memory_before": 6666592,
+          "process_memory_after": 6717872,
+          "vm_memory_before": 60251354,
+          "vm_memory_after": 60298530
+        },
+        {
+          "elapsed_us": 49,
+          "node_reductions": 6889,
+          "node_gcs": 0,
+          "process_memory_before": 4120928,
+          "process_memory_after": 4166360,
+          "vm_memory_before": 57737738,
+          "vm_memory_after": 57745770
+        },
+        {
+          "elapsed_us": 79,
+          "node_reductions": 6378,
+          "node_gcs": 0,
+          "process_memory_before": 6666592,
+          "process_memory_after": 6717792,
+          "vm_memory_before": 60257234,
+          "vm_memory_after": 60305314
+        },
+        {
+          "elapsed_us": 27,
+          "node_reductions": 6850,
+          "node_gcs": 0,
+          "process_memory_before": 4121088,
+          "process_memory_after": 4167032,
+          "vm_memory_before": 57699554,
+          "vm_memory_after": 57740778
+        },
+        {
+          "elapsed_us": 25,
+          "node_reductions": 5748,
+          "node_gcs": 0,
+          "process_memory_before": 6666752,
+          "process_memory_after": 6707456,
+          "vm_memory_before": 60243362,
+          "vm_memory_after": 60287986
+        }
+      ],
+      "median_us": 35,
+      "p95_us": 79
+    },
+    {
+      "input": {
+        "depth": 50,
+        "facts": 5000,
+        "fixture_hash": "66f676aa577bc1599b9c7d195bf7464ce207aeecca69d50cf6ce6052d480a2b8",
+        "index_build_us": 19001
+      },
+      "name": "graph/5000/50",
+      "samples": [
+        {
+          "elapsed_us": 259,
+          "node_reductions": 50113,
+          "node_gcs": 0,
+          "process_memory_before": 6666512,
+          "process_memory_after": 6717872,
+          "vm_memory_before": 60245602,
+          "vm_memory_after": 60336114
+        },
+        {
+          "elapsed_us": 231,
+          "node_reductions": 51938,
+          "node_gcs": 0,
+          "process_memory_before": 4121248,
+          "process_memory_after": 4172688,
+          "vm_memory_before": 57706458,
+          "vm_memory_after": 57782842
+        },
+        {
+          "elapsed_us": 220,
+          "node_reductions": 50225,
+          "node_gcs": 0,
+          "process_memory_before": 6666432,
+          "process_memory_after": 6717712,
+          "vm_memory_before": 60251690,
+          "vm_memory_after": 60313274
+        },
+        {
+          "elapsed_us": 229,
+          "node_reductions": 49626,
+          "node_gcs": 0,
+          "process_memory_before": 4120928,
+          "process_memory_after": 4161024,
+          "vm_memory_before": 57696594,
+          "vm_memory_after": 57764122
+        },
+        {
+          "elapsed_us": 225,
+          "node_reductions": 49249,
+          "node_gcs": 0,
+          "process_memory_before": 6666352,
+          "process_memory_after": 6695104,
+          "vm_memory_before": 60220634,
+          "vm_memory_after": 60299490
+        },
+        {
+          "elapsed_us": 226,
+          "node_reductions": 50734,
+          "node_gcs": 0,
+          "process_memory_before": 4120768,
+          "process_memory_after": 4154856,
+          "vm_memory_before": 57676618,
+          "vm_memory_after": 57757802
+        },
+        {
+          "elapsed_us": 240,
+          "node_reductions": 50847,
+          "node_gcs": 0,
+          "process_memory_before": 6666672,
+          "process_memory_after": 6712872,
+          "vm_memory_before": 60238954,
+          "vm_memory_after": 60324386
+        }
+      ],
+      "median_us": 229,
+      "p95_us": 259
+    },
+    {
+      "input": {
+        "depth": 150,
+        "facts": 5000,
+        "fixture_hash": "66f676aa577bc1599b9c7d195bf7464ce207aeecca69d50cf6ce6052d480a2b8",
+        "index_build_us": 19001
+      },
+      "name": "graph/5000/150",
+      "samples": [
+        {
+          "elapsed_us": 619,
+          "node_reductions": 150060,
+          "node_gcs": 0,
+          "process_memory_before": 6666432,
+          "process_memory_after": 6717872,
+          "vm_memory_before": 60251618,
+          "vm_memory_after": 60391010
+        },
+        {
+          "elapsed_us": 611,
+          "node_reductions": 150689,
+          "node_gcs": 0,
+          "process_memory_before": 6666432,
+          "process_memory_after": 6712712,
+          "vm_memory_before": 60238754,
+          "vm_memory_after": 60384442
+        },
+        {
+          "elapsed_us": 613,
+          "node_reductions": 150589,
+          "node_gcs": 0,
+          "process_memory_before": 6666432,
+          "process_memory_after": 6707456,
+          "vm_memory_before": 60254170,
+          "vm_memory_after": 60370218
+        },
+        {
+          "elapsed_us": 635,
+          "node_reductions": 151762,
+          "node_gcs": 0,
+          "process_memory_before": 6666672,
+          "process_memory_after": 6718032,
+          "vm_memory_before": 60251122,
+          "vm_memory_after": 60398074
+        },
+        {
+          "elapsed_us": 599,
+          "node_reductions": 151754,
+          "node_gcs": 0,
+          "process_memory_before": 6666752,
+          "process_memory_after": 6718112,
+          "vm_memory_before": 60246298,
+          "vm_memory_after": 60388690
+        },
+        {
+          "elapsed_us": 593,
+          "node_reductions": 150238,
+          "node_gcs": 0,
+          "process_memory_before": 6666432,
+          "process_memory_after": 6711880,
+          "vm_memory_before": 60238546,
+          "vm_memory_after": 60368586
+        },
+        {
+          "elapsed_us": 827,
+          "node_reductions": 151750,
+          "node_gcs": 0,
+          "process_memory_before": 6666832,
+          "process_memory_after": 6718192,
+          "vm_memory_before": 60271410,
+          "vm_memory_after": 60398330
+        }
+      ],
+      "median_us": 613,
+      "p95_us": 827
+    },
+    {
+      "input": {
+        "depth": 5,
+        "facts": 20000,
+        "fixture_hash": "b4cb690f2c1712343a0645d0ed86a9ea6c3fb48bf80adc8967567f76c3a9a619",
+        "index_build_us": 84826
+      },
+      "name": "graph/20000/5",
+      "samples": [
+        {
+          "elapsed_us": 46,
+          "node_reductions": 5444,
+          "node_gcs": 0,
+          "process_memory_before": 23881408,
+          "process_memory_after": 23927288,
+          "vm_memory_before": 77454090,
+          "vm_memory_after": 77515266
+        },
+        {
+          "elapsed_us": 41,
+          "node_reductions": 6563,
+          "node_gcs": 0,
+          "process_memory_before": 13821192,
+          "process_memory_after": 13861464,
+          "vm_memory_before": 67425962,
+          "vm_memory_after": 67440890
+        },
+        {
+          "elapsed_us": 97,
+          "node_reductions": 8032,
+          "node_gcs": 0,
+          "process_memory_before": 16585128,
+          "process_memory_after": 16636248,
+          "vm_memory_before": 70164818,
+          "vm_memory_after": 70224202
+        },
+        {
+          "elapsed_us": 34,
+          "node_reductions": 6462,
+          "node_gcs": 0,
+          "process_memory_before": 13821192,
+          "process_memory_after": 13872392,
+          "vm_memory_before": 67400658,
+          "vm_memory_after": 67452506
+        },
+        {
+          "elapsed_us": 34,
+          "node_reductions": 6281,
+          "node_gcs": 0,
+          "process_memory_before": 16585048,
+          "process_memory_after": 16630144,
+          "vm_memory_before": 70156298,
+          "vm_memory_after": 70218234
+        },
+        {
+          "elapsed_us": 85,
+          "node_reductions": 5402,
+          "node_gcs": 0,
+          "process_memory_before": 13821512,
+          "process_memory_after": 13861320,
+          "vm_memory_before": 67427290,
+          "vm_memory_after": 67449066
+        },
+        {
+          "elapsed_us": 35,
+          "node_reductions": 5732,
+          "node_gcs": 0,
+          "process_memory_before": 16584888,
+          "process_memory_after": 16630176,
+          "vm_memory_before": 70156842,
+          "vm_memory_after": 70218090
+        }
+      ],
+      "median_us": 41,
+      "p95_us": 97
+    },
+    {
+      "input": {
+        "depth": 50,
+        "facts": 20000,
+        "fixture_hash": "b4cb690f2c1712343a0645d0ed86a9ea6c3fb48bf80adc8967567f76c3a9a619",
+        "index_build_us": 84826
+      },
+      "name": "graph/20000/50",
+      "samples": [
+        {
+          "elapsed_us": 332,
+          "node_reductions": 50873,
+          "node_gcs": 0,
+          "process_memory_before": 19901496,
+          "process_memory_after": 19947616,
+          "vm_memory_before": 73474114,
+          "vm_memory_after": 73559178
+        },
+        {
+          "elapsed_us": 241,
+          "node_reductions": 51955,
+          "node_gcs": 0,
+          "process_memory_before": 13821192,
+          "process_memory_after": 13872472,
+          "vm_memory_before": 67405826,
+          "vm_memory_after": 67483154
+        },
+        {
+          "elapsed_us": 326,
+          "node_reductions": 51947,
+          "node_gcs": 0,
+          "process_memory_before": 16584888,
+          "process_memory_after": 16636168,
+          "vm_memory_before": 70170226,
+          "vm_memory_after": 70254730
+        },
+        {
+          "elapsed_us": 241,
+          "node_reductions": 51927,
+          "node_gcs": 0,
+          "process_memory_before": 13821112,
+          "process_memory_after": 13872072,
+          "vm_memory_before": 67428338,
+          "vm_memory_after": 67490242
+        },
+        {
+          "elapsed_us": 260,
+          "node_reductions": 51940,
+          "node_gcs": 0,
+          "process_memory_before": 16585048,
+          "process_memory_after": 16636008,
+          "vm_memory_before": 70182322,
+          "vm_memory_after": 70239738
+        },
+        {
+          "elapsed_us": 230,
+          "node_reductions": 50750,
+          "node_gcs": 0,
+          "process_memory_before": 13821272,
+          "process_memory_after": 13866544,
+          "vm_memory_before": 67404370,
+          "vm_memory_after": 67477178
+        },
+        {
+          "elapsed_us": 233,
+          "node_reductions": 50897,
+          "node_gcs": 0,
+          "process_memory_before": 16584888,
+          "process_memory_after": 16625768,
+          "vm_memory_before": 70150682,
+          "vm_memory_after": 70236210
+        }
+      ],
+      "median_us": 241,
+      "p95_us": 332
+    },
+    {
+      "input": {
+        "depth": 150,
+        "facts": 20000,
+        "fixture_hash": "b4cb690f2c1712343a0645d0ed86a9ea6c3fb48bf80adc8967567f76c3a9a619",
+        "index_build_us": 84826
+      },
+      "name": "graph/20000/150",
+      "samples": [
+        {
+          "elapsed_us": 614,
+          "node_reductions": 151790,
+          "node_gcs": 0,
+          "process_memory_before": 19901576,
+          "process_memory_after": 19952936,
+          "vm_memory_before": 73487650,
+          "vm_memory_after": 73625538
+        },
+        {
+          "elapsed_us": 699,
+          "node_reductions": 150581,
+          "node_gcs": 0,
+          "process_memory_before": 16584888,
+          "process_memory_after": 16630240,
+          "vm_memory_before": 70156834,
+          "vm_memory_after": 70303690
+        },
+        {
+          "elapsed_us": 681,
+          "node_reductions": 151766,
+          "node_gcs": 0,
+          "process_memory_before": 19901416,
+          "process_memory_after": 19952776,
+          "vm_memory_before": 73481162,
+          "vm_memory_after": 73626290
+        },
+        {
+          "elapsed_us": 623,
+          "node_reductions": 150585,
+          "node_gcs": 0,
+          "process_memory_before": 16585288,
+          "process_memory_after": 16630720,
+          "vm_memory_before": 70180706,
+          "vm_memory_after": 70303114
+        },
+        {
+          "elapsed_us": 620,
+          "node_reductions": 151785,
+          "node_gcs": 0,
+          "process_memory_before": 19901576,
+          "process_memory_after": 19952936,
+          "vm_memory_before": 73481698,
+          "vm_memory_after": 73624074
+        },
+        {
+          "elapsed_us": 599,
+          "node_reductions": 150068,
+          "node_gcs": 0,
+          "process_memory_before": 16585048,
+          "process_memory_after": 16630320,
+          "vm_memory_before": 70162922,
+          "vm_memory_after": 70302474
+        },
+        {
+          "elapsed_us": 618,
+          "node_reductions": 149827,
+          "node_gcs": 0,
+          "process_memory_before": 19901656,
+          "process_memory_after": 19936688,
+          "vm_memory_before": 73495378,
+          "vm_memory_after": 73609146
+        }
+      ],
+      "median_us": 620,
+      "p95_us": 699
+    },
+    {
+      "input": {
+        "depth": 5,
+        "facts": 50000,
+        "fixture_hash": "e67b82e9a07b646a0d38f950fe4a32e148746c74b01bfa235b0290497f3970f1",
+        "index_build_us": 228121
+      },
+      "name": "graph/50000/5",
+      "samples": [
+        {
+          "elapsed_us": 62,
+          "node_reductions": 6872,
+          "node_gcs": 0,
+          "process_memory_before": 59421168,
+          "process_memory_after": 59467192,
+          "vm_memory_before": 112985658,
+          "vm_memory_after": 113039274
+        },
+        {
+          "elapsed_us": 51,
+          "node_reductions": 5996,
+          "node_gcs": 0,
+          "process_memory_before": 34388328,
+          "process_memory_after": 34434352,
+          "vm_memory_before": 87952770,
+          "vm_memory_after": 88014354
+        },
+        {
+          "elapsed_us": 32,
+          "node_reductions": 6478,
+          "node_gcs": 0,
+          "process_memory_before": 41265160,
+          "process_memory_after": 41316440,
+          "vm_memory_before": 94836482,
+          "vm_memory_after": 94896386
+        },
+        {
+          "elapsed_us": 87,
+          "node_reductions": 4966,
+          "node_gcs": 0,
+          "process_memory_before": 34388008,
+          "process_memory_after": 34427944,
+          "vm_memory_before": 87950306,
+          "vm_memory_after": 88000930
+        },
+        {
+          "elapsed_us": 91,
+          "node_reductions": 8019,
+          "node_gcs": 0,
+          "process_memory_before": 41265240,
+          "process_memory_after": 41316280,
+          "vm_memory_before": 94859162,
+          "vm_memory_after": 94889082
+        },
+        {
+          "elapsed_us": 42,
+          "node_reductions": 6810,
+          "node_gcs": 0,
+          "process_memory_before": 34388168,
+          "process_memory_after": 34439208,
+          "vm_memory_before": 87970738,
+          "vm_memory_after": 88012162
+        },
+        {
+          "elapsed_us": 58,
+          "node_reductions": 6255,
+          "node_gcs": 0,
+          "process_memory_before": 41265160,
+          "process_memory_after": 41310432,
+          "vm_memory_before": 94844202,
+          "vm_memory_after": 94876538
+        }
+      ],
+      "median_us": 58,
+      "p95_us": 91
+    },
+    {
+      "input": {
+        "depth": 50,
+        "facts": 50000,
+        "fixture_hash": "e67b82e9a07b646a0d38f950fe4a32e148746c74b01bfa235b0290497f3970f1",
+        "index_build_us": 228121
+      },
+      "name": "graph/50000/50",
+      "samples": [
+        {
+          "elapsed_us": 272,
+          "node_reductions": 50736,
+          "node_gcs": 0,
+          "process_memory_before": 34388168,
+          "process_memory_after": 34434192,
+          "vm_memory_before": 87945610,
+          "vm_memory_after": 88030866
+        },
+        {
+          "elapsed_us": 262,
+          "node_reductions": 50764,
+          "node_gcs": 0,
+          "process_memory_before": 41265240,
+          "process_memory_after": 41316520,
+          "vm_memory_before": 94774938,
+          "vm_memory_after": 94817962
+        },
+        {
+          "elapsed_us": 264,
+          "node_reductions": 50237,
+          "node_gcs": 0,
+          "process_memory_before": 34388008,
+          "process_memory_after": 34439128,
+          "vm_memory_before": 87858530,
+          "vm_memory_after": 87908914
+        },
+        {
+          "elapsed_us": 249,
+          "node_reductions": 50750,
+          "node_gcs": 0,
+          "process_memory_before": 41265160,
+          "process_memory_after": 41311200,
+          "vm_memory_before": 94734658,
+          "vm_memory_after": 94797178
+        },
+        {
+          "elapsed_us": 280,
+          "node_reductions": 50730,
+          "node_gcs": 0,
+          "process_memory_before": 34388328,
+          "process_memory_after": 34433520,
+          "vm_memory_before": 87834002,
+          "vm_memory_after": 87888602
+        },
+        {
+          "elapsed_us": 256,
+          "node_reductions": 50762,
+          "node_gcs": 0,
+          "process_memory_before": 41265240,
+          "process_memory_after": 41300112,
+          "vm_memory_before": 94690506,
+          "vm_memory_after": 94771386
+        },
+        {
+          "elapsed_us": 346,
+          "node_reductions": 50740,
+          "node_gcs": 0,
+          "process_memory_before": 34388168,
+          "process_memory_after": 34433440,
+          "vm_memory_before": 87827130,
+          "vm_memory_after": 87903658
+        }
+      ],
+      "median_us": 264,
+      "p95_us": 346
+    },
+    {
+      "input": {
+        "depth": 150,
+        "facts": 50000,
+        "fixture_hash": "e67b82e9a07b646a0d38f950fe4a32e148746c74b01bfa235b0290497f3970f1",
+        "index_build_us": 228121
+      },
+      "name": "graph/50000/150",
+      "samples": [
+        {
+          "elapsed_us": 676,
+          "node_reductions": 150632,
+          "node_gcs": 0,
+          "process_memory_before": 34388248,
+          "process_memory_after": 34429112,
+          "vm_memory_before": 87821698,
+          "vm_memory_after": 87976754
+        },
+        {
+          "elapsed_us": 672,
+          "node_reductions": 150601,
+          "node_gcs": 0,
+          "process_memory_before": 41265000,
+          "process_memory_after": 41316360,
+          "vm_memory_before": 94705082,
+          "vm_memory_after": 94834546
+        },
+        {
+          "elapsed_us": 638,
+          "node_reductions": 148859,
+          "node_gcs": 0,
+          "process_memory_before": 34388328,
+          "process_memory_after": 34434528,
+          "vm_memory_before": 87856562,
+          "vm_memory_after": 87974434
+        },
+        {
+          "elapsed_us": 643,
+          "node_reductions": 149846,
+          "node_gcs": 0,
+          "process_memory_before": 41265240,
+          "process_memory_after": 41305448,
+          "vm_memory_before": 94690610,
+          "vm_memory_after": 94839442
+        },
+        {
+          "elapsed_us": 741,
+          "node_reductions": 149722,
+          "node_gcs": 0,
+          "process_memory_before": 34387928,
+          "process_memory_after": 34434048,
+          "vm_memory_before": 87838850,
+          "vm_memory_after": 87973642
+        },
+        {
+          "elapsed_us": 644,
+          "node_reductions": 150056,
+          "node_gcs": 0,
+          "process_memory_before": 41265560,
+          "process_memory_after": 41316920,
+          "vm_memory_before": 94745658,
+          "vm_memory_after": 94851250
+        },
+        {
+          "elapsed_us": 630,
+          "node_reductions": 150577,
+          "node_gcs": 0,
+          "process_memory_before": 34388408,
+          "process_memory_after": 34428504,
+          "vm_memory_before": 87855714,
+          "vm_memory_after": 87969522
+        }
+      ],
+      "median_us": 644,
+      "p95_us": 741
+    },
+    {
+      "input": {
+        "depth": 5,
+        "facts": 250000,
+        "fixture_hash": "dfb9f4900db0e90f1fdd104867fd79d73135af7ac3db3049d6f392a94b022d08",
+        "index_build_us": 1607399
+      },
+      "name": "graph/250000/5",
+      "samples": [
+        {
+          "elapsed_us": 58,
+          "node_reductions": 6386,
+          "node_gcs": 0,
+          "process_memory_before": 306589360,
+          "process_memory_after": 306635560,
+          "vm_memory_before": 359934706,
+          "vm_memory_after": 359981810
+        },
+        {
+          "elapsed_us": 134,
+          "node_reductions": 5955,
+          "node_gcs": 0,
+          "process_memory_before": 177425576,
+          "process_memory_after": 177465784,
+          "vm_memory_before": 230762962,
+          "vm_memory_after": 230819522
+        },
+        {
+          "elapsed_us": 114,
+          "node_reductions": 8024,
+          "node_gcs": 0,
+          "process_memory_before": 212910256,
+          "process_memory_after": 212961376,
+          "vm_memory_before": 266262346,
+          "vm_memory_after": 266315290
+        },
+        {
+          "elapsed_us": 49,
+          "node_reductions": 6567,
+          "node_gcs": 0,
+          "process_memory_before": 177425256,
+          "process_memory_after": 177465208,
+          "vm_memory_before": 230763298,
+          "vm_memory_after": 230789306
+        },
+        {
+          "elapsed_us": 55,
+          "node_reductions": 6840,
+          "node_gcs": 0,
+          "process_memory_before": 212910256,
+          "process_memory_after": 212961376,
+          "vm_memory_before": 266291538,
+          "vm_memory_after": 266322002
+        },
+        {
+          "elapsed_us": 53,
+          "node_reductions": 6470,
+          "node_gcs": 0,
+          "process_memory_before": 177425496,
+          "process_memory_after": 177470864,
+          "vm_memory_before": 230769610,
+          "vm_memory_after": 230815154
+        },
+        {
+          "elapsed_us": 163,
+          "node_reductions": 8003,
+          "node_gcs": 0,
+          "process_memory_before": 212910096,
+          "process_memory_after": 212961216,
+          "vm_memory_before": 266291346,
+          "vm_memory_after": 266321746
+        }
+      ],
+      "median_us": 58,
+      "p95_us": 163
+    },
+    {
+      "input": {
+        "depth": 50,
+        "facts": 250000,
+        "fixture_hash": "dfb9f4900db0e90f1fdd104867fd79d73135af7ac3db3049d6f392a94b022d08",
+        "index_build_us": 1607399
+      },
+      "name": "graph/250000/50",
+      "samples": [
+        {
+          "elapsed_us": 296,
+          "node_reductions": 50123,
+          "node_gcs": 0,
+          "process_memory_before": 177425416,
+          "process_memory_after": 177476776,
+          "vm_memory_before": 230852130,
+          "vm_memory_after": 230861266
+        },
+        {
+          "elapsed_us": 307,
+          "node_reductions": 49883,
+          "node_gcs": 0,
+          "process_memory_before": 212909616,
+          "process_memory_after": 212955816,
+          "vm_memory_before": 266254634,
+          "vm_memory_after": 266340066
+        },
+        {
+          "elapsed_us": 380,
+          "node_reductions": 51924,
+          "node_gcs": 0,
+          "process_memory_before": 177425656,
+          "process_memory_after": 177476856,
+          "vm_memory_before": 230823290,
+          "vm_memory_after": 230861442
+        },
+        {
+          "elapsed_us": 271,
+          "node_reductions": 50726,
+          "node_gcs": 0,
+          "process_memory_before": 212909936,
+          "process_memory_after": 212949952,
+          "vm_memory_before": 266271074,
+          "vm_memory_after": 266333098
+        },
+        {
+          "elapsed_us": 364,
+          "node_reductions": 51951,
+          "node_gcs": 0,
+          "process_memory_before": 177425336,
+          "process_memory_after": 177476616,
+          "vm_memory_before": 230783506,
+          "vm_memory_after": 230867834
+        },
+        {
+          "elapsed_us": 284,
+          "node_reductions": 50839,
+          "node_gcs": 0,
+          "process_memory_before": 212910256,
+          "process_memory_after": 212956136,
+          "vm_memory_before": 266285266,
+          "vm_memory_after": 266340378
+        },
+        {
+          "elapsed_us": 382,
+          "node_reductions": 51929,
+          "node_gcs": 0,
+          "process_memory_before": 177425496,
+          "process_memory_after": 177476856,
+          "vm_memory_before": 230784370,
+          "vm_memory_after": 230861394
+        }
+      ],
+      "median_us": 307,
+      "p95_us": 382
+    },
+    {
+      "input": {
+        "depth": 150,
+        "facts": 250000,
+        "fixture_hash": "dfb9f4900db0e90f1fdd104867fd79d73135af7ac3db3049d6f392a94b022d08",
+        "index_build_us": 1607399
+      },
+      "name": "graph/250000/150",
+      "samples": [
+        {
+          "elapsed_us": 808,
+          "node_reductions": 150254,
+          "node_gcs": 0,
+          "process_memory_before": 212909856,
+          "process_memory_after": 212950048,
+          "vm_memory_before": 266247450,
+          "vm_memory_after": 266402698
+        },
+        {
+          "elapsed_us": 696,
+          "node_reductions": 151766,
+          "node_gcs": 0,
+          "process_memory_before": 177425336,
+          "process_memory_after": 177476696,
+          "vm_memory_before": 230789922,
+          "vm_memory_after": 230921754
+        },
+        {
+          "elapsed_us": 687,
+          "node_reductions": 150589,
+          "node_gcs": 0,
+          "process_memory_before": 212909936,
+          "process_memory_after": 212955464,
+          "vm_memory_before": 266254274,
+          "vm_memory_after": 266400426
+        },
+        {
+          "elapsed_us": 710,
+          "node_reductions": 151766,
+          "node_gcs": 0,
+          "process_memory_before": 177425416,
+          "process_memory_after": 177476856,
+          "vm_memory_before": 230795194,
+          "vm_memory_after": 230922058
+        },
+        {
+          "elapsed_us": 816,
+          "node_reductions": 149718,
+          "node_gcs": 0,
+          "process_memory_before": 212909936,
+          "process_memory_after": 212956136,
+          "vm_memory_before": 266255306,
+          "vm_memory_after": 266393122
+        },
+        {
+          "elapsed_us": 674,
+          "node_reductions": 150605,
+          "node_gcs": 0,
+          "process_memory_before": 177425176,
+          "process_memory_after": 177465176,
+          "vm_memory_before": 230781194,
+          "vm_memory_after": 230908650
+        },
+        {
+          "elapsed_us": 720,
+          "node_reductions": 151781,
+          "node_gcs": 0,
+          "process_memory_before": 212910096,
+          "process_memory_after": 212961536,
+          "vm_memory_before": 266294874,
+          "vm_memory_after": 266406402
+        }
+      ],
+      "median_us": 710,
+      "p95_us": 816
+    },
+    {
+      "input": {
+        "matches": 1000,
+        "seeds": 1000,
+        "fixture_hash": "9d4132f683d43339d146cb496324ed4bced8b43961c796ca5781ff336d393135"
+      },
+      "name": "foray/projection/1000",
+      "samples": [
+        {
+          "elapsed_us": 6443,
+          "node_reductions": 777906,
+          "node_gcs": 83,
+          "process_memory_before": 373840,
+          "process_memory_after": 691248,
+          "vm_memory_before": 54568784,
+          "vm_memory_after": 54911656
+        },
+        {
+          "elapsed_us": 6183,
+          "node_reductions": 782663,
+          "node_gcs": 85,
+          "process_memory_before": 231904,
+          "process_memory_after": 691032,
+          "vm_memory_before": 54452808,
+          "vm_memory_after": 54893888
+        },
+        {
+          "elapsed_us": 6414,
+          "node_reductions": 780632,
+          "node_gcs": 83,
+          "process_memory_before": 373920,
+          "process_memory_after": 691248,
+          "vm_memory_before": 54590152,
+          "vm_memory_after": 54911896
+        },
+        {
+          "elapsed_us": 6252,
+          "node_reductions": 782652,
+          "node_gcs": 84,
+          "process_memory_before": 231984,
+          "process_memory_after": 691904,
+          "vm_memory_before": 54458496,
+          "vm_memory_after": 54995208
+        },
+        {
+          "elapsed_us": 6338,
+          "node_reductions": 781018,
+          "node_gcs": 83,
+          "process_memory_before": 373840,
+          "process_memory_after": 691248,
+          "vm_memory_before": 54629384,
+          "vm_memory_after": 54922312
+        },
+        {
+          "elapsed_us": 6236,
+          "node_reductions": 782716,
+          "node_gcs": 85,
+          "process_memory_before": 231824,
+          "process_memory_after": 691112,
+          "vm_memory_before": 54453128,
+          "vm_memory_after": 54904224
+        },
+        {
+          "elapsed_us": 6322,
+          "node_reductions": 781931,
+          "node_gcs": 83,
+          "process_memory_before": 373680,
+          "process_memory_after": 691248,
+          "vm_memory_before": 54590528,
+          "vm_memory_after": 54912232
+        }
+      ],
+      "median_us": 6322,
+      "p95_us": 6443
+    },
+    {
+      "input": {
+        "matches": 1000,
+        "seeds": 10000,
+        "fixture_hash": "610774771b3980270fc8ef9f98cf7f2dafc18af63052244b5b45bf86dba1320d"
+      },
+      "name": "foray/projection/10000",
+      "samples": [
+        {
+          "elapsed_us": 6610,
+          "node_reductions": 789362,
+          "node_gcs": 12,
+          "process_memory_before": 2548040,
+          "process_memory_after": 4723968,
+          "vm_memory_before": 56756984,
+          "vm_memory_after": 59116448
+        },
+        {
+          "elapsed_us": 6662,
+          "node_reductions": 788740,
+          "node_gcs": 12,
+          "process_memory_before": 2547960,
+          "process_memory_after": 4723968,
+          "vm_memory_before": 57370432,
+          "vm_memory_after": 59099800
+        },
+        {
+          "elapsed_us": 6637,
+          "node_reductions": 788968,
+          "node_gcs": 12,
+          "process_memory_before": 2547640,
+          "process_memory_after": 4724048,
+          "vm_memory_before": 56774000,
+          "vm_memory_after": 59118776
+        },
+        {
+          "elapsed_us": 6595,
+          "node_reductions": 788908,
+          "node_gcs": 12,
+          "process_memory_before": 2547640,
+          "process_memory_after": 4723968,
+          "vm_memory_before": 56756488,
+          "vm_memory_after": 59120048
+        },
+        {
+          "elapsed_us": 6545,
+          "node_reductions": 788724,
+          "node_gcs": 12,
+          "process_memory_before": 2548040,
+          "process_memory_after": 4724048,
+          "vm_memory_before": 57350032,
+          "vm_memory_after": 59120048
+        },
+        {
+          "elapsed_us": 6725,
+          "node_reductions": 788898,
+          "node_gcs": 12,
+          "process_memory_before": 2547880,
+          "process_memory_after": 4723968,
+          "vm_memory_before": 57356760,
+          "vm_memory_after": 59113520
+        },
+        {
+          "elapsed_us": 6723,
+          "node_reductions": 788726,
+          "node_gcs": 12,
+          "process_memory_before": 2547880,
+          "process_memory_after": 4723968,
+          "vm_memory_before": 56763648,
+          "vm_memory_after": 59111712
+        }
+      ],
+      "median_us": 6637,
+      "p95_us": 6725
+    },
+    {
+      "input": {
+        "seeds": 1000,
+        "fixture_hash": "969b4bd24db5fa097dcf14430206c2cc01ea3498a6041ad937ab143c92703f4b"
+      },
+      "name": "havoc/import/1000",
+      "samples": [
+        {
+          "elapsed_us": 9620,
+          "node_reductions": 1198963,
+          "node_gcs": 38,
+          "process_memory_before": 373840,
+          "process_memory_after": 1805264,
+          "vm_memory_before": 54908627,
+          "vm_memory_after": 56338995
+        },
+        {
+          "elapsed_us": 9898,
+          "node_reductions": 1201449,
+          "node_gcs": 37,
+          "process_memory_before": 373920,
+          "process_memory_after": 1805184,
+          "vm_memory_before": 55145547,
+          "vm_memory_after": 56340395
+        },
+        {
+          "elapsed_us": 9265,
+          "node_reductions": 1199556,
+          "node_gcs": 38,
+          "process_memory_before": 373600,
+          "process_memory_after": 1805184,
+          "vm_memory_before": 55150091,
+          "vm_memory_after": 56334139
+        },
+        {
+          "elapsed_us": 9254,
+          "node_reductions": 1199055,
+          "node_gcs": 37,
+          "process_memory_before": 373600,
+          "process_memory_after": 1805184,
+          "vm_memory_before": 54934987,
+          "vm_memory_after": 56318475
+        },
+        {
+          "elapsed_us": 9233,
+          "node_reductions": 1205641,
+          "node_gcs": 37,
+          "process_memory_before": 373760,
+          "process_memory_after": 1805264,
+          "vm_memory_before": 54917507,
+          "vm_memory_after": 56444467
+        },
+        {
+          "elapsed_us": 9725,
+          "node_reductions": 1188464,
+          "node_gcs": 25,
+          "process_memory_before": 373600,
+          "process_memory_after": 4722152,
+          "vm_memory_before": 55138203,
+          "vm_memory_after": 59371195
+        },
+        {
+          "elapsed_us": 9191,
+          "node_reductions": 1187226,
+          "node_gcs": 24,
+          "process_memory_before": 373680,
+          "process_memory_after": 4722152,
+          "vm_memory_before": 55515955,
+          "vm_memory_after": 59372507
+        }
+      ],
+      "median_us": 9265,
+      "p95_us": 9898
+    },
+    {
+      "input": {
+        "seeds": 5000,
+        "fixture_hash": "b630f059bbf14458ccf41b6778a7f65006d9c37da18202060cb595702f56f143"
+      },
+      "name": "havoc/import/5000",
+      "samples": [
+        {
+          "elapsed_us": 50310,
+          "node_reductions": 5920029,
+          "node_gcs": 49,
+          "process_memory_before": 1575824,
+          "process_memory_after": 8971640,
+          "vm_memory_before": 57443763,
+          "vm_memory_after": 64833043
+        },
+        {
+          "elapsed_us": 50380,
+          "node_reductions": 5920026,
+          "node_gcs": 50,
+          "process_memory_before": 1575824,
+          "process_memory_after": 8971640,
+          "vm_memory_before": 58428355,
+          "vm_memory_after": 64847459
+        },
+        {
+          "elapsed_us": 50632,
+          "node_reductions": 5919834,
+          "node_gcs": 49,
+          "process_memory_before": 1575664,
+          "process_memory_after": 8971720,
+          "vm_memory_before": 57451571,
+          "vm_memory_after": 64839595
+        },
+        {
+          "elapsed_us": 50388,
+          "node_reductions": 5920875,
+          "node_gcs": 49,
+          "process_memory_before": 1575344,
+          "process_memory_after": 8971720,
+          "vm_memory_before": 57451699,
+          "vm_memory_after": 64847643
+        },
+        {
+          "elapsed_us": 50785,
+          "node_reductions": 5920092,
+          "node_gcs": 50,
+          "process_memory_before": 1575664,
+          "process_memory_after": 8971640,
+          "vm_memory_before": 57442235,
+          "vm_memory_after": 64827699
+        },
+        {
+          "elapsed_us": 51062,
+          "node_reductions": 5922047,
+          "node_gcs": 49,
+          "process_memory_before": 1575744,
+          "process_memory_after": 8971800,
+          "vm_memory_before": 58412339,
+          "vm_memory_after": 64842979
+        },
+        {
+          "elapsed_us": 50530,
+          "node_reductions": 5919964,
+          "node_gcs": 49,
+          "process_memory_before": 1575584,
+          "process_memory_after": 8971560,
+          "vm_memory_before": 57446659,
+          "vm_memory_after": 64835899
+        }
+      ],
+      "median_us": 50530,
+      "p95_us": 51062
+    },
+    {
+      "input": {
+        "calls": 5000,
+        "files": 50,
+        "fixture_hash": "58d696bf1e8984fd5b091cb16e21611ae81df87b15cee62e160be355297796e0"
+      },
+      "name": "sast/source-rules",
+      "samples": [
+        {
+          "elapsed_us": 211632,
+          "node_reductions": 15558089,
+          "node_gcs": 738,
+          "process_memory_before": 56640,
+          "process_memory_after": 16587968,
+          "vm_memory_before": 56106432,
+          "vm_memory_after": 75451832
+        },
+        {
+          "elapsed_us": 184054,
+          "node_reductions": 15437324,
+          "node_gcs": 745,
+          "process_memory_before": 56320,
+          "process_memory_after": 19133432,
+          "vm_memory_before": 56108776,
+          "vm_memory_after": 77643304
+        },
+        {
+          "elapsed_us": 208925,
+          "node_reductions": 15534873,
+          "node_gcs": 740,
+          "process_memory_before": 56480,
+          "process_memory_after": 16586992,
+          "vm_memory_before": 56116368,
+          "vm_memory_after": 75099624
+        },
+        {
+          "elapsed_us": 182639,
+          "node_reductions": 15432563,
+          "node_gcs": 742,
+          "process_memory_before": 56480,
+          "process_memory_after": 19133560,
+          "vm_memory_before": 56111656,
+          "vm_memory_after": 77631920
+        },
+        {
+          "elapsed_us": 192191,
+          "node_reductions": 15445396,
+          "node_gcs": 738,
+          "process_memory_before": 56480,
+          "process_memory_after": 19132728,
+          "vm_memory_before": 56119280,
+          "vm_memory_after": 77636248
+        },
+        {
+          "elapsed_us": 213883,
+          "node_reductions": 15551187,
+          "node_gcs": 735,
+          "process_memory_before": 56160,
+          "process_memory_after": 16588512,
+          "vm_memory_before": 56119744,
+          "vm_memory_after": 75081856
+        },
+        {
+          "elapsed_us": 211629,
+          "node_reductions": 15559358,
+          "node_gcs": 748,
+          "process_memory_before": 56320,
+          "process_memory_after": 16587680,
+          "vm_memory_before": 56206768,
+          "vm_memory_after": 75130016
+        }
+      ],
+      "median_us": 208925,
+      "p95_us": 213883
+    },
+    {
+      "input": {
+        "mode": "disabled",
+        "fixture_hash": "5410a2749183237a252d384b829c0333134a5894896b83fc74ceeafdffda3db1",
+        "workload": "compute"
+      },
+      "name": "iast/compute/disabled",
+      "samples": [
+        {
+          "elapsed_us": 364,
+          "node_reductions": 29564,
+          "node_gcs": 2,
+          "process_memory_before": 35944,
+          "process_memory_after": 102512,
+          "vm_memory_before": 56063270,
+          "vm_memory_after": 56121910
+        },
+        {
+          "elapsed_us": 323,
+          "node_reductions": 27232,
+          "node_gcs": 2,
+          "process_memory_before": 36024,
+          "process_memory_after": 102832,
+          "vm_memory_before": 56094318,
+          "vm_memory_after": 56135374
+        },
+        {
+          "elapsed_us": 313,
+          "node_reductions": 29221,
+          "node_gcs": 1,
+          "process_memory_before": 35544,
+          "process_memory_after": 253832,
+          "vm_memory_before": 56091574,
+          "vm_memory_after": 56269982
+        },
+        {
+          "elapsed_us": 320,
+          "node_reductions": 25872,
+          "node_gcs": 1,
+          "process_memory_before": 56480,
+          "process_memory_after": 248992,
+          "vm_memory_before": 56085910,
+          "vm_memory_after": 56250294
+        },
+        {
+          "elapsed_us": 316,
+          "node_reductions": 26536,
+          "node_gcs": 1,
+          "process_memory_before": 56640,
+          "process_memory_after": 237536,
+          "vm_memory_before": 56127654,
+          "vm_memory_after": 56253934
+        },
+        {
+          "elapsed_us": 305,
+          "node_reductions": 28686,
+          "node_gcs": 1,
+          "process_memory_before": 56720,
+          "process_memory_after": 226656,
+          "vm_memory_before": 56098254,
+          "vm_memory_after": 56243502
+        },
+        {
+          "elapsed_us": 341,
+          "node_reductions": 24992,
+          "node_gcs": 1,
+          "process_memory_before": 56560,
+          "process_memory_after": 226320,
+          "vm_memory_before": 56120798,
+          "vm_memory_after": 56234590
+        }
+      ],
+      "median_us": 320,
+      "p95_us": 364
+    },
+    {
+      "input": {
+        "mode": "targeted",
+        "fixture_hash": "5410a2749183237a252d384b829c0333134a5894896b83fc74ceeafdffda3db1",
+        "workload": "compute"
+      },
+      "name": "iast/compute/targeted",
+      "samples": [
+        {
+          "elapsed_us": 8358,
+          "node_reductions": 75162,
+          "node_gcs": 3,
+          "process_memory_before": 35944,
+          "process_memory_after": 253912,
+          "vm_memory_before": 56738173,
+          "vm_memory_after": 56794749
+        },
+        {
+          "elapsed_us": 8020,
+          "node_reductions": 67421,
+          "node_gcs": 3,
+          "process_memory_before": 56560,
+          "process_memory_after": 183064,
+          "vm_memory_before": 56217509,
+          "vm_memory_after": 56283989
+        },
+        {
+          "elapsed_us": 7947,
+          "node_reductions": 67511,
+          "node_gcs": 4,
+          "process_memory_before": 56640,
+          "process_memory_after": 177632,
+          "vm_memory_before": 56205573,
+          "vm_memory_after": 56296533
+        },
+        {
+          "elapsed_us": 7396,
+          "node_reductions": 67447,
+          "node_gcs": 2,
+          "process_memory_before": 56480,
+          "process_memory_after": 215952,
+          "vm_memory_before": 56195669,
+          "vm_memory_after": 56328069
+        },
+        {
+          "elapsed_us": 8415,
+          "node_reductions": 74276,
+          "node_gcs": 2,
+          "process_memory_before": 56640,
+          "process_memory_after": 220968,
+          "vm_memory_before": 56427965,
+          "vm_memory_after": 56325197
+        },
+        {
+          "elapsed_us": 8272,
+          "node_reductions": 87432,
+          "node_gcs": 4,
+          "process_memory_before": 56560,
+          "process_memory_after": 183976,
+          "vm_memory_before": 56413517,
+          "vm_memory_after": 56309077
+        },
+        {
+          "elapsed_us": 7357,
+          "node_reductions": 46887,
+          "node_gcs": 3,
+          "process_memory_before": 56560,
+          "process_memory_after": 183736,
+          "vm_memory_before": 56207677,
+          "vm_memory_after": 56724021
+        }
+      ],
+      "median_us": 8020,
+      "p95_us": 8415
+    },
+    {
+      "input": {
+        "mode": "disabled",
+        "fixture_hash": "69b8e01c0315d5a3b723be2d41b7441ed8f66b8e8d88284d1933f1f0bcd3b85f",
+        "workload": "binary"
+      },
+      "name": "iast/binary/disabled",
+      "samples": [
+        {
+          "elapsed_us": 19,
+          "node_reductions": 11668,
+          "node_gcs": 1,
+          "process_memory_before": 56480,
+          "process_memory_after": 221224,
+          "vm_memory_before": 56364925,
+          "vm_memory_after": 56412501
+        },
+        {
+          "elapsed_us": 10,
+          "node_reductions": 11999,
+          "node_gcs": 1,
+          "process_memory_before": 56480,
+          "process_memory_after": 237088,
+          "vm_memory_before": 56288309,
+          "vm_memory_after": 56402053
+        },
+        {
+          "elapsed_us": 11,
+          "node_reductions": 2034,
+          "node_gcs": 1,
+          "process_memory_before": 56800,
+          "process_memory_after": 254312,
+          "vm_memory_before": 56210581,
+          "vm_memory_after": 56374117
+        },
+        {
+          "elapsed_us": 10,
+          "node_reductions": 2073,
+          "node_gcs": 1,
+          "process_memory_before": 35544,
+          "process_memory_after": 237840,
+          "vm_memory_before": 56176621,
+          "vm_memory_after": 56412253
+        },
+        {
+          "elapsed_us": 10,
+          "node_reductions": 6215,
+          "node_gcs": 1,
+          "process_memory_before": 56560,
+          "process_memory_after": 255400,
+          "vm_memory_before": 56251597,
+          "vm_memory_after": 56380493
+        },
+        {
+          "elapsed_us": 10,
+          "node_reductions": 4190,
+          "node_gcs": 1,
+          "process_memory_before": 56480,
+          "process_memory_after": 215504,
+          "vm_memory_before": 56209581,
+          "vm_memory_after": 56328413
+        },
+        {
+          "elapsed_us": 11,
+          "node_reductions": 4846,
+          "node_gcs": 1,
+          "process_memory_before": 56640,
+          "process_memory_after": 255448,
+          "vm_memory_before": 56181317,
+          "vm_memory_after": 56386277
+        }
+      ],
+      "median_us": 10,
+      "p95_us": 19
+    },
+    {
+      "input": {
+        "mode": "targeted",
+        "fixture_hash": "69b8e01c0315d5a3b723be2d41b7441ed8f66b8e8d88284d1933f1f0bcd3b85f",
+        "workload": "binary"
+      },
+      "name": "iast/binary/targeted",
+      "samples": [
+        {
+          "elapsed_us": 6767,
+          "node_reductions": 30566,
+          "node_gcs": 2,
+          "process_memory_before": 56720,
+          "process_memory_after": 231896,
+          "vm_memory_before": 56167357,
+          "vm_memory_after": 56325725
+        },
+        {
+          "elapsed_us": 7608,
+          "node_reductions": 42684,
+          "node_gcs": 3,
+          "process_memory_before": 56560,
+          "process_memory_after": 248352,
+          "vm_memory_before": 56430317,
+          "vm_memory_after": 56365229
+        },
+        {
+          "elapsed_us": 7987,
+          "node_reductions": 62579,
+          "node_gcs": 2,
+          "process_memory_before": 56720,
+          "process_memory_after": 248800,
+          "vm_memory_before": 56227613,
+          "vm_memory_after": 56366557
+        },
+        {
+          "elapsed_us": 7197,
+          "node_reductions": 23991,
+          "node_gcs": 2,
+          "process_memory_before": 56560,
+          "process_memory_after": 231816,
+          "vm_memory_before": 56455645,
+          "vm_memory_after": 56788701
+        },
+        {
+          "elapsed_us": 7433,
+          "node_reductions": 42660,
+          "node_gcs": 3,
+          "process_memory_before": 56400,
+          "process_memory_after": 198248,
+          "vm_memory_before": 56211045,
+          "vm_memory_after": 56762013
+        },
+        {
+          "elapsed_us": 7530,
+          "node_reductions": 42407,
+          "node_gcs": 3,
+          "process_memory_before": 56400,
+          "process_memory_after": 177792,
+          "vm_memory_before": 56202437,
+          "vm_memory_after": 56911141
+        },
+        {
+          "elapsed_us": 7480,
+          "node_reductions": 42492,
+          "node_gcs": 3,
+          "process_memory_before": 56560,
+          "process_memory_after": 182792,
+          "vm_memory_before": 56388605,
+          "vm_memory_after": 56300365
+        }
+      ],
+      "median_us": 7480,
+      "p95_us": 7987
+    },
+    {
+      "input": {
+        "mode": "disabled",
+        "fixture_hash": "08db4eda9980a5ad1e8ec227fc8d1b0ff4ddb06f3c10de70b7d5deaa9d96e001",
+        "workload": "container"
+      },
+      "name": "iast/container/disabled",
+      "samples": [
+        {
+          "elapsed_us": 0,
+          "node_reductions": 11695,
+          "node_gcs": 1,
+          "process_memory_before": 56560,
+          "process_memory_after": 237056,
+          "vm_memory_before": 56210621,
+          "vm_memory_after": 56431253
+        },
+        {
+          "elapsed_us": 0,
+          "node_reductions": 11989,
+          "node_gcs": 1,
+          "process_memory_before": 56480,
+          "process_memory_after": 220152,
+          "vm_memory_before": 56282277,
+          "vm_memory_after": 56389637
+        },
+        {
+          "elapsed_us": 0,
+          "node_reductions": 4357,
+          "node_gcs": 1,
+          "process_memory_before": 56400,
+          "process_memory_after": 243864,
+          "vm_memory_before": 56455013,
+          "vm_memory_after": 56562133
+        },
+        {
+          "elapsed_us": 0,
+          "node_reductions": 2736,
+          "node_gcs": 1,
+          "process_memory_before": 56480,
+          "process_memory_after": 249888,
+          "vm_memory_before": 56432877,
+          "vm_memory_after": 56393245
+        },
+        {
+          "elapsed_us": 0,
+          "node_reductions": 4922,
+          "node_gcs": 1,
+          "process_memory_before": 90208,
+          "process_memory_after": 265224,
+          "vm_memory_before": 56275669,
+          "vm_memory_after": 56427877
+        },
+        {
+          "elapsed_us": 0,
+          "node_reductions": 3810,
+          "node_gcs": 2,
+          "process_memory_before": 56480,
+          "process_memory_after": 183432,
+          "vm_memory_before": 56213813,
+          "vm_memory_after": 56326909
+        },
+        {
+          "elapsed_us": 0,
+          "node_reductions": 4041,
+          "node_gcs": 1,
+          "process_memory_before": 56320,
+          "process_memory_after": 254440,
+          "vm_memory_before": 56191653,
+          "vm_memory_after": 56405557
+        }
+      ],
+      "median_us": 0,
+      "p95_us": 0
+    },
+    {
+      "input": {
+        "mode": "targeted",
+        "fixture_hash": "08db4eda9980a5ad1e8ec227fc8d1b0ff4ddb06f3c10de70b7d5deaa9d96e001",
+        "workload": "container"
+      },
+      "name": "iast/container/targeted",
+      "samples": [
+        {
+          "elapsed_us": 7777,
+          "node_reductions": 52459,
+          "node_gcs": 34,
+          "process_memory_before": 90048,
+          "process_memory_after": 265304,
+          "vm_memory_before": 56658581,
+          "vm_memory_after": 56369197
+        },
+        {
+          "elapsed_us": 7517,
+          "node_reductions": 45030,
+          "node_gcs": 34,
+          "process_memory_before": 35704,
+          "process_memory_after": 123448,
+          "vm_memory_before": 56456445,
+          "vm_memory_after": 56235661
+        },
+        {
+          "elapsed_us": 7173,
+          "node_reductions": 47204,
+          "node_gcs": 33,
+          "process_memory_before": 89968,
+          "process_memory_after": 265304,
+          "vm_memory_before": 56367821,
+          "vm_memory_after": 56970197
+        },
+        {
+          "elapsed_us": 6974,
+          "node_reductions": 45009,
+          "node_gcs": 34,
+          "process_memory_before": 36024,
+          "process_memory_after": 259824,
+          "vm_memory_before": 56206421,
+          "vm_memory_after": 56814949
+        },
+        {
+          "elapsed_us": 7673,
+          "node_reductions": 60823,
+          "node_gcs": 33,
+          "process_memory_before": 89808,
+          "process_memory_after": 265384,
+          "vm_memory_before": 56495749,
+          "vm_memory_after": 56366317
+        },
+        {
+          "elapsed_us": 7245,
+          "node_reductions": 33299,
+          "node_gcs": 33,
+          "process_memory_before": 36024,
+          "process_memory_after": 238016,
+          "vm_memory_before": 56472189,
+          "vm_memory_after": 56347357
+        },
+        {
+          "elapsed_us": 7268,
+          "node_reductions": 45168,
+          "node_gcs": 33,
+          "process_memory_before": 89808,
+          "process_memory_after": 286000,
+          "vm_memory_before": 56240869,
+          "vm_memory_after": 57004221
+        }
+      ],
+      "median_us": 7268,
+      "p95_us": 7777
+    },
+    {
+      "input": {
+        "mode": "disabled",
+        "fixture_hash": "5097520630a0f1e7c0e0b307637ca96f7f4a76798892118b6d63053eba9071e8",
+        "workload": "io"
+      },
+      "name": "iast/io/disabled",
+      "samples": [
+        {
+          "elapsed_us": 24,
+          "node_reductions": 4339,
+          "node_gcs": 2,
+          "process_memory_before": 36104,
+          "process_memory_after": 110576,
+          "vm_memory_before": 56187516,
+          "vm_memory_after": 56290660
+        },
+        {
+          "elapsed_us": 11,
+          "node_reductions": 4605,
+          "node_gcs": 1,
+          "process_memory_before": 35864,
+          "process_memory_after": 206248,
+          "vm_memory_before": 56179836,
+          "vm_memory_after": 56346708
+        },
+        {
+          "elapsed_us": 30,
+          "node_reductions": 6585,
+          "node_gcs": 1,
+          "process_memory_before": 89968,
+          "process_memory_after": 265464,
+          "vm_memory_before": 56241940,
+          "vm_memory_after": 56430316
+        },
+        {
+          "elapsed_us": 21,
+          "node_reductions": 4738,
+          "node_gcs": 1,
+          "process_memory_before": 35864,
+          "process_memory_after": 253512,
+          "vm_memory_before": 56192116,
+          "vm_memory_after": 56400452
+        },
+        {
+          "elapsed_us": 15,
+          "node_reductions": 4439,
+          "node_gcs": 1,
+          "process_memory_before": 90048,
+          "process_memory_after": 265304,
+          "vm_memory_before": 56247316,
+          "vm_memory_after": 56411620
+        },
+        {
+          "elapsed_us": 24,
+          "node_reductions": 4700,
+          "node_gcs": 1,
+          "process_memory_before": 35864,
+          "process_memory_after": 250224,
+          "vm_memory_before": 56207028,
+          "vm_memory_after": 56388076
+        },
+        {
+          "elapsed_us": 13,
+          "node_reductions": 4660,
+          "node_gcs": 1,
+          "process_memory_before": 90048,
+          "process_memory_after": 265304,
+          "vm_memory_before": 56246572,
+          "vm_memory_after": 56421796
+        }
+      ],
+      "median_us": 21,
+      "p95_us": 30
+    },
+    {
+      "input": {
+        "mode": "targeted",
+        "fixture_hash": "5097520630a0f1e7c0e0b307637ca96f7f4a76798892118b6d63053eba9071e8",
+        "workload": "io"
+      },
+      "name": "iast/io/targeted",
+      "samples": [
+        {
+          "elapsed_us": 7752,
+          "node_reductions": 62580,
+          "node_gcs": 2,
+          "process_memory_before": 35624,
+          "process_memory_after": 248128,
+          "vm_memory_before": 56908948,
+          "vm_memory_after": 56391588
+        },
+        {
+          "elapsed_us": 7150,
+          "node_reductions": 30901,
+          "node_gcs": 2,
+          "process_memory_before": 90288,
+          "process_memory_after": 265464,
+          "vm_memory_before": 56521148,
+          "vm_memory_after": 56409092
+        },
+        {
+          "elapsed_us": 7728,
+          "node_reductions": 42844,
+          "node_gcs": 2,
+          "process_memory_before": 35864,
+          "process_memory_after": 207000,
+          "vm_memory_before": 56506284,
+          "vm_memory_after": 56366140
+        },
+        {
+          "elapsed_us": 7316,
+          "node_reductions": 44870,
+          "node_gcs": 2,
+          "process_memory_before": 89968,
+          "process_memory_after": 265544,
+          "vm_memory_before": 56311068,
+          "vm_memory_after": 57010732
+        },
+        {
+          "elapsed_us": 7780,
+          "node_reductions": 62873,
+          "node_gcs": 2,
+          "process_memory_before": 35864,
+          "process_memory_after": 254696,
+          "vm_memory_before": 56516156,
+          "vm_memory_after": 56406996
+        },
+        {
+          "elapsed_us": 7168,
+          "node_reductions": 24940,
+          "node_gcs": 2,
+          "process_memory_before": 89968,
+          "process_memory_after": 285840,
+          "vm_memory_before": 56292772,
+          "vm_memory_after": 57038052
+        },
+        {
+          "elapsed_us": 7376,
+          "node_reductions": 42682,
+          "node_gcs": 2,
+          "process_memory_before": 89968,
+          "process_memory_after": 265304,
+          "vm_memory_before": 56283516,
+          "vm_memory_after": 57025948
+        }
+      ],
+      "median_us": 7376,
+      "p95_us": 7780
+    }
+  ],
+  "repository_revision": "working tree implementing VALIDATION_REVIEW.md"
+}

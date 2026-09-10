@@ -100,6 +100,30 @@ defmodule Havoc.CorpusTest do
     end
   end
 
+  test "rejects an oversized import without replacing the existing proof", %{path: path} do
+    original = seed("original", "property", "proof")
+    assert :ok = Havoc.Corpus.put(original, path: path)
+    before = File.read!(path)
+    payload = :binary.copy("a", 950_000)
+    seeds = for number <- 1..14, do: seed("large-#{number}", "property", payload)
+
+    assert_raise Havoc.Corpus.Error, ~r/corpus_too_large/, fn ->
+      Havoc.Corpus.import(seeds, path: path)
+    end
+
+    assert File.read!(path) == before
+    assert [^original] = Havoc.Corpus.load(path: path)
+  end
+
+  test "batch imports retain the last duplicate and merge existing IDs", %{path: path} do
+    original = seed("original", "property", "proof")
+    assert :ok = Havoc.Corpus.put(original, path: path)
+    first = seed("duplicate", "property", "first")
+    last = %{first | value: "last"}
+    assert {:ok, 2} = Havoc.Corpus.import([first, last], path: path)
+    assert [^last, ^original] = Havoc.Corpus.load(path: path)
+  end
+
   defp seed(id, property_id, value) do
     %Seed{
       id: id,

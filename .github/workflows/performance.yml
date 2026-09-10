@@ -1,0 +1,61 @@
+name: Performance comparison
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline_ref:
+        description: Revision to compare with the selected workflow revision
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MIX_ENV: test
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: candidate
+      - uses: erlef/setup-beam@v1
+        with:
+          version-file: candidate/.tool-versions
+          version-type: strict
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.baseline_ref }}
+          path: baseline
+      - name: Install candidate dependencies
+        working-directory: candidate
+        run: mix deps.get
+      - name: Measure candidate
+        working-directory: candidate
+        run: mix rampart.perf --output ../artifacts/after.json
+      - name: Use the same workload harness for the baseline
+        run: cp candidate/evaluation/performance.exs baseline/evaluation/performance.exs
+      - name: Install baseline dependencies
+        working-directory: baseline
+        run: mix deps.get
+      - name: Measure baseline
+        working-directory: baseline
+        run: >-
+          mix run -r evaluation/performance.exs
+          -e 'RampartPerformance.run!(System.argv())' --
+          --output ../artifacts/before.json
+      - name: Compare measurements
+        working-directory: candidate
+        run: >-
+          mix rampart.perf.compare ../artifacts/before.json ../artifacts/after.json
+          --output ../artifacts/comparison.json
+      - name: Retain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rampart-performance-comparison
+          path: artifacts/*.json
+          if-no-files-found: error

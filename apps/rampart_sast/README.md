@@ -215,6 +215,26 @@ neighborhoods, not data/control-flow proof. `RampartSAST.Inventory.Artifact`
 creates a content-addressed, size-bounded full inventory payload for host-owned
 storage while normal query pages remain bounded for agent context.
 
+Native and portable inventories build local query indexes once. Indexes are
+derived caches excluded from inventory IDs, artifacts, and the worker protocol.
+Treat a built inventory as immutable. Queries preserve deterministic ordering
+and exact totals while retaining only the requested page. `:target_module` and
+`:target_function` filters apply before pagination in both APIs.
+
+`Inventory.calls_to/3` and `package_usage/2` return a complete answer when it fits
+the default 100-fact page. They raise if more facts exist. Use
+`calls_to_page/4` or `package_usage_page/3`, following `next_offset` until nil,
+for larger answers; an empty bounded list alone is not an absence proof.
+
+Graph defaults independently limit nodes (200), edges (500), inspected
+adjacency entries (`max_work: 10_000`), depth (3), and encoded slice bytes
+(`max_bytes: 256_000`). `limit_reasons` names omitted work and `work_count`
+reports inspected entries, including unselected relations. Exact capacity is
+complete when no additional evidence is omitted. Parallel facts retain their
+individual provenance. Increase host-selected limits or retrieve the full
+inventory artifact when a slice is truncated. The byte limit covers compact
+JSON from `Graph.Slice.to_map/1`; an adapter must budget its surrounding envelope.
+
 The new expression relationships are high-recall syntax, not a data-flow
 engine. A variable appearing in a right-hand expression or call argument does
 not prove that its value reaches another expression, that a branch executes, or

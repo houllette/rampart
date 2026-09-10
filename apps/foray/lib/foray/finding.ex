@@ -15,7 +15,7 @@ defmodule Foray.Finding do
     struct(Core.Finding,
       id:
         Core.Finding.dedupe_id(:foray, [
-          "http_match",
+          "http_match_v2",
           job.method,
           url,
           category,
@@ -35,16 +35,22 @@ defmodule Foray.Finding do
         length: match.length,
         words: match.words,
         lines: match.lines,
-        content_type: match.content_type
+        content_type: match.content_type,
+        identity_version: 2
       },
       severity: nil,
       confidence: :medium,
       evidence: evidence(match, keyword, input),
       raw: match.raw,
-      seed: Wordlist.seed_for(job.wordlists, match.input),
+      seed: seed_for(job, match.input),
       observed_at: DateTime.utc_now()
     )
   end
+
+  defp seed_for(%Job{seed_index: nil, wordlists: wordlists}, inputs),
+    do: Wordlist.seed_for(wordlists, inputs)
+
+  defp seed_for(%Job{seed_index: index}, inputs), do: Wordlist.indexed_seed(index, inputs)
 
   defp primary_point(points, input) do
     matching = Enum.filter(points, &Map.has_key?(input, &1.keyword))
@@ -89,7 +95,7 @@ defmodule Foray.Finding do
   defp input_signature(input) do
     input
     |> Enum.sort()
-    |> Enum.map_join("\u0000", fn {keyword, value} -> keyword <> "=" <> value end)
+    |> :erlang.term_to_binary([:deterministic])
   end
 
   defp normalize_url(url) do

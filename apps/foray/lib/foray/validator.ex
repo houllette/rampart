@@ -85,8 +85,7 @@ defmodule Foray.Validator do
             request,
             seed,
             %Evidence{
-              summary:
-                "Foray could not identify the originating job without broadening the probe",
+              summary: "Foray could not replay the recorded identity with its originating job",
               facts: %{reason: reason, finding_id: candidate.id, url: candidate.locus[:url]}
             }
           )
@@ -108,12 +107,17 @@ defmodule Foray.Validator do
   defp reproduce(scan, candidate, inputs) do
     jobs = scan |> JobBuilder.build() |> matching_jobs(candidate, inputs)
 
-    if jobs == [] do
-      {:inconclusive, :originating_job_not_found}
-    else
-      Core.Scope.ensure_all_authorized!(Enum.map(jobs, & &1.target), scan.scope)
-      Runtime.validate!(scan)
-      run_jobs(jobs, scan, candidate.id)
+    cond do
+      scan.engine.module == Foray.Fuzz.Ffuf and candidate.locus[:identity_version] != 2 ->
+        {:inconclusive, :unsupported_identity_version}
+
+      jobs == [] ->
+        {:inconclusive, :originating_job_not_found}
+
+      true ->
+        Core.Scope.ensure_all_authorized!(Enum.map(jobs, & &1.target), scan.scope)
+        Runtime.validate!(scan)
+        run_jobs(jobs, scan, candidate.id)
     end
   end
 

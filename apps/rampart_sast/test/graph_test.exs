@@ -111,4 +111,91 @@ defmodule RampartSAST.GraphTest do
       Artifact.encode(result.inventory, max_bytes: 1)
     end
   end
+
+  test "filters calls before pagination and exposes complete continuation metadata" do
+    source =
+      "defmodule Paged do\ndef run(x) do\n" <>
+        String.duplicate("String.trim(x)\n", 120) <> "String.upcase(x)\nend\nend\n"
+
+    result = RampartSAST.inventory_sources([{"lib/paged.ex", source}])
+
+    assert [%{object: "String.upcase/1"}] =
+             Inventory.calls_to(result.inventory, "String", "upcase")
+
+    assert %Page{returned: 100, total: 120, next_offset: 100} =
+             Inventory.calls_to_page(result.inventory, "String", "trim")
+
+    assert %Page{returned: 20, next_offset: nil} =
+             Inventory.calls_to_page(result.inventory, "String", "trim", offset: 100)
+
+    assert_raise ArgumentError, ~r/calls_to_page/, fn ->
+      Inventory.calls_to(result.inventory, "String", "trim")
+    end
+  end
+
+  test "bounds parallel edge evidence independently of nodes" do
+    source =
+      "defmodule Dense do\ndef run(x) do\n" <>
+        String.duplicate("String.trim(x)\n", 40) <> "end\nend\n"
+
+    result = RampartSAST.inventory_sources([{"lib/dense.ex", source}])
+
+    slice =
+      Graph.callees(result.inventory, "Dense.run/1",
+        relations: [:calls],
+        max_nodes: 3,
+        max_edges: 5
+      )
+
+    assert length(slice.nodes) == 2
+    assert length(slice.edges) == 5
+    assert slice.truncated
+    assert :max_edges in slice.limit_reasons
+    limited = Graph.callees(result.inventory, "Dense.run/1", max_work: 3)
+    assert limited.work_count == 3
+    assert :max_work in limited.limit_reasons
+
+    small = Graph.callees(result.inventory, "Dense.run/1", relations: [:calls], max_bytes: 2_000)
+    assert byte_size(JSON.encode!(Graph.Slice.to_map(small))) <= 2_000
+    assert :max_bytes in small.limit_reasons
+  end
+
+  test "exact node capacity and depth boundaries report omitted edges accurately" do
+    source =
+      "defmodule Depth do\ndef first(x), do: second(x)\ndef second(x), do: String.trim(x)\nend\n"
+
+    result = RampartSAST.inventory_sources([{"lib/depth.ex", source}])
+
+    complete =
+      Graph.callees(result.inventory, "Depth.second/1", relations: [:calls], max_nodes: 2)
+
+    refute complete.truncated
+
+    partial =
+      Graph.callees(result.inventory, "Depth.first/1",
+        relations: [:calls, :invokes],
+        max_depth: 1
+      )
+
+    assert partial.truncated
+    assert :max_depth in partial.limit_reasons
+  end
+
+  test "cyclic and multi-root traversal preserves every fact once in both directions" do
+    source = "defmodule Cycle do\ndef a(x), do: b(x)\ndef b(x), do: a(x)\nend\n"
+    inventory = RampartSAST.inventory_sources([{"lib/cycle.ex", source}]).inventory
+    options = [relations: [:invokes], direction: :both, max_nodes: 2, max_edges: 2]
+    cycle = Graph.slice(inventory, ["Cycle.a/1"], options)
+
+    roots =
+      Graph.slice(inventory, ["Cycle.b/1", "Cycle.a/1"], Keyword.put(options, :max_depth, 1))
+
+    refute cycle.truncated
+    refute roots.truncated
+    assert cycle.nodes == ["Cycle.a/1", "Cycle.b/1"]
+    assert length(cycle.edges) == 2
+    assert Enum.map(cycle.edges, & &1.id) == Enum.map(roots.edges, & &1.id)
+    assert Inventory.to_map(inventory) == Inventory.to_map(%{inventory | index: nil})
+    assert Artifact.encode(inventory).id == Artifact.encode(%{inventory | index: nil}).id
+  end
 end

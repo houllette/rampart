@@ -21,6 +21,29 @@ and scheduler manifest. They are suitable for retaining benchmark history in
 CI. Timing budgets are deliberately broad enough for shared runners; semantic
 and fail-closed checks remain strict.
 
+The separate performance harness exercises graph inventories from 5,000 to
+250,000 facts, repeated finding projection, corpus import/reload, source-rule
+tasks, and compute/binary/container/IO trace sessions:
+
+```sh
+mix rampart.perf --output tmp/performance.json
+mix rampart.perf.compare before.json after.json --output tmp/comparison.json
+```
+
+Each run records two warmups, seven samples by default, latency distributions,
+fixture and harness hashes, runtime/schedulers, node reductions/GC counts, and
+process/VM memory endpoints. Memory endpoints are not peak RSS; node counters
+include child work and background VM activity. Index construction is reported
+separately from repeated graph queries. Ratios on sub-microsecond measurements
+are omitted when the denominator rounds to zero.
+
+The manually dispatched **Performance comparison** workflow uses the same
+harness and pinned runtime for the selected revision and `baseline_ref`, then
+retains both reports and their comparison. Run it on a quiet runner; these
+observations do not define release SLOs or production instrumentation safety.
+The initial local comparison and its limitations are recorded in
+[`PERFORMANCE.md`](PERFORMANCE.md).
+
 ## Current vertical slices
 
 The corpus currently has fourteen cases spanning composed, package, runtime-

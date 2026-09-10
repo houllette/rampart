@@ -8,6 +8,49 @@ defmodule Foray.FfufEngineTest do
 
   @fixture Path.expand("fixtures/ffuf_v2_2.ndjson", __DIR__)
 
+  test "indexed provenance preserves first seed and keyword precedence" do
+    first = %Seed{id: "first", value: "same", provenance: :wordlist}
+    duplicate = %{first | id: "duplicate"}
+    later = %{first | id: "later-keyword"}
+
+    wordlists = [
+      %Foray.Wordlist{ref: "one", keyword: "A", source: {:seeds, [first, duplicate]}},
+      %Foray.Wordlist{ref: "two", keyword: "B", source: {:seeds, [later]}}
+    ]
+
+    index = Foray.Wordlist.index(wordlists)
+    assert Foray.Wordlist.indexed_seed(index, %{"A" => "same", "B" => "same"}) == first
+    assert Foray.Wordlist.indexed_seed(index, %{"A" => "missing", "B" => "same"}) == later
+    assert Foray.Wordlist.indexed_seed(index, %{"A" => "missing"}) == nil
+  end
+
+  test "real projected identities join an exact replay and legacy identities require re-observation" do
+    scan =
+      Foray.target("https://app.example", scope: Allowlist.new!(["https://app.example/"]))
+      |> Foray.fuzz_path(wordlist: "paths.txt")
+      |> Foray.engine(Ffuf,
+        executable: "sh",
+        runner: Foray.TestChunkRunner,
+        runner_options: [observer: self(), chunks: [first_match_line()]]
+      )
+
+    [job] = JobBuilder.build(scan)
+    [candidate] = Ffuf.stream(job, scan.engine.opts) |> Enum.to_list()
+    assert candidate.locus.identity_version == 2
+    assert {:ok, restored} = candidate |> Foray.Result.encode!() |> Foray.Result.decode()
+    assert restored.locus.identity_version == 2
+    assert %{verdict: :confirmed} = Foray.validate(restored, scan)
+    assert %{verdict: :confirmed, findings: [replayed]} = Foray.validate(candidate, scan)
+    assert replayed.id == candidate.id
+    legacy = %{candidate | locus: Map.delete(candidate.locus, :identity_version)}
+
+    assert %{verdict: :inconclusive, evidence: %{facts: %{reason: :unsupported_identity_version}}} =
+             Foray.validate(legacy, scan)
+  end
+
+  defp first_match_line,
+    do: @fixture |> File.read!() |> String.split("\n", parts: 2) |> hd() |> Kernel.<>("\n")
+
   test "rejects ffuf versions below the pinned security floor" do
     assert {:error, {:unsupported_ffuf_version, "2.1.0", "2.2.0"}} =
              Ffuf.validate_runtime(executable: "sh", runner: Foray.TestOldRunner)

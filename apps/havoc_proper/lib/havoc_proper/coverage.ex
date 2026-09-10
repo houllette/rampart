@@ -15,21 +15,70 @@ defmodule HavocProper.Coverage do
   @spec with_modules([module()], (-> result)) :: result when result: var
   def with_modules(modules, fun) when is_list(modules) and is_function(fun, 0) do
     modules = modules |> Enum.uniq() |> Enum.sort()
+    caller = self()
+    reference = make_ref()
+    {owner, monitor} = spawn_monitor(fn -> own_session(modules, caller, reference) end)
 
-    :global.trans({__MODULE__, :session}, fn ->
-      session_running? = is_pid(Process.whereis(:cover_server))
-      :ok = start_cover()
-      refuse_existing_session!()
+    case await_session(owner, monitor, reference) do
+      :ready ->
+        try do
+          fun.()
+        after
+          send(owner, {reference, :release})
+          :done = await_session(owner, monitor, reference)
+          Process.demonitor(monitor, [:flush])
+        end
+    end
+  end
 
-      try do
-        validate_modules!(modules)
-        Enum.each(modules, &compile_beam!/1)
-        fun.()
-      after
-        :ok = :cover.stop()
-        if session_running?, do: :ok = start_cover()
+  defp own_session(modules, caller, reference) do
+    monitor = Process.monitor(caller)
+
+    :global.trans(
+      {{__MODULE__, :session}, caller},
+      fn ->
+        if Process.alive?(caller), do: instrument(modules, caller, reference, monitor)
+      end,
+      [node()]
+    )
+
+    send(caller, {reference, :done})
+  catch
+    kind, reason -> send(caller, {reference, {:failed, kind, reason, __STACKTRACE__}})
+  end
+
+  defp instrument(modules, caller, reference, monitor) do
+    session_running? = is_pid(Process.whereis(:cover_server))
+    :ok = start_cover()
+    refuse_existing_session!()
+
+    try do
+      validate_modules!(modules)
+      Enum.each(modules, &compile_beam!/1)
+      send(caller, {reference, :ready})
+
+      receive do
+        {^reference, :release} -> :ok
+        {:DOWN, ^monitor, :process, ^caller, _reason} -> :ok
       end
-    end)
+    after
+      :ok = :cover.stop()
+      if session_running?, do: :ok = start_cover()
+    end
+  end
+
+  defp await_session(owner, monitor, reference) do
+    receive do
+      {^reference, {:failed, kind, reason, stacktrace}} ->
+        Process.demonitor(monitor, [:flush])
+        :erlang.raise(kind, reason, stacktrace)
+
+      {^reference, status} ->
+        status
+
+      {:DOWN, ^monitor, :process, ^owner, reason} ->
+        exit({:cover_session_failed, reason})
+    end
   end
 
   @doc "Resets the instrumented modules, executes a candidate, and returns covered line IDs."
