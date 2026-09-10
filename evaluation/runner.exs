@@ -1373,8 +1373,17 @@ defmodule RampartEvaluation.Runner do
       )
     ]
 
+    checks =
+      checks ++
+        Enum.with_index(validation.controls, fn control, index ->
+          check("fixed boundary control #{index + 1}: #{control.expected_status}", control.passed)
+        end)
+
     false_confirmations =
-      Enum.count([validation.fixed, validation.failure], &(&1.verdict == :confirmed))
+      Enum.count(
+        [validation.fixed, validation.failure | validation.controls],
+        &(&1.verdict == :confirmed)
+      )
 
     %{
       schema_version: 1,
@@ -1529,7 +1538,7 @@ defmodule RampartEvaluation.Runner do
       property_id: "evaluation:#{evaluation_case.id}",
       property_name: "historical contract #{evaluation_case.id}",
       module: __MODULE__,
-      oracles: [expected.oracle],
+      oracles: [historical_contract_oracle(expected)],
       locus: %{
         case_id: evaluation_case.id,
         advisory: evaluation_case.provenance.advisory,
@@ -1567,9 +1576,42 @@ defmodule RampartEvaluation.Runner do
       confirmed: confirmed,
       fixed: fixed,
       failure: failure,
+      controls: historical_fixed_controls(expected, seed, fixed_target, property_options),
       replay_confirmed: Havoc.validate(seed, vulnerable_target, property_options),
       replay_fixed: Havoc.validate(seed, fixed_target, property_options)
     }
+  end
+
+  defp historical_contract_oracle(%{oracle: oracle, oracle_options: options}) do
+    apply(Havoc.Oracle, oracle, [options])
+  end
+
+  defp historical_contract_oracle(%{oracle: oracle}), do: oracle
+
+  defp historical_fixed_controls(expected, seed, target, options) do
+    Enum.map(Map.get(expected, :fixed_controls, []), fn control ->
+      observation = target.(control.input)
+
+      control_seed = %{
+        seed
+        | id:
+            Core.Finding.dedupe_id(:havoc, [
+              seed.id,
+              "fixed_control",
+              Havoc.TermCodec.fingerprint(control.input)
+            ]),
+          value: control.input
+      }
+
+      result = Havoc.validate(control_seed, fn _ -> observation end, options)
+
+      %{
+        passed: result.verdict == :refuted and observation.status == control.status,
+        expected_status: control.status,
+        actual_status: observation.status,
+        verdict: result.verdict
+      }
+    end)
   end
 
   defp historical_contract_target(module, function, :direct) do
@@ -1584,7 +1626,9 @@ defmodule RampartEvaluation.Runner do
     validation.confirmed.verdict == validation.replay_confirmed.verdict and
       validation.fixed.verdict == validation.replay_fixed.verdict and
       validation.confirmed.seed.id == validation.replay_confirmed.seed.id and
-      validation.fixed.seed.id == validation.replay_fixed.seed.id
+      validation.fixed.seed.id == validation.replay_fixed.seed.id and
+      Enum.map(validation.confirmed.findings, &{&1.id, &1.evidence}) ==
+        Enum.map(validation.replay_confirmed.findings, &{&1.id, &1.evidence})
   end
 
   defp components(evaluation_case) do

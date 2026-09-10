@@ -11,8 +11,9 @@ before those changes.
 The [2026-09-09 capability extension](CVE_CAPABILITY_CATALOG.md) adds eight
 separate advisories covering resource units, incremental parsing, protocol
 state, canonicalization and native arithmetic. Its structured records contain
-proposed contracts only; they do not change the empirical results or executed
-coverage described here.
+three executed reduced resource contracts and five proposals. Upstream package
+execution remains unperformed for those eight; they do not change the original
+twelve-advisory baseline described here.
 
 ## What `mix hex.audit` does
 

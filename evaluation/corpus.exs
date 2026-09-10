@@ -78,8 +78,133 @@ defmodule RampartEvaluation.Corpus do
       historical_ulid_contract_case(),
       historical_http_parameter_contract_case(),
       historical_cache_tenancy_contract_case(),
-      historical_ash_field_policy_contract_case()
+      historical_ash_field_policy_contract_case(),
+      historical_resource_length_case(),
+      historical_incremental_buffer_case(),
+      historical_numeric_work_case()
     ]
+  end
+
+  defp historical_resource_length_case do
+    resource_contract_case(
+      "resource-length",
+      "resource_length",
+      RampartEvaluation.Historical.ResourceLength,
+      "CVE-2026-82752",
+      :bounded_length,
+      [unit: :bytes, max_length: 4],
+      "a" <> String.duplicate("\u0301", 4),
+      %{
+        project: "ash-project/ash",
+        vulnerable_revision: "81bc148079ef14a507377af301cdc90f78277955",
+        fixed_revision: "a64cab49b8886503e6b7c7b211d83c475aac48ca",
+        source_path: "lib/ash/type/string.ex"
+      },
+      [
+        %{input: "aaa", status: :accepted},
+        %{input: "aaaa", status: :accepted},
+        %{input: "aaaaa", status: :rejected},
+        %{input: "éé", status: :accepted},
+        %{input: "ééé", status: :rejected}
+      ]
+    )
+  end
+
+  defp historical_incremental_buffer_case do
+    resource_contract_case(
+      "incremental-buffer",
+      "incremental_buffer",
+      RampartEvaluation.Historical.IncrementalBuffer,
+      "CVE-2026-82728",
+      :incremental_buffer_budget,
+      [max_bytes: 16],
+      [String.duplicate("A", 8), String.duplicate("A", 9)],
+      %{
+        project: "elixir-mint/mint",
+        vulnerable_revision: "d996244f432ef67fe7556b277da0d697f06e840d",
+        fixed_revision: "19be5558b6a317e271c78666498dd78b151e490a",
+        source_path: "lib/mint/http1.ex"
+      },
+      [
+        %{input: ["OK\r\n"], status: :accepted},
+        %{input: [String.duplicate("A", 16)], status: :incomplete},
+        %{input: [String.duplicate("A", 17)], status: :rejected},
+        %{input: List.duplicate("A", 17), status: :rejected}
+      ]
+    )
+  end
+
+  defp historical_numeric_work_case do
+    resource_contract_case(
+      "numeric-work",
+      "numeric_work",
+      RampartEvaluation.Historical.NumericWork,
+      "CVE-2026-82729",
+      :incremental_work_budget,
+      [unit: :digit_folds, max_work: 16],
+      [String.duplicate("F", 8), String.duplicate("F", 9), "\r\n"],
+      %{
+        project: "elixir-mint/mint",
+        vulnerable_revision: "19be5558b6a317e271c78666498dd78b151e490a",
+        fixed_revision: "bd2a4e7513594997c140cfef9fe0e968712fb588",
+        source_path: "lib/mint/http1/parse.ex"
+      },
+      [
+        %{input: ["F\r\n"], status: :accepted},
+        %{input: [String.duplicate("F", 16), "\r\n"], status: :accepted},
+        %{input: [String.duplicate("F", 17) <> "\r\n"], status: :rejected},
+        %{input: List.duplicate("F", 17) ++ ["\r", "\n"], status: :rejected}
+      ]
+    )
+  end
+
+  defp resource_contract_case(
+         name,
+         directory,
+         module,
+         advisory,
+         oracle,
+         options,
+         input,
+         provenance,
+         controls
+       ) do
+    module_name = inspect(module)
+
+    %{
+      id: "historical.#{name}-contract.#{String.downcase(advisory)}.v1",
+      kind: :historical_contract_regression,
+      tier: :historical,
+      target_sources: ["evaluation/fixtures/historical/#{directory}/fixture.ex"],
+      dependency_sources: [],
+      expected: %{
+        vulnerable_function: "#{module_name}.vulnerable/1",
+        fixed_function: "#{module_name}.fixed/1",
+        runtime_module: module,
+        runtime_vulnerable_function: :vulnerable,
+        runtime_fixed_function: :fixed,
+        input: input,
+        oracle: oracle,
+        oracle_options: options,
+        fixed_controls: controls,
+        observation_shape: :direct,
+        finding_category: :resource_exhaustion,
+        static_kind: :binding,
+        static_object: "observation",
+        static_expression_kind: :call,
+        static_source_variable: "input",
+        static_subjects: ["#{module_name}.vulnerable/1", "#{module_name}.fixed/1"]
+      },
+      provenance:
+        Map.merge(provenance, %{
+          advisory: advisory,
+          license: "MIT",
+          fixture_kind: :adapted_predicate,
+          execution_scope: :reduced_contract_only,
+          upstream_execution: :not_run
+        }),
+      budgets: @budgets
+    }
   end
 
   defp case_spec(

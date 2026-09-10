@@ -11,7 +11,7 @@ defmodule Havoc.Oracle do
   """
 
   alias Havoc.Observation.{Cache, Codec, Differential, FieldPolicy, HTTPParameter, State}
-  alias Havoc.Oracle.{AssertionError, Checked, Report, Terminal, Violation}
+  alias Havoc.Oracle.{AssertionError, Checked, Report, Resource, Terminal, Violation}
   alias Havoc.TermCodec
 
   @type checker_result ::
@@ -393,6 +393,31 @@ defmodule Havoc.Oracle do
       options: config
     }
   end
+
+  @doc """
+  Measures an accepted `Havoc.Observation.Length` in explicit bytes, codepoints
+  or graphemes. Requires `:unit` and `:max_length`. Unicode measurement skips
+  invalid UTF-8 or values exceeding `:max_measurement_bytes` (1 MiB); byte
+  measurement is constant-time. Rejection passes only this concrete claim.
+  """
+  @spec bounded_length(opts :: keyword()) :: t()
+  def bounded_length(opts), do: Resource.bounded_length(opts)
+
+  @doc """
+  Bounds retained bytes at every `Havoc.Observation.Incremental` sample,
+  including intermediate and terminal states. Requires `:max_bytes`.
+  Missing measurements are inconclusive unless a measured violation exists.
+  """
+  @spec incremental_buffer_budget(opts :: keyword()) :: t()
+  def incremental_buffer_budget(opts), do: Resource.incremental_buffer_budget(opts)
+
+  @doc """
+  Bounds measured cumulative parser work above its initial counter. Requires
+  `:unit` and `:max_work`. Missing/mismatched units or counters are inconclusive;
+  this proves a finite measured budget violation, not asymptotic complexity.
+  """
+  @spec incremental_work_budget(opts :: keyword()) :: t()
+  def incremental_work_budget(opts), do: Resource.incremental_work_budget(opts)
 
   @doc "Builds a named custom oracle."
   @spec custom(atom(), (term(), term() -> checker_result()), keyword()) :: t()

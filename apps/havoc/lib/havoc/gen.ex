@@ -103,6 +103,74 @@ defmodule Havoc.Gen do
     end
   end
 
+  @doc """
+  Generates ASCII, multibyte and combining-mark text with an explicit byte cap.
+
+  `:max_bytes` defaults to 256; `:max_marks` (64) bounds marks on a generated
+  base character. StreamData owns shrinking and preserves the byte budget.
+  This is a unit-disparity corpus, not exhaustive Unicode normalization coverage.
+  """
+  @spec unicode_length(opts :: keyword()) :: StreamData.t(String.t())
+  def unicode_length(opts \\ []) do
+    opts =
+      NimbleOptions.validate!(opts,
+        max_bytes: [type: :pos_integer, default: 256],
+        max_marks: [type: :non_neg_integer, default: 64]
+      )
+
+    bases = Enum.filter(["a", "é", "😀"], &(byte_size(&1) <= opts[:max_bytes]))
+
+    combining =
+      StreamData.bind(StreamData.member_of(bases), fn base ->
+        maximum = min(opts[:max_marks], div(opts[:max_bytes] - byte_size(base), 2))
+
+        StreamData.member_of(["\u0301", "\u0308", "\u0338"])
+        |> StreamData.list_of(max_length: maximum)
+        |> StreamData.map(&IO.iodata_to_binary([base | &1]))
+      end)
+
+    StreamData.one_of([StreamData.string(:alphanumeric, max_length: opts[:max_bytes]), combining])
+  end
+
+  @doc """
+  Generates nonempty byte chunks whose concatenation is exactly `input`.
+
+  `:max_chunks` defaults to 64 and `:max_input_bytes` to 65,536. Oversized
+  input fails before generator construction. Empty input yields `[]`; UTF-8
+  may be split inside codepoints. Shrinking merges chunks or moves boundaries
+  without changing the underlying bytes. Persist the chunk list for exact replay.
+  """
+  @spec byte_partitions(input :: binary(), opts :: keyword()) :: StreamData.t([binary()])
+  def byte_partitions(input, opts \\ []) when is_binary(input) do
+    opts =
+      NimbleOptions.validate!(opts,
+        max_chunks: [type: :pos_integer, default: 64],
+        max_input_bytes: [type: :non_neg_integer, default: 65_536]
+      )
+
+    if byte_size(input) > opts[:max_input_bytes],
+      do: raise(ArgumentError, "partition input exceeds its byte budget")
+
+    partition_generator(input, opts[:max_chunks])
+  end
+
+  defp partition_generator("", _maximum), do: StreamData.constant([])
+
+  defp partition_generator(input, maximum) when byte_size(input) == 1 or maximum == 1,
+    do: StreamData.constant([input])
+
+  defp partition_generator(input, maximum) do
+    StreamData.integer(1..(byte_size(input) - 1))
+    |> StreamData.list_of(max_length: min(maximum - 1, byte_size(input) - 1))
+    |> StreamData.map(fn cuts ->
+      boundaries = [0 | Enum.sort(Enum.uniq(cuts))] ++ [byte_size(input)]
+
+      boundaries
+      |> Enum.chunk_every(2, 1, :discard)
+      |> Enum.map(fn [start, stop] -> binary_part(input, start, stop - start) end)
+    end)
+  end
+
   defp validate_injection_classes!([]) do
     raise ArgumentError, "at least one injection class is required"
   end

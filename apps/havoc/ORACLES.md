@@ -164,6 +164,58 @@ Counters, cleanup/expiry advancement, quiescence, and the unit being measured
 remain fixture-owned. This contract does not infer denial-of-service impact from
 one count; it proves only the declared finite growth/retention budget.
 
+### Explicit resource length
+
+`Havoc.Oracle.bounded_length(unit: :bytes, max_length: 4096)` consumes a
+`%Havoc.Observation.Length{}`. The unit is mandatory: `:bytes`, `:codepoints`
+and `:graphemes` express different policies. `Length.accepted(input, value)`
+records the actual value admitted at the designated output/storage boundary;
+the oracle measures that value rather than trusting a target-reported length.
+`Length.rejected(input, reason)` passes the concrete acceptance claim. A
+payload mismatch is a harness error. Rejection alone does not establish that
+the application remains functional: include an accepted in-budget control.
+
+Byte measurement uses `byte_size/1`, including for invalid UTF-8. Unicode units
+require valid UTF-8 and at most `:max_measurement_bytes` (1,048,576 by default);
+unavailable measurements skip. Codepoints are counted without building a list.
+This confirms a declared resource-policy violation, not denial-of-service
+impact. Grapheme-only display policies must not be relabeled as byte limits.
+
+### Incremental resource budgets
+
+`Havoc.Observation.Incremental.capture/5` delivers an exact chunk list through
+host-owned parser and measurement callbacks. It samples initial state and every
+returned state, including acceptance/rejection, and stops at the first terminal
+result. It retains measurements rather than full parser states. The default
+65,536 input-byte and 64-chunk caps are validated before either callback runs;
+they do not preempt a callback, contain a VM crash, or perform fixture cleanup.
+An empty partition executes no parser step and skips these oracles.
+
+- `incremental_buffer_budget(max_bytes: limit)` checks every retained-byte
+  sample. A later empty buffer does not conceal an intermediate excess.
+- `incremental_work_budget(unit: :digit_folds, max_work: limit)` checks cumulative
+  measured work above its initial counter. Units must match, and counters must
+  be monotonic even across missing samples. Choose an independently measured
+  operation count when possible. Time/reductions measurements require runtime
+  calibration and do not establish an asymptotic complexity bound.
+
+Measurement adapters return optional nonnegative `:retained_bytes` and `:work`
+counters. Missing data stays unknown: without an observed excess, any missing
+required sample makes exact validation inconclusive. An observed excess proves
+the finite budget violation even if another sample is unknown. Counter resets,
+bad callback results, and mismatched payloads are harness errors. Budget
+oracles alone leave such errors inconclusive; adding `:no_crash` explicitly
+changes target-exception semantics.
+
+The host must define what retained bytes include (logical buffer size, backing
+binaries, or a measured aggregate), attribute the measurements to this parser,
+and enforce callback isolation/deadlines and lifecycle cleanup. Buffer samples
+do not measure transient allocations inside a step or whole-process memory.
+Refutation applies only to delivered prefixes under the selected measurement,
+input partitions and budgets. Always retain a valid accepted control and exact
+boundary/rejected cases. Violation summaries retain the measured value, unit,
+limit and sample index through the ordinary transcript-safe wire projection.
+
 ### Authorization invariants
 
 There is deliberately no automatic bare `:authz_invariant`. Authorization must

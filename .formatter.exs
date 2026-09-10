@@ -10,6 +10,6 @@
     "evaluation/fixtures/{composed,otp,plug,overhead}/**/*.{ex,exs}",
     "evaluation/fixtures/historical/**/vulnerable.ex",
     "evaluation/fixtures/historical/**/fixed.ex",
-    "evaluation/fixtures/historical/{terminal_control,ulid_canonical,http_quoted_parameter,cache_tenancy,ash_field_policy}/**/*.{ex,exs}"
+    "evaluation/fixtures/historical/{terminal_control,ulid_canonical,http_quoted_parameter,cache_tenancy,ash_field_policy,resource_length,incremental_buffer,numeric_work}/**/*.{ex,exs}"
   ]
 ]

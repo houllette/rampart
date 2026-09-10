@@ -3,7 +3,7 @@
   "catalog_id": "rampart-cve-capability-extension-2026-09-09",
   "review_date": "2026-09-09",
   "reviewed_repository_commit": "d34ab53c363ef26bb4628f8b2015ebeb9934091e",
-  "purpose": "Inert research metadata for future deterministic contracts; not an executable manifest, rule catalog, dependency audit or finding feed.",
+  "purpose": "Inert research and evidence metadata for deterministic contracts; not an executable manifest, rule catalog, dependency audit or finding feed.",
   "relationship_to_existing_corpus": "Eight additional advisories; the twelve-advisory frontier and previously executed cases retain their own evidence records.",
   "source_attribution": "Version metadata comes from the cited CNA records. EEF CNA data is CC BY 4.0. Contract proposals and patch summaries are Rampart analysis; upstream source code is not vendored.",
   "interpretation": {
@@ -61,11 +61,14 @@
         "execution_status": "not_executed"
       },
       "evidence": {
-        "level": "advisory_and_patch_review",
+        "level": "advisory_patch_and_reduced_model",
         "upstream_static_scan": "not_run",
-        "reduced_contract": "not_implemented",
+        "reduced_contract": "implemented_and_evaluated",
         "full_package_execution": "not_run",
-        "retained_execution_artifacts": []
+        "retained_execution_artifacts": [
+          "evaluation/baselines/2026-09-10/resource-contracts.json",
+          "evaluation/baselines/2026-09-10/resource-contracts.sources.json"
+        ]
       },
       "prerequisite": "An Ash string constraint accepts caller-supplied text and acts as a storage/resource bound without an independent effective byte or codepoint bound.",
       "patch_observation": "The patch adds explicit length-count units and configuration across string types, validations and query functions.",
@@ -75,8 +78,8 @@
       ],
       "proposed_contract": {
         "id": "resource-length-units/v1",
-        "status": "proposed",
-        "registered_action_id": null,
+        "status": "reduced_contract_implemented",
+        "registered_action_id": "havoc.security-property-reproduces.v1",
         "implementation_owner": "havoc",
         "invariant": "A value admitted under a declared resource limit must satisfy that limit in its declared unit at the persistence/output boundary.",
         "bounded_experiment": "Use bounded ASCII, multibyte and combining-mark values around a host-chosen limit. Compare validation with an independent byte/codepoint measurement; separately label intentional grapheme-only UI policies.",
@@ -95,7 +98,19 @@
       },
       "uncertainty": [
         "A grapheme count is not a byte bound. The local SAST diagnostic analogy is a source-review follow-up, not a demonstrated denial of service."
-      ]
+      ],
+      "implementation": {
+        "date": "2026-09-10",
+        "library_api": [
+          "Havoc.Gen.unicode_length/1",
+          "Havoc.Observation.Length",
+          "Havoc.Oracle.bounded_length/1"
+        ],
+        "fixture": "evaluation/fixtures/historical/resource_length/fixture.ex",
+        "evaluation_case": "historical.resource-length-contract.cve-2026-82752.v1",
+        "validation_command": "mix rampart.eval",
+        "remaining_scope": "Reduced emitted-value model only; actual Ash literal/atomic paths, persistence and runtime configuration are unexecuted."
+      }
     },
     {
       "cve_id": "CVE-2026-82728",
@@ -144,11 +159,14 @@
         "execution_status": "not_executed"
       },
       "evidence": {
-        "level": "advisory_and_patch_review",
+        "level": "advisory_patch_and_reduced_model",
         "upstream_static_scan": "not_run",
-        "reduced_contract": "not_implemented",
+        "reduced_contract": "implemented_and_evaluated",
         "full_package_execution": "not_run",
-        "retained_execution_artifacts": []
+        "retained_execution_artifacts": [
+          "evaluation/baselines/2026-09-10/resource-contracts.json",
+          "evaluation/baselines/2026-09-10/resource-contracts.sources.json"
+        ]
       },
       "prerequisite": "A Mint HTTP/1 client consumes an untrusted response with an incomplete status line or chunk metadata.",
       "patch_observation": "The patch applies the configured response-line size check before retaining additional incomplete status/chunk metadata.",
@@ -158,8 +176,8 @@
       ],
       "proposed_contract": {
         "id": "incremental-buffer-budget/v1",
-        "status": "proposed",
-        "registered_action_id": null,
+        "status": "reduced_contract_implemented",
+        "registered_action_id": "havoc.security-property-reproduces.v1",
         "implementation_owner": "havoc",
         "invariant": "Every incomplete parser state rejects input beyond its declared retained-byte budget, regardless of transport segmentation.",
         "bounded_experiment": "A host-owned response driver delivers the same bounded byte stream under several chunk partitions and inspects parser acceptance, retained bytes and cleanup.",
@@ -178,7 +196,19 @@
       },
       "uncertainty": [
         "This fix does not establish a bound on numeric parse work; preserve the separate CVE-2026-82729 contract."
-      ]
+      ],
+      "implementation": {
+        "date": "2026-09-10",
+        "library_api": [
+          "Havoc.Gen.byte_partitions/2",
+          "Havoc.Observation.Incremental.capture/5",
+          "Havoc.Oracle.incremental_buffer_budget/1"
+        ],
+        "fixture": "evaluation/fixtures/historical/incremental_buffer/fixture.ex",
+        "evaluation_case": "historical.incremental-buffer-contract.cve-2026-82728.v1",
+        "validation_command": "mix rampart.eval",
+        "remaining_scope": "Reduced line accumulator measures logical retained bytes; actual Mint HTTP grammar, connection lifecycle, transient allocation and worker cleanup are unexecuted."
+      }
     },
     {
       "cve_id": "CVE-2026-82729",
@@ -227,11 +257,14 @@
         "execution_status": "not_executed"
       },
       "evidence": {
-        "level": "advisory_and_patch_review",
+        "level": "advisory_patch_and_reduced_model",
         "upstream_static_scan": "not_run",
-        "reduced_contract": "not_implemented",
+        "reduced_contract": "implemented_and_evaluated",
         "full_package_execution": "not_run",
-        "retained_execution_artifacts": []
+        "retained_execution_artifacts": [
+          "evaluation/baselines/2026-09-10/resource-contracts.json",
+          "evaluation/baselines/2026-09-10/resource-contracts.sources.json"
+        ]
       },
       "prerequisite": "A Mint HTTP/1 client parses a chunk-size digit sequence supplied by a remote peer.",
       "patch_observation": "The parser rejects an additional hexadecimal digit after sixteen digits, bounding the integer accumulator.",
@@ -241,8 +274,8 @@
       ],
       "proposed_contract": {
         "id": "numeric-parser-work-budget/v1",
-        "status": "proposed",
-        "registered_action_id": null,
+        "status": "reduced_contract_implemented",
+        "registered_action_id": "havoc.security-property-reproduces.v1",
         "implementation_owner": "havoc",
         "invariant": "Numeric fields are bounded before arbitrary-precision conversion, and fragmented delivery stays within a declared work budget.",
         "bounded_experiment": "Generate bounded numeric fields around the accepted digit limit and replay bounded partitions. Check rejection independently of parser output; record work counters where available.",
@@ -261,7 +294,19 @@
       },
       "uncertainty": [
         "The selected first parent is exactly the CVE-2026-82728 buffer fix. Preserve this ordering so the CPU contract is evaluated independently."
-      ]
+      ],
+      "implementation": {
+        "date": "2026-09-10",
+        "library_api": [
+          "Havoc.Gen.byte_partitions/2",
+          "Havoc.Observation.Incremental.capture/5",
+          "Havoc.Oracle.incremental_work_budget/1"
+        ],
+        "fixture": "evaluation/fixtures/historical/numeric_work/fixture.ex",
+        "evaluation_case": "historical.numeric-work-contract.cve-2026-82729.v1",
+        "validation_command": "mix rampart.eval",
+        "remaining_scope": "Reduced counted hexadecimal folds with prior buffer cap preserved; actual Mint CPU behavior and bignum cost are unmeasured. No asymptotic complexity claim."
+      }
     },
     {
       "cve_id": "CVE-2026-69664",

@@ -11,7 +11,8 @@ patch-informed advisory frontier to missing reusable static and validation
 capabilities without proposing CVE-specific rules. The
 [additional CVE capability catalog](CVE_CAPABILITY_CATALOG.md) adds eight
 advisories with [structured provenance and proposed contracts](CVE_CAPABILITY_CATALOG.json);
-these entries have review evidence only. The
+three entries now have reduced Havoc contract evaluations; upstream execution
+remains unperformed for all eight. The
 [resource-limit inventory](../RESOURCE_LIMITS.md) records current enforcement
 boundaries and concrete local follow-ups.
 

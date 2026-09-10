@@ -100,7 +100,8 @@ never a confirmation. Signal oracles retain their documented confidence and do
 not claim exploitability merely because an agent requested validation.
 
 Relational checks use explicit codec, differential, external-state, parsed HTTP
-parameter, shared-cache, and actor-paired field-policy observations. Terminal
+parameter, shared-cache, actor-paired field-policy, explicit-length and
+incremental-counter observations. Terminal
 safety classifies caller-designated output bytes. These are bounded normalized
 evidence shapes rather than package models: fixtures still own independent
 policy expectations, actors/tenants, cache execution, field/path adapters,
@@ -108,6 +109,11 @@ counters, cleanup, and the security claim's preconditions. The repository
 evaluation requires the same oracle to confirm a vulnerable control, refute a
 fixed control, remain inconclusive on harness failure, and replay the concrete
 seed.
+
+The incremental observation helper drives one finite supplied chunk list
+sequentially and snapshots host-supplied counters. It is neither a parser nor
+a property runner. Driver input/sample limits are separate from the security
+oracle's measured resource limits, and neither contains a nonreturning callback.
 
 ## Research findings applied in v1
 

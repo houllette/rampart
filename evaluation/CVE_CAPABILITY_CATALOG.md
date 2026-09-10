@@ -4,9 +4,12 @@ This 2026-09-09 source review adds eight advisories to the twelve in the
 [historical frontier](HISTORICAL_CVE_FRONTIER.md). The
 [structured catalog](https://github.com/houllette/rampart/blob/main/evaluation/CVE_CAPABILITY_CATALOG.json) records primary sources,
 affected-version metadata, exact fix/first-parent pairs, prerequisites,
-uncertainty, and proposed deterministic proof/refutation contracts. It does
-not add executed coverage. No upstream application was run or scanned for
-this extension, and no executable fixture or new validation action was added.
+uncertainty, and deterministic proof/refutation contracts. The initial review
+added no execution evidence. On 2026-09-10, three reduced Havoc contracts were
+implemented and evaluated: resource-length units, incremental buffer budgets,
+and numeric work budgets. No upstream application has been run or scanned for
+this extension. All three reuse `havoc.security-property-reproduces.v1`; no new
+agent-facing action was registered.
 
 The local source review uses Rampart commit
 `d34ab53c363ef26bb4628f8b2015ebeb9934091e`. Existing evaluation results and
@@ -14,8 +17,11 @@ retained performance/integration artifacts keep their original scope.
 
 ## Capability map
 
-Every contract below is **proposed**. Contract IDs in the JSON are research
-identifiers, not registered `Core.Validation` action IDs.
+The first three contracts have **executed reduced models**; the remaining five
+are proposed. The complete upstream experiments remain unexecuted for all eight.
+Contract IDs in the JSON are research identifiers, not `Core.Validation` action
+IDs; the implemented models use the existing Havoc action explicitly recorded
+in each entry.
 
 | Advisory | Reusable contract | Required observation | Implementation home |
 | --- | --- | --- | --- |
@@ -55,8 +61,10 @@ vendoring or execution, review licensing, build dependencies, fixture scope
 and whether that parent actually exhibits the exact claimed behavior.
 
 `evidence` deliberately distinguishes advisory/patch review, static scanning,
-reduced-contract implementation and full-package execution. All eight entries
-currently have review evidence only and no retained execution artifacts.
+reduced-contract implementation and full-package execution. The first three
+entries include reduced-model evidence and links to the retained evaluation
+report. Its runtime identity and source fingerprints identify the evaluated
+implementation. Five entries still have advisory/patch-review evidence only.
 `static_facts_to_localize` describes useful inputs, including relationships
 that current SAST may not yet represent. It is not an inventory of implemented
 extractors.
@@ -106,10 +114,11 @@ analysis capability. See the
    pins, complete-line framing, and XML document/result budgets. Each has a
    concrete specification. These four local boundaries were subsequently
    implemented on 2026-09-10; the resource inventory records their verification
-   scope. The eight upstream validation contracts remain proposed.
+   scope. All eight upstream package experiments remain unexecuted.
 2. Add the explicit-unit and parser-budget contracts to Havoc using ordinary
-   StreamData generation/shrinking. Start with small reduced cases and then
-   execute the exact pinned package pairs. Keep those evidence levels separate.
+   StreamData generation/shrinking. The small reduced cases are now implemented
+   and run in `mix rampart.eval`; next execute the exact pinned package pairs.
+   Keep those evidence levels separate.
 3. Extend the existing complete-application evaluation approach to path
    authorization, segmentation/cleanup and authentication-state scenarios.
    Have the host own lifecycle measurements and independent positive controls.
@@ -123,3 +132,22 @@ evidence and replay reference. Register an agent-facing action only after its
 deterministic proof/refutation behavior exists. These proposed cases complement
 the original frontier's remaining IP classification, route topology and
 persistent-state reclamation work; they do not replace it.
+
+## Implemented library surface and reduced evidence
+
+Havoc now provides `Gen.unicode_length/1`, `Gen.byte_partitions/2`,
+`Observation.Length`, `Observation.Incremental.capture/5`, and three configured
+oracles: `bounded_length/1`, `incremental_buffer_budget/1`, and
+`incremental_work_budget/1`. Inputs and sample counts are bounded, generation
+and shrinking remain StreamData-owned, and concrete chunk lists survive corpus
+replay. Missing measurements/units stay inconclusive; target/oracle failures
+cannot confirm a resource violation unless a separate crash invariant is added.
+Measured values, units and limits survive the existing wire projection.
+
+The retained [evaluation report](https://github.com/houllette/rampart/blob/main/evaluation/baselines/2026-09-10/resource-contracts.json)
+contains vulnerable/fixed replay and positive/exact-boundary/rejection checks,
+bounded SAST localization and wire evidence checks, and source fingerprints.
+The three fixture READMEs specify what remains unmodeled: Ash atomic/persistence
+paths, Mint protocol grammar and lifecycle cleanup, and actual bignum cost.
+See [Havoc oracle semantics](https://github.com/houllette/rampart/blob/main/apps/havoc/ORACLES.md) for the generic library
+contract and callback/isolation responsibilities.

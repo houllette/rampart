@@ -113,8 +113,9 @@ real or replayed application traffic ──────┘
 - **Havoc** is the in-process validation engine. Its conservative oracles,
   exact-payload validation, generators, and durable corpus are the trust anchor.
   Codec, parsed HTTP parameter, shared-cache, actor-paired field-policy,
-  differential, and external-state observations support narrowly stated
-  canonicalization, grammar, policy/noninterference, and lifecycle contracts;
+  differential, external-state, explicit-length, and incremental-counter observations
+  support narrowly stated canonicalization, grammar, policy/noninterference,
+  lifecycle, and resource-budget contracts;
   terminal classification covers captured output bytes. Fixtures still own
   independent expectations, exploit preconditions, controls, and cleanup.
 - **HavocProper** is an opt-in execution driver for coverage-guided research; it
@@ -216,7 +217,8 @@ never depends on the sensor, a static analyzer, or an agent harness.
    derivation, and Muex work independently shippable.
 2. Mature the validation contract and adversarially review Havoc's oracles
    against real vulnerable/fixed examples. Keep the terminal, canonical-codec,
-   quoted-parameter, cache-tenancy, and actor-paired field-policy historical
+   quoted-parameter, cache-tenancy, actor-paired field-policy, explicit-unit length,
+   incremental-buffer, and numeric-work historical
    controls green while adding IP-policy, route-topology, and state-lifecycle
    cases.
 3. Mature RampartSAST's project/package inventory, graph queries, and
@@ -231,7 +233,8 @@ never depends on the sensor, a static analyzer, or an agent harness.
    ambiguous localization, targeted-overhead measurement, conditional boundary
    correlation, adversarial fail-closed probes, OTP process-scope refusal, exact
    historical Plug source, and adapted vulnerable/fixed terminal-control,
-   canonical-codec, quoted-parameter, cache-tenancy, and Ash field-policy
+   canonical-codec, quoted-parameter, cache-tenancy, Ash field-policy, resource-length,
+   incremental-buffer, and numeric-work
    contracts. Add macro-generated, protocol/callback,
    dependency-misuse, full pinned package/
    application, remaining OTP-boundary, and Erlang examples. Track false

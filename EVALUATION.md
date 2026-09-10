@@ -54,7 +54,7 @@ The initial local comparison and its limitations are recorded in
 
 ## Current vertical slices
 
-The corpus currently has fourteen cases spanning composed, package, runtime-
+The corpus currently has seventeen cases spanning composed, package, runtime-
 measurement, OTP-boundary, and historical tiers.
 
 Five composed cases use checksummed target/dependency workspaces and real, safely
@@ -175,10 +175,21 @@ verdict contract, not that Rampart independently rediscovered the advisory or
 established every real-world exploit precondition. The remaining review entries
 continue to be roadmap evidence.
 
+Three further reduced cases implement reusable contracts from the
+[additional capability catalog](evaluation/CVE_CAPABILITY_CATALOG.md): explicit
+byte versus grapheme policy (CVE-2026-82752), retained incremental buffer bytes
+(CVE-2026-82728), and measured hexadecimal digit folds before conversion
+(CVE-2026-82729). The last case keeps buffer protection in both controls to
+separate work from retention. Fixed fixtures must accept valid/exact-boundary
+controls and reject declared over-budget inputs; parser controls include whole
+and fragmented deliveries. They use the existing Havoc action and retain the
+same static inventory, wire budget, harness-failure and replay checks. These
+are original bounded models, with no upstream Ash or Mint package execution.
+
 Across cases, the gate measures inventory, query, graph, artifact, evidence,
 atom, memory, and execution characteristics. A runtime confirmation proves only
 the action's narrow exact-marker, terminal-byte, canonical-codec, parsed-header,
-cache-replay, or actor-paired field-visibility claim.
+cache-replay, actor-paired field-visibility, or measured resource-budget claim.
 
 ## Metrics
 
@@ -258,7 +269,7 @@ The corpus has three intended tiers:
    targeted tracing overhead, the partial direct-message/GenServer/Task/ETS/
    process-dictionary matrix plus external-state, mailbox-pressure, and
    distributed frontier probes, one explicit unsupported OTP process-scope
-   boundary, and five exact vulnerable/fixed Havoc contracts.
+   boundary, and eight exact vulnerable/fixed Havoc contracts.
 3. **Historical cases:** pinned vulnerable and fixed source snapshots from real,
    already-disclosed open-source projects. These include provenance, licensing,
    expected claims, and no evaluation-time network dependency.

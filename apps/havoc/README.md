@@ -145,6 +145,36 @@ exploitability.
 action is ordinary deterministic Elixir code; an agent harness is optional and
 owns only the decision to invoke it.
 
+## Resource contracts and fragmented inputs
+
+Havoc also provides explicit-unit length and incremental parser budget checks:
+
+```elixir
+length_oracle = Havoc.Oracle.bounded_length(unit: :bytes, max_length: 4096)
+generator = Havoc.Gen.unicode_length(max_bytes: 8192, max_marks: 2048)
+
+partitions = Havoc.Gen.byte_partitions(response_bytes, max_chunks: 32)
+buffer_oracle = Havoc.Oracle.incremental_buffer_budget(max_bytes: 4096)
+work_oracle = Havoc.Oracle.incremental_work_budget(unit: :digit_folds, max_work: 16)
+
+target = fn chunks ->
+  Havoc.Observation.Incremental.capture(chunks, initial_state,
+    fn chunk, state -> MyParser.step(chunk, state) end,
+    fn state -> MyFixture.measure(state) end,
+    work_unit: :digit_folds, max_input_bytes: 65_536, max_chunks: 32
+  )
+end
+```
+
+The step returns `{:incomplete | :accepted | :rejected, next_state}`. The
+measurement adapter supplies `:retained_bytes` and/or a monotonic cumulative
+`:work` counter. Use the resulting target and oracle with `security_property`
+or replay an exact chunk-list seed through `Havoc.validate/3`. StreamData owns
+generation and shrinking. `Length.accepted(input, actual_output)` separately
+records a length-policy boundary; the oracle independently counts that output.
+See [oracle semantics](ORACLES.md) for unknown measurements, counter attribution,
+positive controls, callback deadlines and limits on the conclusions.
+
 ## Tiered CI
 
 Run replay plus random generation with ordinary ExUnit:
