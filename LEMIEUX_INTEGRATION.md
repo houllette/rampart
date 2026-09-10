@@ -2,7 +2,7 @@
 
 This note records an implementation-level review of
 [`houllette/lemieux`](https://github.com/houllette/lemieux) at commit
-`e427221bc6b6c2b70909256d048174b986910fbd`. It replaces the earlier assumption
+`76bd70322daae8ce47f53ed3993ee8d07f2c8452` (reviewed 2026-09-09). It replaces the earlier assumption
 that Lemieux was only a future generic agent loop.
 
 Lemieux is already a library-first coding-agent harness with governed tool
@@ -67,9 +67,19 @@ catch-all tool.
 
 The recommended adapter is one configured tool per **enabled validation
 action**, with the host profile selecting only the small set relevant to the
-current task. There are only three v1 actions today. If the catalog grows, the
-host should partition it by workflow and effect class rather than expose all
-of Rampart at once.
+current task. The current catalog contains five v1 actions, with IAST withheld:
+
+| Action | Proof established | Initial agent availability |
+| --- | --- | --- |
+| `portico.endpoint-reachable.v1` | One endpoint is reachable during the probe | Host-authorized network profile |
+| `foray.http-match-reproduces.v1` | The exact recorded HTTP match reproduces | Host-authorized network profile; identity v3 required |
+| `havoc.security-property-reproduces.v1` | A concrete input violates the configured security oracle | Host-owned execution fixture and oracle |
+| `sast.rule-matches-source.v1` | The selected rule still matches the supplied syntax | Trusted snapshot replay; reconnaissance of untrusted projects uses `RampartSAST.Isolated` |
+| `iast.exact-marker-reaches-sink.v1` | An unchanged marker reaches a sink in one execution process | Withheld while research gates remain open |
+
+The host should partition the catalog by workflow and effect class. Neither
+static replay nor a reproduced HTTP match alone establishes a vulnerability.
+Foray findings recorded before identity v3 require re-observation before replay.
 
 Map `Core.Validation.Action` as follows:
 
@@ -80,6 +90,7 @@ Map `Core.Validation.Action` as follows:
 | `Core.Validation.Wire.input_schema/1` | input JSON Schema |
 | `side_effects: :authorized_probe` | external effect, not read-only, policy approval |
 | `side_effects: :test_execution` | write/test effect, not read-only |
+| `side_effects: :none` | read-only syntactic action, subject to host snapshot policy |
 | host-bound deadline | descriptor runtime timeout |
 | validator implementation + action bytes | implementation digest input |
 | action-scoped binding | exclusive by default; resource-keyed only when proved safe |
@@ -91,9 +102,10 @@ mark them read-only. Havoc can persist a counterexample, so its validation tool
 is not read-only either. This also keeps effectful Rampart tools out of
 Lemieux's read-only delegated A2A sessions by default.
 
-Descriptor timeouts must come from the bound execution configuration. Lemieux's
-default two-minute timeout is shorter than some Foray job ceilings; a static
-hard-coded adapter timeout would turn valid long probes into harness failures.
+Descriptor timeouts must come from the bound execution configuration and remain
+within the session's `tool_timeout_ms` maximum. At the reviewed revision, that
+host maximum defaults to ten minutes; descriptor defaults may be lower. Set
+both explicitly for the intended workload rather than relying on those defaults.
 
 ### 4. Keep verdicts distinct from tool failures
 
@@ -138,6 +150,12 @@ should be persisted by a host-authorized artifact service. The tool result
 carries only content-addressed references. Lemieux's artifact locator is a
 reference, never access authority; the host still resolves it under current
 scope.
+
+Budget the complete `Lemieux.Tool.Result` envelope, including model text and
+artifact references. The reviewed `Result.limit/2` replaces oversized structured
+content with a truncation marker and clears artifacts/metadata. The adapter must
+externalize large evidence before reaching that fallback, leaving enough room
+for the reference and verdict in the final envelope.
 
 Including a seed value in the wire projection is an explicit host decision.
 Exact replay remains available in the native result and the Rampart corpus,
@@ -204,3 +222,37 @@ The reviewed Lemieux contracts sharpen the sensor's eventual external interface:
 These constraints reinforce—not relax—the north-star rule: Lemieux decides
 what deterministic Rampart capability to call; Rampart alone decides what the
 observations prove.
+
+## Executable consumer handoff
+
+Start with `mix rampart.integration --suite consumers`, then `--suite contracts`
+and `--suite applications`. The [integration gate](evaluation/integration/README.md)
+builds and consumes actual package archives in fresh projects and retains its
+reports and replay artifacts. It exercises all three verdicts, scope denial,
+malformed references, option smuggling, validator crashes, completed target
+failures, cancellation, deadlines, rebuilt current authority, and oversized
+evidence. Full Lemieux descriptor/result wrapping and transcript resume tests
+belong in the separate security application.
+
+[examples/bound_validation.exs](examples/bound_validation.exs) is a tested,
+transport-neutral embedding example. The host starts a task supervisor, builds
+the binding, then calls `RampartExample.BoundValidation.start/4` and `await/2`:
+
+```elixir
+{:ok, supervisor} = Task.Supervisor.start_link()
+binding = Core.Validation.Binding.new!(Havoc.Validator,
+  "havoc.security-property-reproduces.v1",
+  resolver: host_seed_resolver,
+  validator_options: [target: reviewed_target,
+    property_options: [oracles: reviewed_oracles, corpus_path: host_corpus_path]])
+
+task = RampartExample.BoundValidation.start(supervisor, binding, subject_reference,
+  output_limit: 4096, artifact_directory: host_artifact_directory)
+result = RampartExample.BoundValidation.await(task, 5000)
+```
+
+The example bounds its own projection, not a surrounding Lemieux envelope. It
+is evaluation/example code, not a new Rampart harness or a ready-made Lemieux
+adapter. A real host supplies artifact authorization, binding reconstruction,
+descriptor policies, and final envelope budgeting. Neither repository adds the
+other as a dependency.

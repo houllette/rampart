@@ -36,16 +36,22 @@ defmodule Foray.FfufEngineTest do
 
     [job] = JobBuilder.build(scan)
     [candidate] = Ffuf.stream(job, scan.engine.opts) |> Enum.to_list()
-    assert candidate.locus.identity_version == 2
+    assert candidate.locus.identity_version == 3
     assert {:ok, restored} = candidate |> Foray.Result.encode!() |> Foray.Result.decode()
-    assert restored.locus.identity_version == 2
+    assert restored.locus.identity_version == 3
     assert %{verdict: :confirmed} = Foray.validate(restored, scan)
     assert %{verdict: :confirmed, findings: [replayed]} = Foray.validate(candidate, scan)
     assert replayed.id == candidate.id
-    legacy = %{candidate | locus: Map.delete(candidate.locus, :identity_version)}
 
-    assert %{verdict: :inconclusive, evidence: %{facts: %{reason: :unsupported_identity_version}}} =
-             Foray.validate(legacy, scan)
+    for version <- [nil, 1, 2] do
+      legacy = put_in(candidate.locus.identity_version, version)
+
+      assert %{
+               verdict: :inconclusive,
+               evidence: %{facts: %{reason: :unsupported_identity_version}}
+             } =
+               Foray.validate(legacy, scan)
+    end
   end
 
   defp first_match_line,
@@ -142,6 +148,15 @@ defmodule Foray.FfufEngineTest do
     assert_raise NimbleOptions.ValidationError, fn ->
       Foray.target("https://app.example", engine_options: [follow_redirects: true])
     end
+  end
+
+  test "rejects ffuf's reserved metadata keyword as a payload source" do
+    [job] =
+      Foray.target("https://app.example")
+      |> Foray.fuzz_param("q", wordlist: "payloads.txt", keyword: "FFUFHASH")
+      |> JobBuilder.build()
+
+    assert_raise ArgumentError, ~r/FFUFHASH/, fn -> Ffuf.command(job, []) end
   end
 
   defp flag_value(command, flag) do

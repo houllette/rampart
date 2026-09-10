@@ -15,12 +15,12 @@ defmodule Foray.Finding do
     struct(Core.Finding,
       id:
         Core.Finding.dedupe_id(:foray, [
-          "http_match_v2",
+          "http_match_v3",
           job.method,
           url,
           category,
           point_name,
-          input_signature(match.input)
+          input_signature(match.input, job.wordlists)
         ]),
       source: :foray,
       category: category,
@@ -36,7 +36,7 @@ defmodule Foray.Finding do
         words: match.words,
         lines: match.lines,
         content_type: match.content_type,
-        identity_version: 2
+        identity_version: 3
       },
       severity: nil,
       confidence: :medium,
@@ -92,8 +92,9 @@ defmodule Foray.Finding do
 
   defp primary_input(input, _point), do: input |> Enum.sort() |> List.first() || {nil, nil}
 
-  defp input_signature(input) do
+  defp input_signature(input, wordlists) do
     input
+    |> Map.take(Enum.map(wordlists, & &1.keyword))
     |> Enum.sort()
     |> :erlang.term_to_binary([:deterministic])
   end

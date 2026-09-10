@@ -1,0 +1,12 @@
+
+22:24:39.023 [debug] Starting graceful termination sequence: [sigterm: 150, sigterm: 100, sigkill: 100]
+
+22:24:39.025 [debug] Sending signal: sigterm with wait_time: 150
+
+22:24:39.176 [debug] External program terminated successfully with signal: sigterm
+
+22:24:42.066 [debug] Starting graceful termination sequence: [sigterm: 150, sigterm: 100, sigkill: 100]
+
+22:24:42.066 [debug] Sending signal: sigterm with wait_time: 150
+
+22:24:42.217 [debug] External program terminated successfully with signal: sigterm

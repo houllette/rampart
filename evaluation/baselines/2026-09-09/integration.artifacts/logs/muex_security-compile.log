@@ -1,0 +1,11 @@
+==> jason
+Compiling 10 files (.ex)
+Generated jason app
+==> muex
+Compiling 47 files (.ex)
+Generated muex app
+==> muex_security
+Compiling 8 files (.ex)
+Generated muex_security app
+==> consumer
+Generated consumer app

@@ -1,0 +1,32 @@
+Building muex_security 0.1.0
+  Dependencies:
+    muex ~> 0.9 (app: muex)
+  App: muex_security
+  Name: muex_security
+  Files:
+    lib
+    lib/mix
+    lib/mix/tasks
+    lib/mix/tasks/muex.security.ex
+    lib/muex_security
+    lib/muex_security/mutation.ex
+    lib/muex_security/mutator
+    lib/muex_security/mutator/transport_security.ex
+    lib/muex_security/mutator/secure_compare.ex
+    lib/muex_security/mutator/security_header.ex
+    lib/muex_security/mutator/security_decision.ex
+    lib/muex_security/mutator/sanitizer_bypass.ex
+    lib/muex_security.ex
+    mix.exs
+    README.md
+    OPERATORS.md
+    LICENSE
+  Version: 0.1.0
+  Build tools: mix
+  Description: Focused security mutation operators for Muex
+  Licenses: MIT
+  Links: 
+    GitHub: https://github.com/houllette/rampart
+  Elixir: ~> 1.20
+Package checksum: fd9557e551e4784492f9b8da23ed201556ff618e8d6edf0587104ef958753427
+Saved to /var/folders/sm/bmj7fhns2t1bxd29kghb2x280000gn/T/rampart-integration-udt355sk/muex_security.tar

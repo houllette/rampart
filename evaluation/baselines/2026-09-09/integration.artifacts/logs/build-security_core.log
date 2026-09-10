@@ -1,0 +1,45 @@
+Building security_core 0.1.0
+  Dependencies:
+    exile ~> 0.14.0 (app: exile)
+    telemetry ~> 1.4 (app: telemetry)
+  App: security_core
+  Name: security_core
+  Files:
+    lib
+    lib/core
+    lib/core/telemetry.ex
+    lib/core/hypothesis.ex
+    lib/core/finding.ex
+    lib/core/validator.ex
+    lib/core/runner
+    lib/core/runner/exile.ex
+    lib/core/runner/error.ex
+    lib/core/runner/timeout_error.ex
+    lib/core/runner.ex
+    lib/core/scope
+    lib/core/scope/policy.ex
+    lib/core/scope/deny_all.ex
+    lib/core/scope/error.ex
+    lib/core/scope.ex
+    lib/core/validation.ex
+    lib/core/application.ex
+    lib/core/seed.ex
+    lib/core/validation
+    lib/core/validation/request.ex
+    lib/core/validation/action.ex
+    lib/core/validation/binding.ex
+    lib/core/validation/evidence.ex
+    lib/core/validation/wire.ex
+    lib/core/validation/result.ex
+    mix.exs
+    README.md
+    LICENSE
+  Version: 0.1.0
+  Build tools: mix
+  Description: Findings, proof memory, validation, scope, telemetry, and process contracts
+  Licenses: MIT
+  Links: 
+    GitHub: https://github.com/houllette/rampart
+  Elixir: ~> 1.20
+Package checksum: fcd398ea1642c8b511991e4c047d54f1d3f1872436aa49d5be5006dd8441bead
+Saved to /var/folders/sm/bmj7fhns2t1bxd29kghb2x280000gn/T/rampart-integration-udt355sk/security_core.tar

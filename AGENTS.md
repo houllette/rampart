@@ -81,6 +81,7 @@ means a green PR.
 | Lint | `mix credo --strict` |
 | Compile-time dependency check | `mix xref graph --label compile-connected --fail-above 0` |
 | Type check (slow; runs in CI, not in `precommit`) | `mix dialyzer` |
+| External package/native integration (slow; separate CI gate) | `mix rampart.integration` — see `evaluation/integration/README.md` for pinned native prerequisites |
 | Dependency vulnerabilities | `mix deps.audit` |
 | Retired packages | `mix hex.audit` |
 | Refresh AGENTS.md usage rules | `mix usage_rules.sync --yes` |

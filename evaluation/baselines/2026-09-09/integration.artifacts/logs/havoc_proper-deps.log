@@ -1,0 +1,22 @@
+Resolving Hex dependencies...
+Resolution completed in 0.013s
+Unchanged:
+  elixir_make 0.10.0
+  exile 0.14.0
+  jason 1.4.5
+  libgraph 0.16.0
+  nimble_options 1.1.1
+  propcheck 1.5.0
+  proper 1.5.0
+  stream_data 1.4.0
+  telemetry 1.4.2
+* Getting exile (Hex package)
+* Getting telemetry (Hex package)
+* Getting elixir_make (Hex package)
+* Getting nimble_options (Hex package)
+* Getting propcheck (Hex package)
+* Getting libgraph (Hex package)
+* Getting proper (Hex package)
+* Getting jason (Hex package)
+* Getting stream_data (Hex package)
+You have added/upgraded packages you could sponsor, run `mix hex.sponsor` to learn more

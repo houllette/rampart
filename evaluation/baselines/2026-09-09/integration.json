@@ -1,0 +1,1252 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "started_at": "2026-09-10T04:23:34.719538+00:00",
+  "source_commit": "b983dd82c95a815bf2671cd3d2086ffc44dbe430",
+  "lock_sha256": "b72514ccce696dd2df2c2d513235d4437763616cf3d711ebc3660d47c9929628",
+  "source_snapshot_sha256": "7ee1ceea85403185ea1844f2419c21e3503ab7382d5316ad461d36467cad0eb1",
+  "packages": {
+    "security_core": {
+      "archive_sha256": "fcd398ea1642c8b511991e4c047d54f1d3f1872436aa49d5be5006dd8441bead",
+      "requirements": [
+        {
+          "app": "exile",
+          "name": "exile",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.14.0"
+        },
+        {
+          "app": "telemetry",
+          "name": "telemetry",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.4"
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "portico": {
+      "archive_sha256": "7d602306ac80061d68a65084c2f0ccee8891812cc4edb5ee9327b62fc8416ba1",
+      "requirements": [
+        {
+          "app": "security_core",
+          "name": "security_core",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.1"
+        },
+        {
+          "app": "broadway",
+          "name": "broadway",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.3"
+        },
+        {
+          "app": "jason",
+          "name": "jason",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.4"
+        },
+        {
+          "app": "nimble_options",
+          "name": "nimble_options",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.1"
+        },
+        {
+          "app": "saxy",
+          "name": "saxy",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.6"
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "foray": {
+      "archive_sha256": "e46cd89dcc503f4c5168adcff04386a364cb81c74b4cca83264683e1c802f75f",
+      "requirements": [
+        {
+          "app": "security_core",
+          "name": "security_core",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.1"
+        },
+        {
+          "app": "broadway",
+          "name": "broadway",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.3"
+        },
+        {
+          "app": "jason",
+          "name": "jason",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.4"
+        },
+        {
+          "app": "nimble_options",
+          "name": "nimble_options",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.1"
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "havoc": {
+      "archive_sha256": "ce5d0fa51f03fea16ebd7e4b705faf3c9acd0d3ddb04ab30c281044d1bb3f2c2",
+      "requirements": [
+        {
+          "app": "security_core",
+          "name": "security_core",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.1"
+        },
+        {
+          "app": "jason",
+          "name": "jason",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.4"
+        },
+        {
+          "app": "nimble_options",
+          "name": "nimble_options",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.1"
+        },
+        {
+          "app": "stream_data",
+          "name": "stream_data",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.4"
+        }
+      ],
+      "version": "0.2.0"
+    },
+    "havoc_proper": {
+      "archive_sha256": "71d64ff51c46561f665b74f36f44ea2df8b516cbad616a06b6fc8e343fdfb4b3",
+      "requirements": [
+        {
+          "app": "havoc",
+          "name": "havoc",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.2"
+        },
+        {
+          "app": "nimble_options",
+          "name": "nimble_options",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.1"
+        },
+        {
+          "app": "propcheck",
+          "name": "propcheck",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 1.5"
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "muex_security": {
+      "archive_sha256": "fd9557e551e4784492f9b8da23ed201556ff618e8d6edf0587104ef958753427",
+      "requirements": [
+        {
+          "app": "muex",
+          "name": "muex",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.9"
+        }
+      ],
+      "version": "0.1.0"
+    },
+    "rampart_sast": {
+      "archive_sha256": "55d03d2235cf6530194acbe65bcdafd1bae64b602696ef1277179ef6af3c9a6e",
+      "requirements": [
+        {
+          "app": "security_core",
+          "name": "security_core",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.1"
+        }
+      ],
+      "version": "0.1.0-dev"
+    },
+    "rampart_iast": {
+      "archive_sha256": "5a39e3694f4f66fa91b9efd786417a2ff84e4eae2d3f26be5258d6f2ccfd7dfd",
+      "requirements": [
+        {
+          "app": "security_core",
+          "name": "security_core",
+          "optional": false,
+          "repository": "hexpm",
+          "requirement": "~> 0.1"
+        }
+      ],
+      "version": "0.1.0-dev"
+    }
+  },
+  "results": [
+    {
+      "name": "security_core",
+      "seconds": 0.882,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "native_runner",
+        "deny_scope"
+      ]
+    },
+    {
+      "name": "portico",
+      "seconds": 0.507,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "action",
+        "target",
+        "scope_denial"
+      ]
+    },
+    {
+      "name": "foray",
+      "seconds": 0.501,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "whole_job",
+        "action"
+      ]
+    },
+    {
+      "name": "havoc",
+      "seconds": 0.49,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "confirmed",
+        "persisted_replay",
+        "refuted"
+      ]
+    },
+    {
+      "name": "havoc_proper",
+      "seconds": 0.546,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "proper_generation"
+      ]
+    },
+    {
+      "name": "muex_security",
+      "seconds": 0.491,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "muex_configuration",
+        "mutation"
+      ]
+    },
+    {
+      "name": "rampart_sast",
+      "seconds": 0.926,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "disposable_worker",
+        "facts"
+      ]
+    },
+    {
+      "name": "rampart_iast",
+      "seconds": 0.442,
+      "status": "passed",
+      "checks": [
+        "package_isolation",
+        "research_action_contract"
+      ],
+      "agent_enabled": false
+    },
+    {
+      "name": "contracts",
+      "seconds": 0.716,
+      "status": "passed",
+      "verdicts": [
+        "confirmed",
+        "refuted",
+        "inconclusive"
+      ],
+      "checks": [
+        "persisted_replay",
+        "new_host_authority",
+        "malformed_references",
+        "option_smuggling",
+        "scope_denial",
+        "validator_crash",
+        "deadline",
+        "cancellation",
+        "target_failure",
+        "bounded_artifact_output",
+        "syntactic_replay"
+      ]
+    },
+    {
+      "name": "applications",
+      "seconds": 1.193,
+      "status": "passed",
+      "plug": "1.20.3",
+      "bandit": "1.12.5",
+      "fixtures": [
+        {
+          "name": "tenant_cache",
+          "vulnerable": "confirmed",
+          "fixed": "refuted",
+          "replay": "confirmed",
+          "unavailable_application": "inconclusive",
+          "seed_id": "havoc:f232b33aa5c1b72d8c46c696e2fda849e6db4dbe545524542df7b5af84ae1144",
+          "proof_hashes": {
+            "tenant_cache-confirmed.json": "63ed76f8fb0641a976280b4849db3a8303821e97914082a62b0777dc256c4f1d",
+            "tenant_cache-corpus.json": "9b4461a106843ae36ed7bf6bf09b4be01eb2bdad5f71b8d2fef6205e5d4b55ef",
+            "tenant_cache-failure.json": "733b6bd7359e9d37849ccc17ecb870f9e60b98ab06576e9fa76c82bfe34d5c5a",
+            "tenant_cache-fixed.json": "429631d0bd797905a1b179e8066a82200b4109c4db54e3b0e12c5f25f71acb15",
+            "tenant_cache-replay.json": "d86a22e82ccccad4d57872b794f475850a3f8d9a31a8b3c97ccc4c4cebb5f17a"
+          }
+        },
+        {
+          "name": "route_gateway",
+          "vulnerable": "confirmed",
+          "fixed": "refuted",
+          "replay": "confirmed",
+          "unavailable_application": "inconclusive",
+          "seed_id": "havoc:b7d22008d8d225022102d468dc6cd32a284df73708fd19db36bd4adae7672f3e",
+          "proof_hashes": {
+            "route_gateway-confirmed.json": "cbb0e19ed964a98f0b34e7733f459e3d0f7fc5bceadb1a174d3fbc55fdd6db80",
+            "route_gateway-corpus.json": "b1363616f14c30e438bcf96d73bbf1cd62266880dba711c4258eaf49ba5d0d23",
+            "route_gateway-failure.json": "904a92c4ccb67f1ddd8d5b72673154f0907c143ebe38c1d0a42a59a9eb1909c6",
+            "route_gateway-fixed.json": "8f397870932445ce3949ecbf07d144e91491c7b214faf6025c31cdf197984836",
+            "route_gateway-replay.json": "d272b8163a74d131a3208124f1d15dc9e6505c88f9eef236b10658385ff977be"
+          }
+        }
+      ],
+      "source_hashes": {
+        "lib/route_gateway.ex": "1a5981a7408c353c53556a4e83d4e56895ba05ef768ce84ccaea9a4b00f94b17",
+        "lib/server.ex": "084de07569d21011eedfa864896712311ecc96fc0af54ea4cd84d0ce7876abaa",
+        "lib/tenant_cache.ex": "13f94dc0d2468171d7afddf7772a852770878534d7952dc4e2f3919f948de83e",
+        "mix.lock": "b72514ccce696dd2df2c2d513235d4437763616cf3d711ebc3660d47c9929628"
+      },
+      "inventory_id": "5643832f20fdcc7e0a036bf17acc4dc7183c1d573ee7f6d517c452d45d7a57ce",
+      "historical_cve_reproduction": false
+    },
+    {
+      "name": "native",
+      "seconds": 44.911,
+      "status": "passed",
+      "versions": {
+        "rustscan": "2.4.1",
+        "nmap": "7.99",
+        "ffuf": "2.2.0",
+        "ffuf_reported": "2.1.0"
+      },
+      "checks": [
+        "rustscan_to_nmap",
+        "open_closed_ports",
+        "scope_denial",
+        "real_ffuf",
+        "persisted_exact_replay",
+        "multi_keyword",
+        "binary_body",
+        "no_match",
+        "response_receipt_refutation",
+        "request_timeout_inconclusive",
+        "job_deadline_inconclusive",
+        "slow_consumer",
+        "aggregate_rate",
+        "consumer_death",
+        "validation_caller_death",
+        "child_reaping",
+        "wordlist_cleanup",
+        "audit_cleanup"
+      ],
+      "rate": {
+        "requests": 20,
+        "configured_per_second": 10,
+        "observed_peak_one_second": 12,
+        "first_to_last_ms": 1799,
+        "burst_tolerance": 2
+      },
+      "cancellation_ms": 810,
+      "validation_cancellation_ms": 133,
+      "child_count": 19
+    },
+    {
+      "name": "muex",
+      "seconds": 4.43,
+      "timeout": 1,
+      "killed": 1,
+      "status": "passed",
+      "survived": 1,
+      "checks": [
+        "baseline_passes",
+        "bypass_killed",
+        "missing_control_survives",
+        "timeout_distinct",
+        "compile_failure_distinct",
+        "source_restored",
+        "unrelated_code_untouched"
+      ],
+      "compile_failures": 1,
+      "muex_version": "0.9.1"
+    },
+    {
+      "name": "search",
+      "seconds": 0.778,
+      "status": "passed",
+      "domain": "four characters from RAMPXYZ",
+      "trials": [
+        {
+          "mode": "unguided",
+          "trial": 1,
+          "confirmed": true,
+          "covered_line_count": 7,
+          "max_depth": 4,
+          "elapsed_us": 19828,
+          "target_calls": 59,
+          "inputs_sha256": "946f2837806ec9d903f21c0290fc0ba24ab82a68235738db05d2299a1043c8f3",
+          "stream_data_seed": [
+            19,
+            83,
+            1
+          ]
+        },
+        {
+          "mode": "guided",
+          "trial": 1,
+          "confirmed": false,
+          "covered_line_count": 3,
+          "max_depth": 1,
+          "elapsed_us": 26970,
+          "target_calls": 200,
+          "inputs_sha256": "47436c4e7c98a3944083ac1d75d3acecd8cc728b7d56705620a0e423e54d2e14",
+          "stream_data_seed": null
+        },
+        {
+          "mode": "unguided",
+          "trial": 2,
+          "confirmed": false,
+          "covered_line_count": 5,
+          "max_depth": 2,
+          "elapsed_us": 9048,
+          "target_calls": 200,
+          "inputs_sha256": "bede2e65a7363c5bea6b7df0b5e4bdab2bc947900199ae28681480f78e9d4845",
+          "stream_data_seed": [
+            19,
+            83,
+            2
+          ]
+        },
+        {
+          "mode": "guided",
+          "trial": 2,
+          "confirmed": false,
+          "covered_line_count": 5,
+          "max_depth": 2,
+          "elapsed_us": 15005,
+          "target_calls": 200,
+          "inputs_sha256": "5d98aac0b438fd86a846bb0576d106fca80a35f0bf8c88f30d34ecc19a247043",
+          "stream_data_seed": null
+        },
+        {
+          "mode": "unguided",
+          "trial": 3,
+          "confirmed": false,
+          "covered_line_count": 5,
+          "max_depth": 2,
+          "elapsed_us": 9616,
+          "target_calls": 200,
+          "inputs_sha256": "48bfb68aa184a021c9f4943ac1b37c94f59b189a8123387d1324ca917597ef7e",
+          "stream_data_seed": [
+            19,
+            83,
+            3
+          ]
+        },
+        {
+          "mode": "guided",
+          "trial": 3,
+          "confirmed": false,
+          "covered_line_count": 7,
+          "max_depth": 3,
+          "elapsed_us": 15454,
+          "target_calls": 200,
+          "inputs_sha256": "b2bbb84753aa42c76024aa067eaf81ae3e56361a5c6b9363b232d064c21abe6b",
+          "stream_data_seed": null
+        },
+        {
+          "mode": "unguided",
+          "trial": 4,
+          "confirmed": false,
+          "covered_line_count": 5,
+          "max_depth": 2,
+          "elapsed_us": 9374,
+          "target_calls": 200,
+          "inputs_sha256": "9dfd58c519233601ee46e00b047677cd4789ae6d6311b4bad0c40568ec782215",
+          "stream_data_seed": [
+            19,
+            83,
+            4
+          ]
+        },
+        {
+          "mode": "guided",
+          "trial": 4,
+          "confirmed": true,
+          "covered_line_count": 8,
+          "max_depth": 4,
+          "elapsed_us": 15263,
+          "target_calls": 164,
+          "inputs_sha256": "b12ca76a44087811018a870770782e629737209332a1e2c2d40ed624d52126c4",
+          "stream_data_seed": null
+        },
+        {
+          "mode": "unguided",
+          "trial": 5,
+          "confirmed": false,
+          "covered_line_count": 5,
+          "max_depth": 2,
+          "elapsed_us": 9041,
+          "target_calls": 200,
+          "inputs_sha256": "fc5f3e1b97ad6f28a23bec0a2b4a9121d5a0e98a947cc04dc86b00ceefe32afa",
+          "stream_data_seed": [
+            19,
+            83,
+            5
+          ]
+        },
+        {
+          "mode": "guided",
+          "trial": 5,
+          "confirmed": false,
+          "covered_line_count": 5,
+          "max_depth": 2,
+          "elapsed_us": 15746,
+          "target_calls": 200,
+          "inputs_sha256": "aa039c33a946b9c7a45b6e94be478b51eacd4ce155c908d6977f89dced2bcac3",
+          "stream_data_seed": null
+        },
+        {
+          "mode": "unguided",
+          "trial": 6,
+          "confirmed": false,
+          "covered_line_count": 7,
+          "max_depth": 3,
+          "elapsed_us": 9760,
+          "target_calls": 200,
+          "inputs_sha256": "03f3d97951525813025835720e777556fe90f1b47a8449c414e52e66c61f30aa",
+          "stream_data_seed": [
+            19,
+            83,
+            6
+          ]
+        },
+        {
+          "mode": "guided",
+          "trial": 6,
+          "confirmed": false,
+          "covered_line_count": 7,
+          "max_depth": 3,
+          "elapsed_us": 15786,
+          "target_calls": 200,
+          "inputs_sha256": "58252aecfff4310992cb198ab13f7760e1665a2f6584a707fb6c8e65d1dfacd9",
+          "stream_data_seed": null
+        },
+        {
+          "mode": "unguided",
+          "trial": 7,
+          "confirmed": false,
+          "covered_line_count": 7,
+          "max_depth": 3,
+          "elapsed_us": 9488,
+          "target_calls": 200,
+          "inputs_sha256": "cc7f4a8fc7942047210c7991d1d44eaeeb64cd7f08f892e588a517458e0066b3",
+          "stream_data_seed": [
+            19,
+            83,
+            7
+          ]
+        },
+        {
+          "mode": "guided",
+          "trial": 7,
+          "confirmed": true,
+          "covered_line_count": 8,
+          "max_depth": 4,
+          "elapsed_us": 11497,
+          "target_calls": 120,
+          "inputs_sha256": "f4cf713c1e9a3e3459d5e1755f1fab74b2d0a50d695a7c2ad8d1b447a13a4c04",
+          "stream_data_seed": null
+        }
+      ],
+      "summary": {
+        "unguided": {
+          "found": 1,
+          "trials": 7,
+          "median_covered_lines": 5,
+          "median_max_depth": 2,
+          "median_us": 9488
+        },
+        "guided": {
+          "found": 2,
+          "trials": 7,
+          "median_covered_lines": 7,
+          "median_max_depth": 3,
+          "median_us": 15454
+        }
+      },
+      "search_budget": 200,
+      "fixture_sha256": "901be3e9edd0ac379bc4f6e62426f497c1e258e2992cf368ade0674f7b6d108b",
+      "interpretation": "paired bounded trials; both arms collect line coverage; no universal effectiveness threshold; guided RNG seed is not publicly configurable in PropEr 1.5, so exact generated sequences are retained"
+    },
+    {
+      "name": "resources",
+      "seconds": 4.127,
+      "runtime": {
+        "otp": "29",
+        "schedulers": 10,
+        "elixir": "1.20.4",
+        "architecture": "aarch64-apple-darwin25.6.0"
+      },
+      "status": "passed",
+      "cases": [
+        {
+          "mode": "disabled",
+          "concurrency": 1,
+          "workload": "compute",
+          "samples_us": [
+            688,
+            567,
+            559,
+            563,
+            567,
+            560,
+            568
+          ],
+          "median_us": 567,
+          "p95_us": 688,
+          "sampled_peak_vm_bytes": 51153585,
+          "sampled_peak_mailbox_messages": 0,
+          "node_reductions": 400499,
+          "node_gcs": 8,
+          "scheduler_active_ratio": 0.07501438660493934
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 1,
+          "workload": "compute",
+          "samples_us": [
+            8448,
+            7279,
+            7039,
+            8027,
+            8088,
+            7174,
+            7526
+          ],
+          "median_us": 7526,
+          "p95_us": 8448,
+          "sampled_peak_vm_bytes": 52143930,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 911943,
+          "node_gcs": 37,
+          "scheduler_active_ratio": 0.05832269908040297
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 1,
+          "workload": "binary",
+          "samples_us": [
+            295,
+            268,
+            287,
+            302,
+            282,
+            259,
+            266
+          ],
+          "median_us": 282,
+          "p95_us": 302,
+          "sampled_peak_vm_bytes": 51347970,
+          "sampled_peak_mailbox_messages": 0,
+          "node_reductions": 58648,
+          "node_gcs": 8,
+          "scheduler_active_ratio": 0.07394781756569169
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 1,
+          "workload": "binary",
+          "samples_us": [
+            6784,
+            7467,
+            7359,
+            7229,
+            7437,
+            6607,
+            7734
+          ],
+          "median_us": 7359,
+          "p95_us": 7734,
+          "sampled_peak_vm_bytes": 52104250,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 525442,
+          "node_gcs": 38,
+          "scheduler_active_ratio": 0.05655543400997729
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 1,
+          "workload": "container",
+          "samples_us": [
+            73,
+            37,
+            30,
+            22,
+            70,
+            45,
+            32
+          ],
+          "median_us": 37,
+          "p95_us": 73,
+          "sampled_peak_vm_bytes": 51359258,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 27999,
+          "node_gcs": 57,
+          "scheduler_active_ratio": 0.1137923930365442
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 1,
+          "workload": "container",
+          "samples_us": [
+            7454,
+            7693,
+            7103,
+            7201,
+            7100,
+            7447,
+            7150
+          ],
+          "median_us": 7201,
+          "p95_us": 7693,
+          "sampled_peak_vm_bytes": 52118378,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 701445,
+          "node_gcs": 359,
+          "scheduler_active_ratio": 0.057820409728754414
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 1,
+          "workload": "io",
+          "samples_us": [
+            1102,
+            512,
+            431,
+            392,
+            410,
+            479,
+            480
+          ],
+          "median_us": 479,
+          "p95_us": 1102,
+          "sampled_peak_vm_bytes": 51524322,
+          "sampled_peak_mailbox_messages": 0,
+          "node_reductions": 57741,
+          "node_gcs": 29,
+          "scheduler_active_ratio": 0.03419063137415341
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 1,
+          "workload": "io",
+          "samples_us": [
+            7851,
+            7008,
+            7216,
+            7112,
+            7186,
+            7993,
+            6961
+          ],
+          "median_us": 7186,
+          "p95_us": 7993,
+          "sampled_peak_vm_bytes": 52334890,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 572810,
+          "node_gcs": 59,
+          "scheduler_active_ratio": 0.057130210863194635
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 2,
+          "workload": "compute",
+          "samples_us": [
+            1203,
+            836,
+            816,
+            796,
+            819,
+            826,
+            880
+          ],
+          "median_us": 826,
+          "p95_us": 1203,
+          "sampled_peak_vm_bytes": 51574810,
+          "sampled_peak_mailbox_messages": 0,
+          "node_reductions": 751312,
+          "node_gcs": 8,
+          "scheduler_active_ratio": 0.07497799383509496
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 2,
+          "workload": "compute",
+          "samples_us": [
+            16583,
+            14435,
+            14437,
+            14043,
+            14481,
+            15725,
+            14635
+          ],
+          "median_us": 14481,
+          "p95_us": 16583,
+          "sampled_peak_vm_bytes": 52951314,
+          "sampled_peak_mailbox_messages": 13,
+          "node_reductions": 1740589,
+          "node_gcs": 57,
+          "scheduler_active_ratio": 0.06049100269003993
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 2,
+          "workload": "binary",
+          "samples_us": [
+            813,
+            410,
+            588,
+            568,
+            510,
+            490,
+            471
+          ],
+          "median_us": 510,
+          "p95_us": 813,
+          "sampled_peak_vm_bytes": 51577330,
+          "sampled_peak_mailbox_messages": 0,
+          "node_reductions": 62583,
+          "node_gcs": 8,
+          "scheduler_active_ratio": 0.059704773309496174
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 2,
+          "workload": "binary",
+          "samples_us": [
+            14556,
+            14590,
+            13947,
+            14641,
+            13649,
+            14433,
+            15695
+          ],
+          "median_us": 14556,
+          "p95_us": 15695,
+          "sampled_peak_vm_bytes": 53031554,
+          "sampled_peak_mailbox_messages": 16,
+          "node_reductions": 1056031,
+          "node_gcs": 57,
+          "scheduler_active_ratio": 0.059686744840162405
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 2,
+          "workload": "container",
+          "samples_us": [
+            309,
+            73,
+            79,
+            53,
+            97,
+            220,
+            61
+          ],
+          "median_us": 79,
+          "p95_us": 309,
+          "sampled_peak_vm_bytes": 51595426,
+          "sampled_peak_mailbox_messages": 4,
+          "node_reductions": 78292,
+          "node_gcs": 113,
+          "scheduler_active_ratio": 0.10395877293926853
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 2,
+          "workload": "container",
+          "samples_us": [
+            13404,
+            14458,
+            14029,
+            14868,
+            15299,
+            15700,
+            15590
+          ],
+          "median_us": 14868,
+          "p95_us": 15700,
+          "sampled_peak_vm_bytes": 52838322,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 1336584,
+          "node_gcs": 687,
+          "scheduler_active_ratio": 0.06097505141271252
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 2,
+          "workload": "io",
+          "samples_us": [
+            1211,
+            676,
+            642,
+            737,
+            652,
+            600,
+            624
+          ],
+          "median_us": 652,
+          "p95_us": 1211,
+          "sampled_peak_vm_bytes": 51965266,
+          "sampled_peak_mailbox_messages": 2,
+          "node_reductions": 67841,
+          "node_gcs": 50,
+          "scheduler_active_ratio": 0.041648396870981354
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 2,
+          "workload": "io",
+          "samples_us": [
+            14543,
+            14372,
+            15333,
+            13906,
+            14278,
+            13192,
+            13765
+          ],
+          "median_us": 14278,
+          "p95_us": 15333,
+          "sampled_peak_vm_bytes": 52310530,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 1051585,
+          "node_gcs": 107,
+          "scheduler_active_ratio": 0.05868961533044566
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 4,
+          "workload": "compute",
+          "samples_us": [
+            1568,
+            1176,
+            1341,
+            1242,
+            1182,
+            954,
+            1134
+          ],
+          "median_us": 1182,
+          "p95_us": 1568,
+          "sampled_peak_vm_bytes": 51553002,
+          "sampled_peak_mailbox_messages": 0,
+          "node_reductions": 1454458,
+          "node_gcs": 22,
+          "scheduler_active_ratio": 0.10356342844968831
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 4,
+          "workload": "compute",
+          "samples_us": [
+            27485,
+            26513,
+            30601,
+            27576,
+            27868,
+            26230,
+            25680
+          ],
+          "median_us": 27485,
+          "p95_us": 30601,
+          "sampled_peak_vm_bytes": 52399674,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 3426832,
+          "node_gcs": 127,
+          "scheduler_active_ratio": 0.06167046481432248
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 4,
+          "workload": "binary",
+          "samples_us": [
+            960,
+            576,
+            1034,
+            941,
+            922,
+            929,
+            922
+          ],
+          "median_us": 929,
+          "p95_us": 1034,
+          "sampled_peak_vm_bytes": 51518250,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 77006,
+          "node_gcs": 16,
+          "scheduler_active_ratio": 0.06104208677257403
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 4,
+          "workload": "binary",
+          "samples_us": [
+            28286,
+            28546,
+            29605,
+            28810,
+            27239,
+            28164,
+            28323
+          ],
+          "median_us": 28323,
+          "p95_us": 29605,
+          "sampled_peak_vm_bytes": 52799426,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 2110845,
+          "node_gcs": 128,
+          "scheduler_active_ratio": 0.06034440925018989
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 4,
+          "workload": "container",
+          "samples_us": [
+            290,
+            112,
+            141,
+            98,
+            103,
+            108,
+            85
+          ],
+          "median_us": 108,
+          "p95_us": 290,
+          "sampled_peak_vm_bytes": 51571578,
+          "sampled_peak_mailbox_messages": 2,
+          "node_reductions": 109672,
+          "node_gcs": 239,
+          "scheduler_active_ratio": 0.11053171662734657
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 4,
+          "workload": "container",
+          "samples_us": [
+            27084,
+            27576,
+            29529,
+            27045,
+            26152,
+            28400,
+            27299
+          ],
+          "median_us": 27299,
+          "p95_us": 29529,
+          "sampled_peak_vm_bytes": 52522554,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 2689510,
+          "node_gcs": 1405,
+          "scheduler_active_ratio": 0.0615395174657371
+        },
+        {
+          "mode": "disabled",
+          "concurrency": 4,
+          "workload": "io",
+          "samples_us": [
+            1672,
+            1460,
+            1367,
+            1320,
+            1355,
+            1303,
+            1284
+          ],
+          "median_us": 1355,
+          "p95_us": 1672,
+          "sampled_peak_vm_bytes": 51886522,
+          "sampled_peak_mailbox_messages": 2,
+          "node_reductions": 88304,
+          "node_gcs": 107,
+          "scheduler_active_ratio": 0.03888317158712766
+        },
+        {
+          "mode": "targeted",
+          "concurrency": 4,
+          "workload": "io",
+          "samples_us": [
+            25940,
+            27536,
+            26253,
+            25866,
+            27442,
+            25532,
+            27021
+          ],
+          "median_us": 26253,
+          "p95_us": 27536,
+          "sampled_peak_vm_bytes": 52714154,
+          "sampled_peak_mailbox_messages": 1,
+          "node_reductions": 2055891,
+          "node_gcs": 213,
+          "scheduler_active_ratio": 0.060288754671623396
+        }
+      ],
+      "sast": {
+        "calls": 5001,
+        "elapsed_us": 1254106,
+        "isolation_limits": {
+          "max_heap_words": 32000000,
+          "max_wire_terms": 5000000
+        },
+        "small_heap": "incomplete",
+        "inventory_id": "bece52b5c4c56c914c5548b9d5fe682c3b5731cccd8f1f2f66310a07e50c1118",
+        "facts": 15054,
+        "fixture_hash": "6d234b5e402b6e8f6f2887904568095cc3ec210cdc264fe0bade3d56ed8dd515"
+      },
+      "teardown_trials": 20,
+      "measurement": "sampled VM memory and node mailbox peaks at 10ms; node reductions/GC and scheduler wall time include instrumentation; OS RSS is sampled by the external runner; no hard memory cap or production safety claim",
+      "os_memory": {
+        "peak_sampled_process_tree_rss_bytes": 589676544,
+        "samples": 118,
+        "minimum_sample_interval_ms": 20
+      }
+    }
+  ],
+  "artifacts": {
+    "applications/route_gateway-confirmed.json": "cbb0e19ed964a98f0b34e7733f459e3d0f7fc5bceadb1a174d3fbc55fdd6db80",
+    "applications/route_gateway-corpus.json": "b1363616f14c30e438bcf96d73bbf1cd62266880dba711c4258eaf49ba5d0d23",
+    "applications/route_gateway-failure.json": "904a92c4ccb67f1ddd8d5b72673154f0907c143ebe38c1d0a42a59a9eb1909c6",
+    "applications/route_gateway-fixed.json": "8f397870932445ce3949ecbf07d144e91491c7b214faf6025c31cdf197984836",
+    "applications/route_gateway-replay.json": "d272b8163a74d131a3208124f1d15dc9e6505c88f9eef236b10658385ff977be",
+    "applications/tenant_cache-confirmed.json": "63ed76f8fb0641a976280b4849db3a8303821e97914082a62b0777dc256c4f1d",
+    "applications/tenant_cache-corpus.json": "9b4461a106843ae36ed7bf6bf09b4be01eb2bdad5f71b8d2fef6205e5d4b55ef",
+    "applications/tenant_cache-failure.json": "733b6bd7359e9d37849ccc17ecb870f9e60b98ab06576e9fa76c82bfe34d5c5a",
+    "applications/tenant_cache-fixed.json": "429631d0bd797905a1b179e8066a82200b4109c4db54e3b0e12c5f25f71acb15",
+    "applications/tenant_cache-replay.json": "d86a22e82ccccad4d57872b794f475850a3f8d9a31a8b3c97ccc4c4cebb5f17a",
+    "contracts/artifacts/a748a6061440312fe8d7fb50b537bf6a321d14b4e66b6138efb68b0f41067ac0.json": "a748a6061440312fe8d7fb50b537bf6a321d14b4e66b6138efb68b0f41067ac0",
+    "contracts/contract-corpus.json": "a9acbd6e5cd60fa3597ffca251f374276249153de039cfd5f3021ce7631db3ee",
+    "contracts/subject-reference.json": "83a83d17cf68aafcab9129533935300f424e45c142a77efd6f6125711d180fe9",
+    "logs/applications-compile.log": "e9d563fa9b47e4a37efe8cbe117bba7a121946ef0de9f418675d55f6c993145e",
+    "logs/applications-deps.log": "d00bbedf00b5cd2ef0ad66a4dc63bf0e6b88573c512d8ca804ba4a3a79a3c67f",
+    "logs/applications.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/build-foray.log": "efa4c18cc58928616cf765e907f529f19d2d349df46f8d2f4daa5ef527344a28",
+    "logs/build-havoc.log": "0e0539538a014959118de8a542649fe5b9154d09956bcb26c65e8d0d204f6432",
+    "logs/build-havoc_proper.log": "8fd76ded807bfb4a0449ad9e06d1b6b67210da7ab9530cda414950e2dd624115",
+    "logs/build-muex_security.log": "ea65c49c00bee7ed3eb7df2b08d4b3ec22aa0212f0ad885185be74c391a457d8",
+    "logs/build-portico.log": "f943512662ebba49adc8df19ac262059b5a47e9e62b9b2590625c5e8f7cbd2a3",
+    "logs/build-rampart_iast.log": "284226d94861638e3f2c96e64b230e64aa0d2bcfd3d232c8c2f123e178a402ba",
+    "logs/build-rampart_sast.log": "c112d42d39bbb84682e265e9f1c07160cd92fb4fc47528a9d0aeb3f292749b03",
+    "logs/build-security_core.log": "c7421357d0e27b9467076a20a4dd80a3851ff2bb7389cbf12a4b1d38263f7b94",
+    "logs/contracts-compile.log": "c60bd09855cdbedd82de1794ed6bd9f02b4f6204024197f703548d5128badfa6",
+    "logs/contracts-deps.log": "080d62909e411dd3ff41dc995e55644e6e864be097dc47d6a99f0d4d10e3daa1",
+    "logs/contracts.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/foray-compile.log": "f8fc43144e9940244fbb2307a4feab69d62093a559e0e5e258bbf02f82f45945",
+    "logs/foray-deps.log": "6869cb5166b74c15ae95f077e1758723f93db23bf97371107fe85698de0170f7",
+    "logs/foray.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/havoc-compile.log": "57c434d3d53a555444614dd839f487e9a82d698bef4903f075050ce015ed0bf2",
+    "logs/havoc-deps.log": "807f7cd1c2df44739f72bc1b0feebdee1b966964f4c1ea3fd1475559a95650f0",
+    "logs/havoc.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/havoc_proper-compile.log": "cca4b8662013eca86320b527cbfe874bcb3ba7717c9b3222ce81cf4764bd4704",
+    "logs/havoc_proper-deps.log": "6f43bc95ad2c5651227580cbf4fbb8d8a7cffb2376970d705392da2ee4c9543b",
+    "logs/havoc_proper.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/muex-compile.log": "12bd26bd123ae7b02b01e10fecbc9e4cafe08095ad46c5ad4c242aab94f3d748",
+    "logs/muex-deps.log": "7445b4acc5faaa3e5dd6351be9754d937397ba10dafb77bc2645ce6a07c64a4a",
+    "logs/muex.log": "cd1d15d426fe93efd0a3ee4e58a480e4079452b7120c7f8ee4227b76158f7198",
+    "logs/muex_security-compile.log": "f05293f661498ee48c901dddb3dc079d6aca49888945d4663c424266447d8ec1",
+    "logs/muex_security-deps.log": "dcd9997c9a91ef3e1ca191eedd718f6e295affe4cd9c4da47ee78c9048606db5",
+    "logs/muex_security.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/native-compile.log": "9e519f0a5284fd27f8abb80881c25ac17a9ac4e59f5aba160c37327dab2682a7",
+    "logs/native-deps.log": "2876c8810edb13b3059f8e8cbce7012bbc52e8eb7a3b5ae46a8bdd2250ba296e",
+    "logs/native.log": "ceea3540f226a11599b9f6c0e3f3be0d665f213ec81c6e3aa7fe65fc2d173159",
+    "logs/package-metadata.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/portico-compile.log": "e0f11efb479a942b9eda48154caa8cc72109dac7469a3020cf47995b3489f9be",
+    "logs/portico-deps.log": "ebef9d67212932655bd1d5fb1774fee97c02da97daca5e4c80db0b2007962eb2",
+    "logs/portico.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/rampart_iast-compile.log": "4770014d7da7014f652c09fadfe10117a6ce0164b52a10d278a7325d891ca614",
+    "logs/rampart_iast-deps.log": "14aace51f198b16dc7108c5aa892bfa438342a3ade3885732c9357a4c361a4e4",
+    "logs/rampart_iast.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/rampart_sast-compile.log": "44c708937fd2018e70bd393fe4cc61267211934b80ed0a0d4e8e26676ed32d4d",
+    "logs/rampart_sast-deps.log": "53c3af3f8ca61967bd58f271ec6a77667757378764e8e79ef0120d8f31fa0fe4",
+    "logs/rampart_sast.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/resources-compile.log": "4a0e3a6e010cf5c61c8f4c05112a0d50d3aafabc0745d3ec2bdd04fdf148cb37",
+    "logs/resources-deps.log": "37d231ef041e6b48c72e47445bdf1b8b50a5e4c18fe79c7b71b3470941ef8005",
+    "logs/resources.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/search-compile.log": "0dc5db3d9551c2859d6957411a69c5f7d636fa0ef930bd76b9a1ee1b3039382b",
+    "logs/search-deps.log": "83470c1cb21ee41430121b4be28999b0acc10c62e31a2f69012bbc782e25f2f3",
+    "logs/search.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "logs/security_core-compile.log": "e5a1847dc78cb7520b3ae0f091c2b0192dfcd5635f63606c0b2bccff3eb1ffa5",
+    "logs/security_core-deps.log": "9ef4927fa1cc3eb70ba85f2ddc653b28c1d67110d431c2324786909371512042",
+    "logs/security_core.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native/foray-finding.json": "d462ed2b5ddd8b2c911f02b0ec0e99d0e100a632e4c9e5442b3bbcaff1bd5673",
+    "native/foray-replay.json": "42e42bc3188736f32d28fb737d40690d1a639be0a3880752372ffe2125e242c9",
+    "search/guided-1-inputs.json": "47436c4e7c98a3944083ac1d75d3acecd8cc728b7d56705620a0e423e54d2e14",
+    "search/guided-2-inputs.json": "5d98aac0b438fd86a846bb0576d106fca80a35f0bf8c88f30d34ecc19a247043",
+    "search/guided-3-inputs.json": "b2bbb84753aa42c76024aa067eaf81ae3e56361a5c6b9363b232d064c21abe6b",
+    "search/guided-4-corpus.json": "f9b021a484a0a8355df78fb5f3bb672edc74c5245ae47d7e1b89b67357d03e77",
+    "search/guided-4-inputs.json": "b12ca76a44087811018a870770782e629737209332a1e2c2d40ed624d52126c4",
+    "search/guided-5-inputs.json": "aa039c33a946b9c7a45b6e94be478b51eacd4ce155c908d6977f89dced2bcac3",
+    "search/guided-6-inputs.json": "58252aecfff4310992cb198ab13f7760e1665a2f6584a707fb6c8e65d1dfacd9",
+    "search/guided-7-corpus.json": "06a51252dba0e077c0185c1dcbf54faf7f08820a300715bbfc391df02d3546c7",
+    "search/guided-7-inputs.json": "f4cf713c1e9a3e3459d5e1755f1fab74b2d0a50d695a7c2ad8d1b447a13a4c04",
+    "search/unguided-1-corpus.json": "b89949a46d267e333ca9e9a97ebeab2f028dea17cb592a6adcc63cfbd2642214",
+    "search/unguided-1-inputs.json": "946f2837806ec9d903f21c0290fc0ba24ab82a68235738db05d2299a1043c8f3",
+    "search/unguided-2-inputs.json": "bede2e65a7363c5bea6b7df0b5e4bdab2bc947900199ae28681480f78e9d4845",
+    "search/unguided-3-inputs.json": "48bfb68aa184a021c9f4943ac1b37c94f59b189a8123387d1324ca917597ef7e",
+    "search/unguided-4-inputs.json": "9dfd58c519233601ee46e00b047677cd4789ae6d6311b4bad0c40568ec782215",
+    "search/unguided-5-inputs.json": "fc5f3e1b97ad6f28a23bec0a2b4a9121d5a0e98a947cc04dc86b00ceefe32afa",
+    "search/unguided-6-inputs.json": "03f3d97951525813025835720e777556fe90f1b47a8449c414e52e66c61f30aa",
+    "search/unguided-7-inputs.json": "cc7f4a8fc7942047210c7991d1d44eaeeb64cd7f08f892e588a517458e0066b3"
+  },
+  "artifact_directory": "integration.artifacts",
+  "finished_at": "2026-09-10T04:25:30.023388+00:00",
+  "workspace_retained": false,
+  "retention_note": "Temporary workspace removed after success; artifact_directory is relative to this report."
+}

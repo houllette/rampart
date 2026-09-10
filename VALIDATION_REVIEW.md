@@ -1,5 +1,9 @@
 # Rampart validation review — 2026-09-09
 
+The original review and first implementation results are retained below. The
+subsequent external integration work is recorded in the follow-up at the end;
+its completed gates supersede the original future-work status.
+
 Reviewed commit: `9817fe9`. The working tree was clean at the start. The original
 assessment and measurements below describe that baseline. The subsequent
 implementation addresses all seven reproduced defects and all six additional
@@ -22,10 +26,10 @@ workflow passed actionlint 1.7.12, and all 25 retained benchmark case identities
 and before/after harness hashes were verified. The final repository integrity
 scan was complete with 54,671 facts, four static signals, and zero suppressions.
 
-The broader all-primitives release gates below remain future validation work.
-Silent-child lifecycle fixtures do not establish interoperability with actual
-RustScan, nmap, or ffuf binaries, and synthetic graph measurements do not replace
-full application executions.
+At this stage of the review, the broader all-primitives release gates below
+remained future validation work. Silent-child lifecycle fixtures alone did not
+establish interoperability with actual RustScan, nmap, or ffuf binaries, and
+synthetic graph measurements did not replace full application executions.
 
 **Assessment:** the initial architecture substantially matches `NORTH_STAR.md`.
 The next milestone should establish reliable lifecycle handling, complete and
@@ -272,3 +276,57 @@ the current primitives.
 
 The temporary probes are investigation artifacts, not committed regression tests.
 Promote each into its owning application's test suite with its corresponding fix.
+
+## External integration follow-up
+
+`mix rampart.integration` now implements the seven proposed pre-adapter work
+items in fresh consumers of the actual Hex archives. It has a separate push/PR
+workflow, checksummed native-tool installation, bounded external commands, and
+retained replay artifacts. The [gate instructions](evaluation/integration/README.md)
+define the acceptance checks and reproduction commands.
+
+The [retained integration report](evaluation/baselines/2026-09-09/integration.json)
+records a passing final run of all seven suites (eight consumer results plus
+six execution suites), package metadata/checksums, the implementation snapshot
+checksum, and 83 retained proof/log artifact checksums. The work started from
+`b983dd8`; the snapshot checksum identifies these uncommitted implementation
+changes. Local runtime remains Elixir 1.20.4/OTP 29 on Apple ARM64. Linux CI is
+configured but has not run for these changes.
+
+Repository validation passed with 283 tests/properties, 345/345 required-
+distributed evaluation checks, complete SAST inventory with 55,204 facts and
+zero suppressions, and Dialyzer with zero errors/skips. Workflow actionlint
+1.7.12 passed. [PERFORMANCE.md](PERFORMANCE.md) records the final observed
+search, resource and cancellation results without treating them as release SLOs.
+
+| Work item | Implemented evidence |
+| --- | --- |
+| Independent package consumers | Eight archives; metadata-derived dependency closures, compatible suite versions, fresh dependency/build directories and code-path isolation |
+| External validation contract | Real validators through Binding/Wire; persisted references and replay, current host authority, all three verdicts, malformed inputs, scope denial, crashes, cancellation/deadlines and capped artifact summaries |
+| Complete applications | Two original Plug 1.20.3/Bandit 1.12.5 applications covering tenant cache isolation and alternate-route authorization; live HTTP, supervised state, independent controls, vulnerable/fixed/unavailable outcomes and saved proofs |
+| Native scanners | RustScan 2.4.1 → nmap 7.99 and official ffuf v2.2.0; open/closed endpoints, binary and multi-keyword inputs, saved replay, response-backed refutation, timeout/deadline uncertainty, slow consumers, aggregate rates and child/temporary-file cleanup |
+| Lemieux handoff | Contract review refreshed to Lemieux `76bd703`; five-action catalog with IAST withheld; tested transport-neutral embedding example and full-envelope budgeting guidance |
+| Mutation execution and search | Real Muex killed/survived/timeout/compile-failure outcomes; seven paired guided/unguided trials using the same domain and search budget, with independent confirmation and exact replay |
+| Resource validation | Twenty-four disabled/targeted workload/concurrency combinations, sampled VM/mailbox/process-tree peaks, reductions/GC/scheduler activity, overflow, twenty owner-death trials and a 51-file Elixir/Erlang isolated scan |
+
+The native checks exposed three additional Foray defects, now covered by fixes
+and regressions. ffuf's per-run `FFUFHASH` no longer changes the finding identity;
+the official mislabeled v2.2.0 executables are recognized by reviewed SHA-256
+without allowing arbitrary older binaries; and a no-match execution requires an
+exact successful response receipt before it can refute a candidate. Missing or
+invalid receipts, request timeouts and unfinished jobs remain inconclusive.
+Foray identity is now version 3. Existing findings remain readable, but earlier
+identities require authorized re-observation before exact replay.
+
+The remaining integration work belongs in the separate security application:
+wrap the enabled actions as Lemieux tools, reconstruct authority after actual
+transcript resume, enforce the final result-envelope budget, authorize artifact
+retrieval, and run observe → hypothesis → validate → saved replay against these
+fixtures. Start with SAST/Havoc and explicitly authorized Portico/Foray profiles.
+
+These original applications are not upstream CVE reproductions. Full pinned
+Phoenix/Ecto/Ash cases and a broader ecosystem corpus remain useful next
+coverage. The resource workload needs an explicit larger per-worker heap
+profile; it does not establish a whole-VM memory ceiling. Experimental IAST
+remains gated, and no transformed-value, cross-process taint or production
+instrumentation claim follows from these checks.

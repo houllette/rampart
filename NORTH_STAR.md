@@ -75,7 +75,7 @@ database error is not automatically SQL execution.
 ## Lemieux seam, grounded in its implementation
 
 Review of Lemieux at commit
-`e427221bc6b6c2b70909256d048174b986910fbd` confirms that it already owns the
+`76bd70322daae8ce47f53ed3993ee8d07f2c8452` confirms that it already owns the
 model/tool loop, current host-tool authority, policy hooks, bounded execution,
 append-only transcripts, structured tool results, and content-addressed run
 evidence. Rampart must fit those seams rather than build a second harness.

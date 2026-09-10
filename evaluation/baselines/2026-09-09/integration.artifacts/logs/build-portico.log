@@ -1,0 +1,76 @@
+Building portico 0.1.0
+  Dependencies:
+    security_core ~> 0.1 (app: security_core)
+    broadway ~> 1.3 (app: broadway)
+    jason ~> 1.4 (app: jason)
+    nimble_options ~> 1.1 (app: nimble_options)
+    saxy ~> 1.6 (app: saxy)
+  App: portico
+  Name: portico
+  Files:
+    lib
+    lib/portico
+    lib/portico/host.ex
+    lib/portico/pipeline_error.ex
+    lib/portico/timeout.ex
+    lib/portico/stream.ex
+    lib/portico/runtime.ex
+    lib/portico/os_match.ex
+    lib/portico/finding.ex
+    lib/portico/validator.ex
+    lib/portico/port.ex
+    lib/portico/service.ex
+    lib/portico/discovery
+    lib/portico/discovery/producer.ex
+    lib/portico/discovery/source.ex
+    lib/portico/discovery/cursor.ex
+    lib/portico/discovery/reader.ex
+    lib/portico/discovery/result.ex
+    lib/portico/discovery/line_stream.ex
+    lib/portico/discovery/engine.ex
+    lib/portico/discovery/rust_scan.ex
+    lib/portico/audit.ex
+    lib/portico/os_class.ex
+    lib/portico/sink.ex
+    lib/portico/scope
+    lib/portico/scope/cidr.ex
+    lib/portico/scope/allowlist.ex
+    lib/portico/script
+    lib/portico/script/node.ex
+    lib/portico/script.ex
+    lib/portico/serialization.ex
+    lib/portico/nmap_xml.ex
+    lib/portico/json.ex
+    lib/portico/hostname.ex
+    lib/portico/enrichment
+    lib/portico/enrichment/stage.ex
+    lib/portico/enrichment/nmap.ex
+    lib/portico/enrichment/engine.ex
+    lib/portico/result.ex
+    lib/portico/application.ex
+    lib/portico/launch.ex
+    lib/portico/scan_stream.ex
+    lib/portico/engine.ex
+    lib/portico/engine
+    lib/portico/engine/output_error.ex
+    lib/portico/jason_encoders.ex
+    lib/portico/pipeline.ex
+    lib/portico/scan.ex
+    lib/portico/target.ex
+    lib/portico/rate_limit.ex
+    lib/portico.ex
+    mix.exs
+    README.md
+    ARCHITECTURE.md
+    SECURITY.md
+    TELEMETRY.md
+    LICENSE
+  Version: 0.1.0
+  Build tools: mix
+  Description: Backpressured discovery and enrichment orchestration for authorized port scanning
+  Licenses: MIT
+  Links: 
+    GitHub: https://github.com/houllette/rampart
+  Elixir: ~> 1.20
+Package checksum: 7d602306ac80061d68a65084c2f0ccee8891812cc4edb5ee9327b62fc8416ba1
+Saved to /var/folders/sm/bmj7fhns2t1bxd29kghb2x280000gn/T/rampart-integration-udt355sk/portico.tar

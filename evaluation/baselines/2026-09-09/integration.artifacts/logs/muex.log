@@ -1,0 +1,84 @@
+{
+  "mutations": [
+    {
+      "error": null,
+      "status": "killed",
+      "description": "SecurityDecision: force authorized? to allow",
+      "location": {
+        "line": 9,
+        "file": "lib/controller.ex"
+      },
+      "patch": {
+        "after": "true",
+        "before": "MutationFixture.Policy.authorized?(actor)"
+      },
+      "mutator": "MuexSecurity.Mutator.SecurityDecision",
+      "duration_ms": 358
+    }
+  ],
+  "summary": {
+    "timeout": 0,
+    "invalid": 0,
+    "killed": 1,
+    "total": 1,
+    "survived": 0,
+    "mutation_score_high": 100.0,
+    "mutation_score_low": 100.0
+  }
+}
+{
+  "mutations": [
+    {
+      "error": null,
+      "status": "survived",
+      "description": "SecurityDecision: force authorized? to allow",
+      "location": {
+        "line": 9,
+        "file": "lib/controller.ex"
+      },
+      "patch": {
+        "after": "true",
+        "before": "MutationFixture.Policy.authorized?(actor)"
+      },
+      "mutator": "MuexSecurity.Mutator.SecurityDecision",
+      "duration_ms": 366
+    }
+  ],
+  "summary": {
+    "timeout": 0,
+    "invalid": 0,
+    "killed": 0,
+    "total": 1,
+    "survived": 1,
+    "mutation_score_high": 0.0,
+    "mutation_score_low": 0.0
+  }
+}
+{
+  "mutations": [
+    {
+      "error": null,
+      "status": "timeout",
+      "description": "SecurityDecision: force authorized? to allow",
+      "location": {
+        "line": 4,
+        "file": "lib/slow.ex"
+      },
+      "patch": {
+        "after": "true",
+        "before": "MutationFixture.Policy.authorized?(actor)"
+      },
+      "mutator": "MuexSecurity.Mutator.SecurityDecision",
+      "duration_ms": 2408
+    }
+  ],
+  "summary": {
+    "timeout": 1,
+    "invalid": 0,
+    "killed": 0,
+    "total": 1,
+    "survived": 0,
+    "mutation_score_high": 100.0,
+    "mutation_score_low": 0.0
+  }
+}

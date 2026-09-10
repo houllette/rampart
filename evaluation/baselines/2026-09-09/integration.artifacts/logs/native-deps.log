@@ -1,0 +1,33 @@
+Resolving Hex dependencies...
+Resolution completed in 0.025s
+Unchanged:
+  bandit 1.12.5
+  broadway 1.3.0
+  elixir_make 0.10.0
+  exile 0.14.0
+  gen_stage 1.3.2
+  hpax 1.0.4
+  jason 1.4.5
+  mime 2.0.7
+  nimble_options 1.1.1
+  plug 1.20.3
+  plug_crypto 2.2.0
+  saxy 1.6.1
+  telemetry 1.4.2
+  thousand_island 1.5.0
+  websock 0.5.3
+* Getting plug (Hex package)
+* Getting bandit (Hex package)
+* Getting hpax (Hex package)
+* Getting telemetry (Hex package)
+* Getting thousand_island (Hex package)
+* Getting websock (Hex package)
+* Getting mime (Hex package)
+* Getting plug_crypto (Hex package)
+* Getting exile (Hex package)
+* Getting elixir_make (Hex package)
+* Getting broadway (Hex package)
+* Getting jason (Hex package)
+* Getting nimble_options (Hex package)
+* Getting saxy (Hex package)
+* Getting gen_stage (Hex package)

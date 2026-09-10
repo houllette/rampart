@@ -5,6 +5,8 @@
     "{config,lib,test}/**/*.{ex,exs}",
     "evaluation/*.exs",
     "evaluation/support/**/*.exs",
+    "evaluation/integration/**/*.{ex,exs}",
+    "examples/*.exs",
     "evaluation/fixtures/{composed,otp,plug,overhead}/**/*.{ex,exs}",
     "evaluation/fixtures/historical/**/vulnerable.ex",
     "evaluation/fixtures/historical/**/fixed.ex",

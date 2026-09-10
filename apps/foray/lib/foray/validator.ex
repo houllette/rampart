@@ -91,7 +91,7 @@ defmodule Foray.Validator do
           )
       end
     rescue
-      exception in [PipelineError, Core.Runner.Error, Core.Runner.TimeoutError] ->
+      exception in [PipelineError, Foray.OutputError, Core.Runner.Error, Core.Runner.TimeoutError] ->
         Validation.inconclusive(
           request,
           seed,
@@ -108,7 +108,7 @@ defmodule Foray.Validator do
     jobs = scan |> JobBuilder.build() |> matching_jobs(candidate, inputs)
 
     cond do
-      scan.engine.module == Foray.Fuzz.Ffuf and candidate.locus[:identity_version] != 2 ->
+      scan.engine.module == Foray.Fuzz.Ffuf and candidate.locus[:identity_version] != 3 ->
         {:inconclusive, :unsupported_identity_version}
 
       jobs == [] ->
@@ -176,8 +176,10 @@ defmodule Foray.Validator do
   end
 
   defp find_candidate(job, scan, candidate_id) do
+    options = validation_engine_options(scan.engine.module, scan.engine.opts)
+
     job
-    |> scan.engine.module.stream(scan.engine.opts)
+    |> scan.engine.module.stream(options)
     |> Enum.find(fn
       %Core.Finding{} = finding ->
         authorize_observation!(finding, scan.scope)
@@ -201,6 +203,11 @@ defmodule Foray.Validator do
   defp authorize_observation!(_finding, _scope) do
     raise PipelineError, stage: :engine, reason: :finding_missing_url
   end
+
+  defp validation_engine_options(Foray.Fuzz.Ffuf, options),
+    do: Keyword.put(options, :require_completion, true)
+
+  defp validation_engine_options(_engine, options), do: options
 
   defp exact_scan(scan, inputs, candidate) do
     wordlists =

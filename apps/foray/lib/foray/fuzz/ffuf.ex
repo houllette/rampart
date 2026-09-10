@@ -4,12 +4,22 @@ defmodule Foray.Fuzz.Ffuf do
   @behaviour Foray.Fuzz.Engine
 
   alias Foray.Finding
+  alias Foray.Fuzz.Ffuf.Completion
   alias Foray.Job
   alias Foray.NDJSON
   alias Foray.Oracle
   alias Foray.Stream.Cursor
   alias Foray.Wordlist
   alias Foray.Wordlist.Materializer
+
+  # The official v2.2.0 tag retains VERSION = "2.1.0" in constants.go.
+  # These are executable hashes, not archive hashes, of its reviewed macOS
+  # arm64 and Linux amd64 release assets. Other 2.1.0 binaries remain rejected.
+  # https://github.com/ffuf/ffuf/releases/tag/v2.2.0
+  @mislabelled_2_2_binaries [
+    "92897e326f3557f4f007e1099f1609509ad782a1266050be8aa45c742df7d408",
+    "e80d70fc4bc4645c176ef585fbcefaeba20e44950f52c0a116824aaf9786b2aa"
+  ]
 
   @impl true
   def option_schema do
@@ -25,6 +35,7 @@ defmodule Foray.Fuzz.Ffuf do
       replay_proxy: [type: {:or, [:string, nil]}, default: nil],
       minimum_version: [type: :string, default: "2.2.0"],
       allow_unsupported_version: [type: :boolean, default: false],
+      require_completion: [type: :boolean, default: false],
       version_timeout: [type: :pos_integer, default: 2_000],
       max_chunk_size: [type: :pos_integer, default: 65_535],
       exit_timeout: [type: :pos_integer, default: 5_000]
@@ -104,6 +115,18 @@ defmodule Foray.Fuzz.Ffuf do
 
   defp start_stream(job, opts) do
     job = %{job | seed_index: job.seed_index || Wordlist.index(job.wordlists)}
+    completion = Completion.prepare(job, opts[:require_completion])
+
+    try do
+      start_materialized_stream(job, opts, completion)
+    rescue
+      exception ->
+        Completion.cleanup(completion)
+        reraise exception, __STACKTRACE__
+    end
+  end
+
+  defp start_materialized_stream(job, opts, completion) do
     {materialized_job, paths} = Materializer.materialize(job)
 
     try do
@@ -118,12 +141,13 @@ defmodule Foray.Fuzz.Ffuf do
       matches =
         materialized_job
         |> command(opts)
+        |> Kernel.++(Completion.arguments(completion))
         |> Core.Runner.stream(Keyword.put(runner_opts, :backend, opts[:runner]))
-        |> Stream.transform(nil, &stdout_chunk/2)
+        |> Completion.stdout(completion)
         |> NDJSON.stream()
         |> Stream.map(&Finding.from_match(&1, job))
 
-      %{cursor: Cursor.new(matches), paths: paths}
+      %{cursor: Cursor.new(matches), paths: paths, completion: completion}
     rescue
       exception ->
         Materializer.cleanup(paths)
@@ -141,12 +165,12 @@ defmodule Foray.Fuzz.Ffuf do
   defp close_stream(state) do
     Cursor.halt(state.cursor)
   after
-    Materializer.cleanup(state.paths)
+    try do
+      Materializer.cleanup(state.paths)
+    after
+      Completion.cleanup(state.completion)
+    end
   end
-
-  defp stdout_chunk({:stdout, chunk}, state), do: {[IO.iodata_to_binary(chunk)], state}
-  defp stdout_chunk({:stderr, _chunk}, state), do: {[], state}
-  defp stdout_chunk(chunk, state), do: {[IO.iodata_to_binary(chunk)], state}
 
   defp request_arguments(%Job{mode: :sniper} = job) do
     %{
@@ -278,22 +302,44 @@ defmodule Foray.Fuzz.Ffuf do
            backend: opts[:runner],
            timeout: opts[:version_timeout]
          ) do
-      {output, 0} -> compare_version(output, opts)
+      {output, 0} -> compare_version(output, executable, opts)
       {output, status} -> {:error, {:version_check_failed, status, output}}
     end
   rescue
     exception -> {:error, {:version_check_failed, Exception.message(exception)}}
   end
 
-  defp compare_version(output, opts) do
+  defp compare_version(output, executable, opts) do
     with {:ok, found} <- parse_version(output),
          {:ok, required} <- parse_version(opts[:minimum_version]) do
+      found = reviewed_release_version(executable, found)
+
       if opts[:allow_unsupported_version] or version_gte?(found, required) do
         :ok
       else
         {:error, {:unsupported_ffuf_version, format_version(found), format_version(required)}}
       end
     end
+  end
+
+  defp reviewed_release_version(executable, {2, 1, 0} = reported) do
+    with {:ok, %{type: :regular, size: size}} when size <= 33_554_432 <- File.stat(executable),
+         {:ok, digest} <- File.open(executable, [:read, :binary], &executable_digest/1),
+         true <- digest in @mislabelled_2_2_binaries do
+      {2, 2, 0}
+    else
+      _unverified -> reported
+    end
+  end
+
+  defp reviewed_release_version(_executable, reported), do: reported
+
+  defp executable_digest(file) do
+    file
+    |> IO.binstream(65_536)
+    |> Enum.reduce(:crypto.hash_init(:sha256), &:crypto.hash_update(&2, &1))
+    |> :crypto.hash_final()
+    |> Base.encode16(case: :lower)
   end
 
   defp parse_version(version) do
@@ -310,14 +356,14 @@ defmodule Foray.Fuzz.Ffuf do
   defp format_version(version), do: version |> Tuple.to_list() |> Enum.join(".")
 
   defp validate_job!(%Job{} = job) do
-    cond do
-      job.wordlists == [] ->
-        raise ArgumentError, "ffuf jobs require at least one input source"
+    validate_wordlists!(job.wordlists)
+    command_sources = command_source_count(job)
 
-      command_source_count(job) > 1 ->
+    cond do
+      command_sources > 1 ->
         raise ArgumentError, "ffuf supports only one input-command source"
 
-      command_source_count(job) == 1 and length(job.wordlists) > 1 ->
+      command_sources == 1 and length(job.wordlists) > 1 ->
         raise ArgumentError, "ffuf input-command mode cannot be combined with wordlist files"
 
       job.recursion && (job.mode != :clusterbomb or not String.ends_with?(job.target.url, "FUZZ")) ->
@@ -325,6 +371,15 @@ defmodule Foray.Fuzz.Ffuf do
 
       true ->
         :ok
+    end
+  end
+
+  defp validate_wordlists!([]),
+    do: raise(ArgumentError, "ffuf jobs require at least one input source")
+
+  defp validate_wordlists!(wordlists) do
+    if Enum.any?(wordlists, &(&1.keyword == "FFUFHASH")) do
+      raise ArgumentError, "FFUFHASH is reserved by ffuf for per-run metadata"
     end
   end
 

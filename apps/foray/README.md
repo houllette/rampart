@@ -124,15 +124,25 @@ observation reproduced; it does not upgrade an error signal into exploitability
 that the matcher did not establish. The result carries a concrete input-map
 seed. `Foray.validation_actions/0` exposes the machine-discoverable action.
 
-The built-in ffuf projection now uses identity version 2, recorded in
+The built-in ffuf projection now uses identity version 3, recorded in
 `finding.locus.identity_version`. It hashes an unambiguous encoding of sorted
-input pairs; embedded NULs and `=` bytes cannot merge distinct observations.
-IDs intentionally change from the earlier delimiter encoding. Existing
+configured input pairs; embedded NULs and `=` bytes cannot merge distinct
+observations. ffuf's per-run `FFUFHASH` remains raw evidence and cannot alter
+the replay identity; it is reserved and cannot be configured as a wordlist
+keyword. IDs intentionally change from earlier identity versions. Existing
 `Foray.Result` documents remain readable, but ffuf replay of a finding without
-version 2 returns `:inconclusive` with `:unsupported_identity_version` before
+version 3 returns `:inconclusive` with `:unsupported_identity_version` before
 launch. Re-observe under the authorized plan and retain the new finding; do not
 rewrite an old ID and assume its provenance is still unique. Versioned result
 persistence preserves the identity version and supports exact replay after load.
+
+A completed ffuf process with no match is insufficient to refute a hypothesis:
+the request may have timed out. Exact validation also requires a successful
+ffuf audit response receipt for the concrete inputs and method. Missing,
+cancelled, malformed, or oversized receipts yield inconclusive. The audit file
+is private, limited to 16 MiB when read, and removed on completion or caller
+death. ffuf controls response capture while it runs; the read limit is not a
+hard disk-quota guarantee. Matching HTTP observations can confirm immediately.
 
 ## Rate governance: two different controls
 
@@ -268,3 +278,12 @@ mix test apps/foray/test
 mix precommit
 mix dialyzer
 ```
+
+## Official ffuf v2.2.0 version reporting
+
+The official v2.2.0 macOS arm64 and Linux amd64 assets report `2.1.0`. Foray
+recognizes their reviewed executable SHA-256 hashes as release 2.2.0 while
+rejecting other below-floor binaries. This does not enable
+`allow_unsupported_version`. The [native integration manifest](../../evaluation/integration/native-tools.json)
+records the corresponding release archive hashes; the native gate executes the
+real binaries against loopback fixtures.

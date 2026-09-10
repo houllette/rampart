@@ -288,3 +288,12 @@ A future differential corpus should store normalized candidate observations and
 reviewed disagreements, never a requirement that Rampart duplicate another
 tool's output. Security truth comes from labeled snapshots and deterministic
 validation of the exact claim.
+
+## External consumer and execution gate
+
+`mix rampart.integration` supplements the ordinary evaluation corpus with eight
+unpacked package consumers, agent-facing contract checks, two complete original
+Plug applications, pinned native scanners, real Muex execution, guided-search
+comparison, and sampled resource/concurrency measurements. See the
+[integration instructions](evaluation/integration/README.md) for prerequisites,
+focused commands, exact acceptance checks, and measurement limits.

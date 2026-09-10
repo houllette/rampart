@@ -38,7 +38,8 @@ defmodule Rampart.MixProject do
         "rampart.eval": :test,
         "rampart.eval.compare": :test,
         "rampart.perf": :test,
-        "rampart.perf.compare": :test
+        "rampart.perf.compare": :test,
+        "rampart.integration": :test
       ]
     ]
   end
@@ -93,6 +94,7 @@ defmodule Rampart.MixProject do
       "rampart.eval.compare": &compare_evaluations/1,
       "rampart.perf": &run_performance/1,
       "rampart.perf.compare": &compare_performance/1,
+      "rampart.integration": &run_integration/1,
       precommit: [
         "deps.unlock --check-unused",
         "hex.audit",
@@ -159,5 +161,15 @@ defmodule Rampart.MixProject do
     Mix.Task.run("compile", ["--warnings-as-errors"])
     Code.require_file("evaluation/performance.exs")
     RampartPerformance.compare!(arguments)
+  end
+
+  defp run_integration(arguments) do
+    {_output, status} =
+      System.cmd("python3", ["evaluation/integration/run.py" | arguments],
+        into: IO.stream(:stdio, :line)
+      )
+
+    if status != 0,
+      do: Mix.raise("Rampart integration gate failed; inspect the retained report and logs")
   end
 end

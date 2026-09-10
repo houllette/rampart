@@ -1,0 +1,17 @@
+Resolving Hex dependencies...
+Resolution completed in 0.013s
+Unchanged:
+  broadway 1.3.0
+  elixir_make 0.10.0
+  exile 0.14.0
+  gen_stage 1.3.2
+  jason 1.4.5
+  nimble_options 1.1.1
+  telemetry 1.4.2
+* Getting exile (Hex package)
+* Getting telemetry (Hex package)
+* Getting elixir_make (Hex package)
+* Getting broadway (Hex package)
+* Getting jason (Hex package)
+* Getting nimble_options (Hex package)
+* Getting gen_stage (Hex package)

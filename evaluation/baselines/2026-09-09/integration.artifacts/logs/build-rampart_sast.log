@@ -1,0 +1,78 @@
+Building rampart_sast 0.1.0-dev
+  Dependencies:
+    security_core ~> 0.1 (app: security_core)
+  App: rampart_sast
+  Name: rampart_sast
+  Files:
+    lib
+    lib/mix
+    lib/mix/tasks
+    lib/mix/tasks/rampart.sast.ex
+    lib/rampart_sast
+    lib/rampart_sast/behavior
+    lib/rampart_sast/behavior/ecto.ex
+    lib/rampart_sast/behavior/beam.ex
+    lib/rampart_sast/behavior/phoenix.ex
+    lib/rampart_sast/behavior/ash.ex
+    lib/rampart_sast/behavior/plug.ex
+    lib/rampart_sast/context_provider.ex
+    lib/rampart_sast/graph.ex
+    lib/rampart_sast/fact.ex
+    lib/rampart_sast/context
+    lib/rampart_sast/context/elixir.ex
+    lib/rampart_sast/isolated.ex
+    lib/rampart_sast/suppressed.ex
+    lib/rampart_sast/validator.ex
+    lib/rampart_sast/suppression.ex
+    lib/rampart_sast/scanner.ex
+    lib/rampart_sast/observation.ex
+    lib/rampart_sast/graph
+    lib/rampart_sast/graph/slice.ex
+    lib/rampart_sast/discovery
+    lib/rampart_sast/discovery/file_system.ex
+    lib/rampart_sast/limits.ex
+    lib/rampart_sast/module_owners.ex
+    lib/rampart_sast/discovery.ex
+    lib/rampart_sast/behavior.ex
+    lib/rampart_sast/rule
+    lib/rampart_sast/rule/descriptor.ex
+    lib/rampart_sast/workspace.ex
+    lib/rampart_sast/component.ex
+    lib/rampart_sast/inventory
+    lib/rampart_sast/inventory/page.ex
+    lib/rampart_sast/inventory/artifact.ex
+    lib/rampart_sast/inventory/index.ex
+    lib/rampart_sast/expression.ex
+    lib/rampart_sast/source.ex
+    lib/rampart_sast/span.ex
+    lib/rampart_sast/match.ex
+    lib/rampart_sast/inventory.ex
+    lib/rampart_sast/rules
+    lib/rampart_sast/rules/unsafe_atom.ex
+    lib/rampart_sast/rules/unsafe_exec.ex
+    lib/rampart_sast/rules/dynamic_code.ex
+    lib/rampart_sast/rules/unsafe_deserialization.ex
+    lib/rampart_sast/diagnostic.ex
+    lib/rampart_sast/result.ex
+    lib/rampart_sast/rule.ex
+    lib/rampart_sast/context.ex
+    lib/rampart_sast/isolated
+    lib/rampart_sast/isolated/worker.ex
+    lib/rampart_sast/isolated/limits.ex
+    lib/rampart_sast/isolated/wire.ex
+    lib/rampart_sast/isolated/result.ex
+    lib/rampart_sast/ast.ex
+    lib/rampart_sast.ex
+    mix.exs
+    README.md
+    RESEARCH.md
+    LICENSE
+  Version: 0.1.0-dev
+  Build tools: mix
+  Description: High-recall static reconnaissance and signal replay for Elixir and Erlang
+  Licenses: MIT
+  Links: 
+    GitHub: https://github.com/houllette/rampart
+  Elixir: ~> 1.20
+Package checksum: 55d03d2235cf6530194acbe65bcdafd1bae64b602696ef1277179ef6af3c9a6e
+Saved to /var/folders/sm/bmj7fhns2t1bxd29kghb2x280000gn/T/rampart-integration-udt355sk/rampart_sast.tar

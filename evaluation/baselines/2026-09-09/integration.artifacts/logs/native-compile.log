@@ -1,0 +1,83 @@
+==> gen_stage
+Compiling 10 files (.ex)
+     warning: unused require Logger
+     │
+ 103 │   require Logger
+     │   ~
+     │
+     └─ lib/gen_stage/dispatchers/partition_dispatcher.ex:103:3
+
+Generated gen_stage app
+==> mime
+Compiling 1 file (.ex)
+Generated mime app
+==> nimble_options
+Compiling 3 files (.ex)
+Generated nimble_options app
+==> jason
+Compiling 10 files (.ex)
+Generated jason app
+==> plug_crypto
+Compiling 5 files (.ex)
+Generated plug_crypto app
+==> hpax
+Compiling 4 files (.ex)
+Generated hpax app
+==> elixir_make
+Compiling 8 files (.ex)
+Generated elixir_make app
+==> exile
+mkdir -p priv
+cc -std=c99 -I/opt/homebrew/Cellar/erlang/29.0.6/lib/erlang/usr/include -undefined dynamic_lookup -dynamiclib -Wextra -Wall -Werror -Wextra -Wno-unused-parameter -pedantic -O2 -fPIC c_src/exile.c -o priv/exile.so
+mkdir -p priv
+cc -std=c99 -Wall -Werror -Wextra -Wno-unused-parameter -pedantic -O2 -fPIC c_src/spawner.c -o priv/spawner
+Compiling 9 files (.ex)
+    warning: unused require Logger
+    │
+  9 │   require Logger
+    │   ~
+    │
+    └─ lib/exile/stream.ex:9:3
+
+Generated exile app
+==> saxy
+Compiling 19 files (.ex)
+Generated saxy app
+==> consumer
+===> Analyzing applications...
+===> Compiling telemetry
+==> thousand_island
+Compiling 18 files (.ex)
+Generated thousand_island app
+==> broadway
+Compiling 22 files (.ex)
+     warning: this clause of defp enqueue_batch/2 is never used (or it will always fail/warn when invoked)
+     │
+ 375 │   defp enqueue_batch(queue, _list = []), do: queue
+     │        ~
+     │
+     └─ lib/broadway/topology/producer_stage.ex:375:8: Broadway.Topology.ProducerStage.enqueue_batch/2
+
+Generated broadway app
+==> plug
+Compiling 1 file (.erl)
+Compiling 42 files (.ex)
+Generated plug app
+==> websock
+Compiling 1 file (.ex)
+Generated websock app
+==> bandit
+Compiling 54 files (.ex)
+Generated bandit app
+==> security_core
+Compiling 21 files (.ex)
+Generated security_core app
+==> foray
+Compiling 32 files (.ex)
+Generated foray app
+==> portico
+Compiling 44 files (.ex)
+Generated portico app
+==> consumer
+Compiling 1 file (.ex)
+Generated consumer app

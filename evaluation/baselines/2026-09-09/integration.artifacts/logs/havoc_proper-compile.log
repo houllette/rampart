@@ -1,0 +1,126 @@
+==> stream_data
+Compiling 3 files (.ex)
+Generated stream_data app
+==> nimble_options
+Compiling 3 files (.ex)
+Generated nimble_options app
+==> jason
+Compiling 10 files (.ex)
+Generated jason app
+==> consumer
+===> Analyzing applications...
+===> Compiling proper
+/private/var/folders/sm/bmj7fhns2t1bxd29kghb2x280000gn/T/rampart-integration-udt355sk/consumers/havoc_proper/deps/proper/src/proper_statem.erl:770:46: Warning: 'catch ...' is deprecated; please use 'try ... catch ... end' instead.
+Compile directive 'nowarn_deprecated_catch' can be used to suppress
+warnings in selected modules.
+%  770|     [spawn_link_cp(fun() -> Parent ! {self(),catch {ok,F(X)}} end) || X <- L].
+%     |                                              ^
+
+     ┌─ src/proper_statem.erl:
+     │
+ 770 │      [spawn_link_cp(fun() -> Parent ! {self(),catch {ok,F(X)}} end) || X <- L].
+     │                                               ╰── Warning: 'catch ...' is deprecated; please use 'try ... catch ... end' instead.
+Compile directive 'nowarn_deprecated_catch' can be used to suppress
+warnings in selected modules.
+
+
+/private/var/folders/sm/bmj7fhns2t1bxd29kghb2x280000gn/T/rampart-integration-udt355sk/consumers/havoc_proper/deps/proper/src/proper_erlang_abstract_code.erl:2138:29: Warning: ambiguous call of overridden auto-imported BIF is_record/1 --
+use erlang:is_record/1 or "-compile({no_auto_import,[is_record/1]})." to resolve name clash
+% 2138|         lists:all(fun(R) -> is_record(R) end, Term)
+%     |                             ^
+
+      ┌─ src/proper_erlang_abstract_code.erl:
+      │
+ 2138 │          lists:all(fun(R) -> is_record(R) end, Term)
+      │                              ╰── Warning: ambiguous call of overridden auto-imported BIF is_record/1 --
+use erlang:is_record/1 or "-compile({no_auto_import,[is_record/1]})." to resolve name clash
+
+
+==> elixir_make
+Compiling 8 files (.ex)
+Generated elixir_make app
+==> exile
+mkdir -p priv
+cc -std=c99 -I/opt/homebrew/Cellar/erlang/29.0.6/lib/erlang/usr/include -undefined dynamic_lookup -dynamiclib -Wextra -Wall -Werror -Wextra -Wno-unused-parameter -pedantic -O2 -fPIC c_src/exile.c -o priv/exile.so
+mkdir -p priv
+cc -std=c99 -Wall -Werror -Wextra -Wno-unused-parameter -pedantic -O2 -fPIC c_src/spawner.c -o priv/spawner
+Compiling 9 files (.ex)
+    warning: unused require Logger
+    │
+  9 │   require Logger
+    │   ~
+    │
+    └─ lib/exile/stream.ex:9:3
+
+Generated exile app
+==> libgraph
+Compiling 15 files (.ex)
+Generated libgraph app
+==> propcheck
+Compiling 18 files (.ex)
+    warning: unused require Logger
+    │
+ 15 │   require Logger
+    │   ~
+    │
+    └─ lib/counterstrike.ex:15:3
+
+    warning: unused require Logger
+    │
+  8 │   require Logger
+    │   ~
+    │
+    └─ lib/properties.ex:8:3
+
+     warning: unused require PropCheck.BasicTypes
+     │
+ 337 │     require PropCheck.BasicTypes
+     │     ~
+     │
+     └─ lib/statem.ex:337:5
+
+     warning: unused require PropCheck.BasicTypes
+     │
+ 426 │     require PropCheck.BasicTypes
+     │     ~
+     │
+     └─ lib/statem/model_dsl.ex:426:5
+
+    warning: a struct for PropCheck.Result is expected on struct update:
+
+        %PropCheck.Result{state | errors: [{state.current, {fmt, args}} | state.errors]}
+
+    but got type:
+
+        dynamic()
+
+    where "state" was given the type:
+
+        # type: dynamic()
+        # from: lib/result.ex:35:49
+        state
+
+    when defining the variable "state", you must also pattern match on "%PropCheck.Result{}"
+
+    type warning found at:
+    │
+ 39 │           %__MODULE__{state | errors: [{state.current, {fmt, args}} | state.errors]}
+    │           ~
+    │
+    └─ lib/result.ex:39:11: PropCheck.Result.handle_call/3
+
+Generated propcheck app
+==> consumer
+===> Analyzing applications...
+===> Compiling telemetry
+==> security_core
+Compiling 21 files (.ex)
+Generated security_core app
+==> havoc
+Compiling 29 files (.ex)
+Generated havoc app
+==> havoc_proper
+Compiling 7 files (.ex)
+Generated havoc_proper app
+==> consumer
+Generated consumer app

@@ -1,0 +1,31 @@
+{
+  "nmap": {
+    "version": "7.99",
+    "url": "https://nmap.org/dist/nmap-7.99.tar.bz2",
+    "sha256": "df512492ffd108e53a27a06f26d8635bbe89e0e569455dc8ffef058c035d51b2"
+  },
+  "Darwin-arm64": {
+    "rustscan": {
+      "version": "2.4.1",
+      "url": "https://github.com/bee-san/RustScan/releases/download/2.4.1/aarch64-macos-rustscan.tar.gz.zip",
+      "sha256": "0709b9120090101969434f79eb4913c335f08b13febaf405b863ebe0ce81aeec"
+    },
+    "ffuf": {
+      "version": "2.2.0",
+      "url": "https://github.com/ffuf/ffuf/releases/download/v2.2.0/ffuf_2.2.0_macOS_arm64.tar.gz",
+      "sha256": "1c2e66c0d59e9ba2640e9965acbba4d450bff04998815bc33763d5c310f35915"
+    }
+  },
+  "Linux-x86_64": {
+    "rustscan": {
+      "version": "2.4.1",
+      "url": "https://github.com/bee-san/RustScan/releases/download/2.4.1/x86_64-linux-rustscan.tar.gz.zip",
+      "sha256": "f3a4365d939e3b81f25ba8c37852ce9ac9e938c3cc882c5b3e6fff6152c740be"
+    },
+    "ffuf": {
+      "version": "2.2.0",
+      "url": "https://github.com/ffuf/ffuf/releases/download/v2.2.0/ffuf_2.2.0_linux_amd64.tar.gz",
+      "sha256": "bc91fa9feec69e1673a129397ca363a782fa5fee6510daea7b0004d5dc2fd63f"
+    }
+  }
+}

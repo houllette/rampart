@@ -1,0 +1,9 @@
+Resolving Hex dependencies...
+Resolution completed in 0.009s
+Unchanged:
+  elixir_make 0.10.0
+  exile 0.14.0
+  telemetry 1.4.2
+* Getting exile (Hex package)
+* Getting telemetry (Hex package)
+* Getting elixir_make (Hex package)

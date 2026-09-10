@@ -1,0 +1,63 @@
+Building havoc 0.2.0
+  Dependencies:
+    security_core ~> 0.1 (app: security_core)
+    jason ~> 1.4 (app: jason)
+    nimble_options ~> 1.1 (app: nimble_options)
+    stream_data ~> 1.4 (app: stream_data)
+  App: havoc
+  Name: havoc
+  Files:
+    lib
+    lib/havoc.ex
+    lib/mix
+    lib/mix/tasks
+    lib/mix/tasks/havoc.replay.ex
+    lib/havoc
+    lib/havoc/term_codec.ex
+    lib/havoc/property
+    lib/havoc/property/failure.ex
+    lib/havoc/finding.ex
+    lib/havoc/validator.ex
+    lib/havoc/target
+    lib/havoc/target/provider.ex
+    lib/havoc/target/phoenix.ex
+    lib/havoc/target/function.ex
+    lib/havoc/corpus
+    lib/havoc/corpus/error.ex
+    lib/havoc/oracle
+    lib/havoc/oracle/terminal.ex
+    lib/havoc/oracle/violation.ex
+    lib/havoc/oracle/report.ex
+    lib/havoc/oracle/checked.ex
+    lib/havoc/oracle/assertion_error.ex
+    lib/havoc/property.ex
+    lib/havoc/gen.ex
+    lib/havoc/oracle.ex
+    lib/havoc/corpus.ex
+    lib/havoc/property_error.ex
+    lib/havoc/result.ex
+    lib/havoc/target.ex
+    lib/havoc/case.ex
+    lib/havoc/observation
+    lib/havoc/observation/http_parameter.ex
+    lib/havoc/observation/cache.ex
+    lib/havoc/observation/field_policy.ex
+    lib/havoc/observation/differential.ex
+    lib/havoc/observation/codec.ex
+    lib/havoc/observation/state.ex
+    mix.exs
+    README.md
+    ARCHITECTURE.md
+    CORPUS.md
+    ORACLES.md
+    TARGETS.md
+    LICENSE
+  Version: 0.2.0
+  Build tools: mix
+  Description: ExUnit adversarial generators, security oracles, durable regressions, and derived targets
+  Licenses: MIT
+  Links: 
+    GitHub: https://github.com/houllette/rampart
+  Elixir: ~> 1.20
+Package checksum: ce5d0fa51f03fea16ebd7e4b705faf3c9acd0d3ddb04ab30c281044d1bb3f2c2
+Saved to /var/folders/sm/bmj7fhns2t1bxd29kghb2x280000gn/T/rampart-integration-udt355sk/havoc.tar

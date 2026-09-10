@@ -1,0 +1,28 @@
+==> elixir_make
+Compiling 8 files (.ex)
+Generated elixir_make app
+==> exile
+mkdir -p priv
+cc -std=c99 -I/opt/homebrew/Cellar/erlang/29.0.6/lib/erlang/usr/include -undefined dynamic_lookup -dynamiclib -Wextra -Wall -Werror -Wextra -Wno-unused-parameter -pedantic -O2 -fPIC c_src/exile.c -o priv/exile.so
+mkdir -p priv
+cc -std=c99 -Wall -Werror -Wextra -Wno-unused-parameter -pedantic -O2 -fPIC c_src/spawner.c -o priv/spawner
+Compiling 9 files (.ex)
+    warning: unused require Logger
+    │
+  9 │   require Logger
+    │   ~
+    │
+    └─ lib/exile/stream.ex:9:3
+
+Generated exile app
+==> consumer
+===> Analyzing applications...
+===> Compiling telemetry
+==> security_core
+Compiling 21 files (.ex)
+Generated security_core app
+==> rampart_iast
+Compiling 15 files (.ex)
+Generated rampart_iast app
+==> consumer
+Generated consumer app
