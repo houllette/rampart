@@ -231,8 +231,27 @@ builds and consumes actual package archives in fresh projects and retains its
 reports and replay artifacts. It exercises all three verdicts, scope denial,
 malformed references, option smuggling, validator crashes, completed target
 failures, cancellation, deadlines, rebuilt current authority, and oversized
-evidence. Full Lemieux descriptor/result wrapping and transcript resume tests
-belong in the separate security application.
+evidence.
+
+A companion `rampart_lemieux` checkout now implements the separate application
+this design requires. Its configured descriptor holds one current
+`Core.Validation.Binding`, exposes only Core's inert subject-reference schema,
+marks execution exclusive, maps action effects, budgets the complete Lemieux
+result envelope, and externalizes oversized proof only through a host callback.
+Session tests show that a transcript does not contain resolver/options and that
+resume has no authority until the host re-supplies a descriptor. It depends on
+both projects; neither project adds the other to its dependency graph.
+
+The companion also creates local `draft_requires_human_review` disclosure
+bundles from confirmed native results plus an optional same-action refuted fixed
+control. Wire projections omit native raw values and concrete seed bodies; a
+conservative scrubber handles structured and inline credential patterns. Since
+scrubbing changes projection bytes, the disclosure proof is resealed after
+redaction and records the original source-projection digest separately; both
+digests are copied into the manifest. The bundle has no transmission
+capability. A person must independently replay, review impact and affected
+versions, inspect every artifact, identify the right maintainer contact, and
+approve timing before disclosure.
 
 [examples/bound_validation.exs](examples/bound_validation.exs) is a tested,
 transport-neutral embedding example. The host starts a task supervisor, builds
@@ -256,3 +275,33 @@ is evaluation/example code, not a new Rampart harness or a ready-made Lemieux
 adapter. A real host supplies artifact authorization, binding reconstruction,
 descriptor policies, and final envelope budgeting. Neither repository adds the
 other as a dependency.
+
+## Opt-in live model/tool gate
+
+The external adapter now includes `mix live.zai`. With an explicitly supplied
+`ZAI_API_KEY` and `RAMPART_LEMIEUX_APPROVE_LIVE=1`, it runs the cataloged
+`zai_coding_plan:glm-5.3` model through three real Lemieux sessions using
+ReqLLM 1.22's dedicated Z.AI transport, including native tool-result call-ID
+association. A host-side
+RampartSAST scan registers one opaque finding; separate bindings then validate
+the vulnerable source (`confirmed`), a fixed source (`refuted`), and an
+unparseable source (`inconclusive`). Each session exposes one descriptor and no
+general-purpose tools.
+
+The gate checks exactly one inert call, successful tool/result association,
+digest-valid structured evidence, measured provider usage, exact action/verdict
+grounding, and absence of the API key, source body, validator options, resolver
+state, and concrete replay value from the transcript-facing projection. It
+retains gitignored reports and JSONL transcripts for review.
+
+The first live run found that `Core.Validation.Wire.model_text/1` placed the
+action ID as an unlabeled prefix while explicitly labeling only the replay seed.
+Although the structured projection was correct, the model reported the replay
+seed as `ACTION_ID`. The model-facing projection now labels `Action ID`,
+`Verdict`, `Evidence summary`, `Finding count`, and `Replay seed ID` on separate
+lines. The repeated gate then grounded all three verdicts and the exact action
+ID correctly.
+
+This is a calibration of transport and steering, not a prospective discovery
+result. It justifies beginning bounded pilot studies; it does not justify an
+autonomous zero-day discovery claim.

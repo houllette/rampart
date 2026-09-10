@@ -18,7 +18,9 @@ pre-implementation gates. [EVALUATION.md](EVALUATION.md) defines the
 repository-local accuracy, efficiency, usefulness, and fail-closed evaluation
 lab. [LEMIEUX_INTEGRATION.md](LEMIEUX_INTEGRATION.md) records the concrete
 boundary with the external agent harness after review of its current tool,
-policy, transcript, and evidence contracts.
+policy, transcript, and evidence contracts. [ZERO_DAY_READINESS.md](ZERO_DAY_READINESS.md)
+gives the direct, evidence-qualified answer about LLM-directed identification,
+validation, isolation, and responsible disclosure.
 
 > Rampart and the component names are working names until the first packages are
 > published.
@@ -30,10 +32,10 @@ policy, transcript, and evidence contracts.
 | [`security_core`](apps/security_core/README.md) | shared spine | Findings, proof seeds, hypotheses, validation, scope, telemetry, and process contracts | v0.1 conformance work |
 | [`portico`](apps/portico/README.md) | network / TCP | Backpressured RustScan discovery followed by nmap enrichment | v1 build |
 | [`foray`](apps/foray/README.md) | web / HTTP | Structured, scope-safe, job-orchestrated ffuf integration | v1 build |
-| [`havoc`](apps/havoc/README.md) | in-process | StreamData adversarial generation, security oracles, durable regressions, and derived targets | v0.2 |
-| [`havoc_proper`](apps/havoc_proper/README.md) | optional research adapter | PropEr targeted PBT with OTP coverage fitness | experimental v0.1 |
+| [`havoc`](apps/havoc/README.md) | in-process | StreamData adversarial generation, security oracles, durable regressions, derived targets, and host-bound stateful harnesses | v0.2 |
+| [`havoc_proper`](apps/havoc_proper/README.md) | optional research adapter | PropEr targeted PBT with OTP coverage and bounded semantic-feature fitness | experimental v0.1 |
 | [`muex_security`](apps/muex_security/README.md) | mutation extension | Focused security-control operators for Muex | v0.1 |
-| [`rampart_sast`](apps/rampart_sast/README.md) | static / source | High-recall Elixir/Erlang program/package inventory, optional rule signals, queries, and exact replay | experimental v0.1 |
+| [`rampart_sast`](apps/rampart_sast/README.md) | static / source | High-recall Elixir/Erlang program/package inventory, bounded syntax-dependence slices, optional rule signals, queries, and exact replay | experimental v0.1 |
 | [`rampart_iast`](apps/rampart_iast/README.md) | interactive / runtime | Process-scoped exact-marker reachability with pluggable source and sink maps | experimental spike |
 
 ```text
@@ -81,7 +83,11 @@ Rampart knowing that the harness exists. `Core.Validation.Binding` keeps scope,
 scan plans, target functions, and other authority host-owned while a transport
 passes only inert subject IDs. `Core.Validation.Wire` supplies a transcript-safe,
 JSON-shaped result projection without serializing native `raw` terms; the
-consumer still enforces its configured byte limit.
+consumer still enforces its configured byte limit. The external
+`rampart_lemieux` companion now has an opt-in `mix live.zai` calibration gate
+that exercises a real GLM-5.3 model through confirmed, refuted, and inconclusive
+RampartSAST controls. That gate validates the model/tool transport and explicit
+verdict grounding; it is not a prospective discovery result.
 
 ## Dependency and boundary rules
 
@@ -127,6 +133,9 @@ mix deps.get
 mix test
 mix rampart.sast --exit
 mix rampart.eval
+mix rampart.blind
+mix rampart.upstream
+mix rampart.sandbox
 mix rampart.eval.compare report-otp-28.json report-otp-29.json
 mix precommit
 mix dialyzer

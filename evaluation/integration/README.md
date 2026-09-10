@@ -49,7 +49,7 @@ checksums. A commit ID alone is not treated as the identity of a dirty tree.
 | Applications | Two complete original Plug/Bandit applications; live loopback HTTP, compiled routing, supervised state, vulnerable/fixed controls, inaccessible application, durable counterexamples, replay, isolated static inventory |
 | Native | Actual RustScan→nmap, known open/closed endpoints, endpoint validation, ffuf matching/replay, multiple keywords, binary request bodies, response-backed refutation, inconclusive request timeouts/job deadlines, slow consumers, aggregate request ceilings, consumer/validator cancellation, child/wordlist/audit cleanup |
 | Muex | Real isolated mutation test execution: a bypass is killed by a security assertion, survives a happy-path-only test, and timeout/compilation failures remain separate; original source and unrelated code are preserved |
-| Search | Seven paired guided/unguided trials on the same four-character domain and 200-step budget, line coverage, concrete sequences, exact independent confirmation/replay, observed latency and target-call counts |
+| Search | Seven paired guided/unguided trials on the same four-character domain and 200-step budget, line coverage, explicit depth-transition features, deterministic guided manifests, concrete sequences, exact independent confirmation/replay, observed latency and target-call counts |
 | Resources | Compute, binary, container and disk IO with disabled/targeted sensing at concurrency 1/2/4; repeated latency, reductions, GC, scheduler activity, sampled VM/mailbox/RSS peaks, overflow, 20 caller-death trials and a 51-file Elixir/Erlang scan |
 
 ## Full application fixtures
@@ -94,8 +94,10 @@ Search quality and timing are observations, not universal pass thresholds. Both
 search arms collect line coverage so coverage observations are comparable; the
 measured unguided latency includes instrumentation it ordinarily would not need.
 PropEr's public API in the locked version does not accept an initial RNG seed.
-We retain its exact generated inputs and concrete counterexamples rather than
-claiming that a repeated stochastic search reproduces the same trajectory.
+The guided manifest identifies search parameters, the depth-feature contract,
+runtime, and covered BEAM bytes. We retain exact generated inputs and concrete
+counterexamples rather than claiming that a repeated stochastic search
+reproduces the same trajectory.
 Final confirmation can add a small number of target calls beyond search steps;
 the actual counts are retained. No custom random/shrink loop is implemented.
 

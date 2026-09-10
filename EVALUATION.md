@@ -20,9 +20,20 @@ mix rampart.eval
 mix rampart.eval --json
 mix rampart.eval --json --output tmp/rampart-evaluation.json
 mix rampart.eval.compare report-otp-28.json report-otp-29.json
+
+# Calibrated blind evaluator (checked-in case is not a true hidden holdout).
+mix rampart.blind
+
+# Fetch, verify, build, and execute exact complete upstream Mint revisions.
+mix rampart.upstream
+
+# Validate the available OS isolation backend; may require a host context.
+mix rampart.sandbox
 ```
 
-`mix precommit` runs the human-readable gate. JSON reports use a versioned,
+`mix precommit` runs the human-readable gate and blind-evaluator calibration.
+The networked upstream gate and OS-backend self-test remain separate because CI
+network policy and nested-sandbox support vary by runner. JSON reports use a versioned,
 string-keyed projection and include the exact OTP, ERTS, Elixir, architecture,
 and scheduler manifest. New reports also record the full installed OTP version
 and inets/SSH component versions; unavailable metadata stays null. They are suitable for retaining benchmark history in
@@ -183,8 +194,22 @@ byte versus grapheme policy (CVE-2026-82752), retained incremental buffer bytes
 separate work from retention. Fixed fixtures must accept valid/exact-boundary
 controls and reject declared over-budget inputs; parser controls include whole
 and fragmented deliveries. They use the existing Havoc action and retain the
-same static inventory, wire budget, harness-failure and replay checks. These
-are original bounded models, with no upstream Ash or Mint package execution.
+same static inventory, wire budget, harness-failure and replay checks. These are
+original bounded models. The main corpus still performs no upstream Ash
+execution; complete Mint package execution is now covered separately by the
+upstream gate described below.
+
+The separate `mix rampart.upstream` gate verifies exact public Git commits, Git
+tree IDs, and the Mint license; builds complete Mint 1.9.3 source snapshots as
+path dependencies in fresh consumers; and runs two real package paths. It
+confirms/refutes the CVE-2026-82728 HTTP1 incomplete response-line buffer budget
+through an actual loopback connection/request/stream and the CVE-2026-82729
+chunk-size hexadecimal digit budget through Mint's hidden HTTP1 chunk-size
+parser function.
+Each case retains the same original input fingerprint across vulnerable/fixed
+controls, exact-boundary controls, BEAM identities, package/runtime versions,
+and report/artifact hashes. This is retrospective validation of disclosed cases,
+not evidence of independent pre-disclosure discovery.
 
 Across cases, the gate measures inventory, query, graph, artifact, evidence,
 atom, memory, and execution characteristics. A runtime confirmation proves only
@@ -312,7 +337,8 @@ validation of the exact claim.
 
 `mix rampart.integration` supplements the ordinary evaluation corpus with eight
 unpacked package consumers, agent-facing contract checks, two complete original
-Plug applications, pinned native scanners, real Muex execution, guided-search
-comparison, and sampled resource/concurrency measurements. See the
+Plug applications, pinned native scanners, real Muex execution, semantic-state-
+plus-line-coverage guided-search comparison, and sampled resource/concurrency
+measurements. See the
 [integration instructions](evaluation/integration/README.md) for prerequisites,
 focused commands, exact acceptance checks, and measurement limits.

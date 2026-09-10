@@ -1,9 +1,9 @@
 # HavocProper
 
 HavocProper is the optional search-guided backend for Havoc. It combines
-PropEr/PropCheck targeted property-based testing with OTP Cover line coverage as
-the default fitness value, while reusing Havoc's oracles, Core findings, and
-persistent concrete corpus.
+PropEr/PropCheck targeted property-based testing with OTP Cover line coverage
+and optional bounded semantic-state features as fitness, while reusing Havoc's
+oracles, Core findings, and persistent concrete corpus.
 
 It is a separate package for two reasons:
 
@@ -44,10 +44,39 @@ The execution order is:
 2. temporarily Cover-compile the explicitly listed modules;
 3. let PropEr's simulated-annealing or hill-climbing strategy propose inputs;
 4. reset and measure distinct covered lines for each input;
-5. maximize that count, optionally plus a numeric `:fitness_bonus`;
-6. retain bounded coverage-increasing `%Core.Seed{provenance: :generated}`
+5. optionally project stable, non-sensitive state-transition IDs with
+   `:features` and an explicit `:feedback_id`;
+6. maximize line count plus feature count, optionally plus a numeric
+   `:fitness_bonus`;
+7. retain bounded line- or feature-novel `%Core.Seed{provenance: :generated}`
    values; and
-7. normalize any oracle violation through Havoc and persist its exact payload.
+8. normalize any oracle violation through Havoc and persist its exact payload.
+
+A host can set `:manifest_path` to atomically retain the property/search
+configuration, feedback identity, runtime versions, and covered BEAM SHA-256.
+The manifest identifies executable configuration, not a random trajectory.
+PropEr's locked public API exposes no portable initial RNG seed, so evaluations
+must retain exact generated inputs and concrete counterexamples separately.
+
+```elixir
+HavocProper.Guided.check!(generator,
+  property_options ++ [
+    coverage_modules: [MyProtocol],
+    feedback_id: "protocol-state-v1",
+    manifest_path: "tmp/protocol-guided-manifest.json",
+    features: fn sample ->
+      depth =
+        case sample.evaluation do
+          {:ok, observation} -> observation.depth
+          {:error, failure} -> failure.observation.depth
+        end
+
+      for reached <- 0..depth, do: "state-depth:#{reached}"
+    end
+  ],
+  target
+)
+```
 
 Use `HavocProper.Guided.check!/3` directly for non-macro assembly. Guided search
 is an execution driver and candidate-discovery path, not a validation verdict.
@@ -67,8 +96,12 @@ consumer needs Rampart's proof/refutation contract.
   paths may have equal fitness.
 - Targeted PropEr properties do not have StreamData's shrink-tree guarantees.
   Havoc persists the concrete candidate that fired the oracle.
-- Coverage alone is sparse feedback. `:fitness_bonus` can add a domain-specific
-  branch-distance or progress signal without replacing coverage.
+- Coverage alone is sparse feedback. `:features` can add at most 128 stable
+  string IDs (256 bytes each and 8,192 bytes total) per candidate; the labels
+  can be persisted and therefore must not contain secrets. `:fitness_bonus` can
+  add a numeric branch-distance or progress signal without replacing coverage.
+- Feature callbacks are host code. Invalid output or callback failure aborts the
+  search and cannot become a security confirmation.
 - Instrumented modules must have debuggable BEAM files on the code path.
 - Work spawned by the target must finish before the target returns to appear in
   that candidate's measurement.

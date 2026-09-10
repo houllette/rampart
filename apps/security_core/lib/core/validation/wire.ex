@@ -91,8 +91,11 @@ defmodule Core.Validation.Wire do
   @spec model_text(Result.t()) :: String.t()
   def model_text(%Result{} = result) do
     safe_text(
-      "#{result.action.id}: #{result.verdict}. #{result.evidence.summary} " <>
-        "Findings: #{length(result.findings)}. Replay seed: #{result.seed.id}."
+      "Action ID: #{result.action.id}\n" <>
+        "Verdict: #{result.verdict}\n" <>
+        "Evidence summary: #{result.evidence.summary}\n" <>
+        "Finding count: #{length(result.findings)}\n" <>
+        "Replay seed ID: #{result.seed.id}"
     )
   end
 

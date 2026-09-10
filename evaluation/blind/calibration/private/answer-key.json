@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "challenge_id": "calibration.route-alias-authorization.v1",
+  "calibration_only": true,
+  "expected_hypothesis_classes": [
+    "authorization_equivalent_path"
+  ],
+  "expected_locus_fragments": [
+    "route_policy.ex"
+  ],
+  "driver": "driver.exs",
+  "variants": [
+    {
+      "id": "pre-fix",
+      "source": "../public/source/route_policy.ex",
+      "expected_verdict": "confirmed",
+      "role": "vulnerable"
+    },
+    {
+      "id": "post-fix",
+      "source": "fixed.ex",
+      "expected_verdict": "refuted",
+      "role": "fixed"
+    },
+    {
+      "id": "unmounted-neighbour",
+      "source": "benign.ex",
+      "expected_verdict": "inconclusive",
+      "role": "benign_neighbour"
+    },
+    {
+      "id": "harness-failure",
+      "source": "failure.ex",
+      "expected_verdict": "inconclusive",
+      "role": "harness_failure"
+    }
+  ],
+  "forbidden_public_literals": [
+    "BlindCalibration.RoutePolicyFixed",
+    "injected harness failure",
+    "post-fix",
+    "answer-key"
+  ]
+}

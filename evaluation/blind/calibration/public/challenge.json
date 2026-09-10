@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "challenge_id": "calibration.route-alias-authorization.v1",
+  "title": "Equivalent route authorization",
+  "objective": "Review the supplied pre-fix application source, identify one concrete security-boundary hypothesis, and submit an inert deterministic validation request. No advisory, patch, expected input, or answer label is supplied by the challenge interface.",
+  "source_snapshot_sha256": "b98625ae49041ec4a91d761e1c24d08059f1dd6631ec5a5358fb1c38bf56649c",
+  "allowed_action_ids": [
+    "havoc.security-property-reproduces.v1"
+  ],
+  "allowed_contract_ids": [
+    "calibration.route-policy.v1"
+  ],
+  "budgets": {
+    "max_seed_bytes": 4096,
+    "max_validation_ms": 15000
+  }
+}

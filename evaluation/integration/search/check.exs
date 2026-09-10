@@ -91,7 +91,12 @@ defmodule Integration.Search do
       covered_line_count: MapSet.size(sample.covered),
       elapsed_us: elapsed,
       inputs_sha256: hash(JSON.encode!(inputs)),
-      stream_data_seed: if(mode == :unguided, do: [19, 83, trial], else: nil)
+      stream_data_seed: if(mode == :unguided, do: [19, 83, trial], else: nil),
+      guided_manifest_sha256:
+        if(mode == :guided,
+          do: hash(File.read!("proofs/guided-#{trial}-manifest.json")),
+          else: nil
+        )
     }
   end
 
@@ -114,7 +119,7 @@ defmodule Integration.Search do
     end)
   end
 
-  defp search(:guided, _trial, target, state, options) do
+  defp search(:guided, trial, target, state, options) do
     base = PropCheck.BasicTypes.vector(4, PropCheck.BasicTypes.elements(@alphabet))
 
     generator =
@@ -133,9 +138,18 @@ defmodule Integration.Search do
           search_steps: @budget,
           search_strategy: :hill_climbing,
           persist_coverage: false,
-          fitness_bonus: fn sample ->
+          feedback_id: "search-fixture-depth-v1",
+          manifest_path: "proofs/guided-#{trial}-manifest.json",
+          features: fn sample ->
             cover(state, sample.covered_lines)
-            0
+
+            depth =
+              case sample.evaluation do
+                {:ok, %{depth: depth}} -> depth
+                {:error, %Havoc.Property.Failure{observation: %{depth: depth}}} -> depth
+              end
+
+            for reached <- 0..depth, do: "depth:#{reached}"
           end
         ],
       target

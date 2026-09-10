@@ -127,8 +127,12 @@ defmodule Core.ValidationBindingWireTest do
     tampered = put_in(projection, ["evidence", "summary"], "different")
     assert {:error, :digest_mismatch} = Wire.verify(tampered)
 
-    assert Wire.model_text(result) =~ "confirmed"
-    assert Wire.model_text(result) =~ "proof-seed"
+    model_text = Wire.model_text(result)
+    assert model_text =~ "Action ID: test.bound-replay.v1"
+    assert model_text =~ "Verdict: confirmed"
+    assert model_text =~ "Evidence summary: bound validation reproduced"
+    assert model_text =~ "Finding count: 1"
+    assert model_text =~ "Replay seed ID: proof-seed"
   end
 
   test "wire projection fingerprints malformed binary values when explicitly included" do

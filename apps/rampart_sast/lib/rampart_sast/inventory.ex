@@ -228,6 +228,9 @@ defmodule RampartSAST.Inventory do
 
     module_facts(source, scopes) ++
       definition_facts(source, scopes) ++
+      elixir_parameter_facts(source, scopes) ++
+      elixir_guard_facts(source, scopes) ++
+      elixir_return_facts(source, scopes) ++
       binding_facts(source, scopes) ++
       elixir_callback_facts(source, scopes) ++
       protocol_callback_facts(source, scopes) ++
@@ -243,6 +246,10 @@ defmodule RampartSAST.Inventory do
 
     module_facts(source, scopes) ++
       definition_facts(source, scopes) ++
+      erlang_parameter_facts(source, scopes) ++
+      erlang_guard_facts(source, scopes) ++
+      erlang_return_facts(source, scopes) ++
+      erlang_binding_facts(source, scopes) ++
       erlang_callback_facts(source, scopes) ++
       erlang_directive_facts(source, scopes) ++
       call_facts(source, scopes) ++ erlang_unqualified_call_facts(source, scopes)
@@ -335,6 +342,144 @@ defmodule RampartSAST.Inventory do
 
   defp function_head(_head), do: nil
 
+  defp definition_relationships(ast, :elixir) do
+    case elixir_definition_parts(ast) do
+      %{arguments: arguments, guards: guards} ->
+        %{
+          parameter_variables: argument_variables(arguments, :elixir),
+          guard_variables: argument_variables(guards, :elixir),
+          guard_count: length(guards)
+        }
+
+      nil ->
+        %{parameter_variables: [], guard_variables: [], guard_count: 0}
+    end
+  end
+
+  defp definition_relationships({:function, _annotation, _name, _arity, clauses}, :erlang) do
+    parameters =
+      Enum.flat_map(clauses, fn {:clause, _annotation, arguments, _guards, _body} ->
+        argument_variables(arguments, :erlang)
+      end)
+
+    guards =
+      Enum.flat_map(clauses, fn {:clause, _annotation, _arguments, guards, _body} ->
+        argument_variables(List.flatten(guards), :erlang)
+      end)
+
+    %{
+      parameter_variables: Enum.uniq(parameters),
+      guard_variables: Enum.uniq(guards),
+      guard_count:
+        Enum.reduce(clauses, 0, fn {:clause, _annotation, _arguments, guards, _body}, count ->
+          count + length(List.flatten(guards))
+        end)
+    }
+  end
+
+  defp definition_relationships(_ast, _language) do
+    %{parameter_variables: [], guard_variables: [], guard_count: 0}
+  end
+
+  defp elixir_definition_parts({kind, _metadata, [head, body_options]})
+       when kind in [:def, :defp, :defmacro, :defmacrop] and is_list(body_options) do
+    {head, guards} = elixir_head_and_guards(head)
+
+    case {function_head(head), Keyword.fetch(body_options, :do)} do
+      {{_name, arguments}, {:ok, body}} ->
+        %{arguments: arguments, guards: guards, body: body}
+
+      _other ->
+        nil
+    end
+  end
+
+  defp elixir_definition_parts(_ast), do: nil
+
+  defp final_elixir_expression({:__block__, _metadata, expressions}) when expressions != [],
+    do: List.last(expressions)
+
+  defp final_elixir_expression(expression), do: expression
+
+  defp elixir_head_and_guards({:when, _metadata, [head | guards]}), do: {head, guards}
+  defp elixir_head_and_guards(head), do: {head, []}
+
+  defp elixir_expression_target(
+         {:|>, _metadata, [_left, right]},
+         scopes,
+         line,
+         module
+       ) do
+    case right do
+      {{:., _, [module_ast, function]}, _, arguments}
+      when is_atom(function) and is_list(arguments) ->
+        elixir_remote_target(module_ast, function, length(arguments) + 1, scopes, line, module)
+
+      {function, metadata, arguments}
+      when is_atom(function) and is_list(metadata) and is_list(arguments) ->
+        elixir_unqualified_target(function, length(arguments) + 1, scopes, line, module)
+
+      _other ->
+        nil
+    end
+  end
+
+  defp elixir_expression_target(
+         {{:., _, [module_ast, function]}, _, arguments},
+         scopes,
+         line,
+         module
+       )
+       when is_atom(function) and is_list(arguments) do
+    elixir_remote_target(module_ast, function, length(arguments), scopes, line, module)
+  end
+
+  defp elixir_expression_target(
+         {function, metadata, arguments},
+         scopes,
+         line,
+         module
+       )
+       when is_atom(function) and is_list(metadata) and is_list(arguments) do
+    if function in @elixir_non_calls,
+      do: nil,
+      else: elixir_unqualified_target(function, length(arguments), scopes, line, module)
+  end
+
+  defp elixir_expression_target(_expression, _scopes, _line, _module), do: nil
+
+  defp elixir_remote_target(module_ast, function, arity, scopes, line, module) do
+    syntactic_module = expression_module_name(module_ast)
+    target_module = resolve_alias(syntactic_module, scopes.aliases, line, module)
+    "#{target_module}.#{function}/#{arity}"
+  end
+
+  defp elixir_unqualified_target(function, arity, scopes, line, module) do
+    {target_module, _resolution, _candidates} =
+      resolve_unqualified(function, arity, line, module, scopes)
+
+    qualified_or_unqualified_call(target_module, function, arity)
+  end
+
+  defp expression_module_name({:__aliases__, _, parts}), do: AST.alias_name(parts)
+  defp expression_module_name(module) when is_atom(module), do: Atom.to_string(module)
+  defp expression_module_name(_module), do: "<dynamic-module>"
+
+  defp erlang_expression_target(
+         {:call, _annotation, {:remote, _, {:atom, _, module}, {:atom, _, function}}, arguments}
+       ) do
+    "#{module}.#{function}/#{length(arguments)}"
+  end
+
+  defp erlang_expression_target({:call, _annotation, {:atom, _, function}, arguments}) do
+    "#{function}/#{length(arguments)}"
+  end
+
+  defp erlang_expression_target(_expression), do: nil
+
+  defp erlang_module_name(%{modules: [%{object: module} | _rest]}), do: module
+  defp erlang_module_name(_scopes), do: nil
+
   defp erlang_scopes(%Source{ast: forms}) do
     module =
       Enum.find_value(forms, fn
@@ -391,12 +536,286 @@ defmodule RampartSAST.Inventory do
     Enum.map(scopes.definitions, fn scope ->
       subject = enclosing_module(scopes.modules, scope.start_line) || source.path
 
-      fact(source, :definition, subject, :defines_function, scope.object, scope.ast, %{
-        language: source.language,
-        visibility: scope.qualifier
+      attributes =
+        %{
+          language: source.language,
+          visibility: scope.qualifier
+        }
+        |> Map.merge(definition_relationships(scope.ast, source.language))
+
+      fact(source, :definition, subject, :defines_function, scope.object, scope.ast, attributes)
+    end)
+  end
+
+  defp elixir_parameter_facts(source, scopes) do
+    Enum.flat_map(scopes.definitions, &elixir_definition_parameter_facts(source, &1))
+  end
+
+  defp elixir_definition_parameter_facts(source, definition) do
+    case elixir_definition_parts(definition.ast) do
+      %{arguments: arguments} ->
+        arguments
+        |> Enum.with_index(1)
+        |> Enum.flat_map(&elixir_argument_parameter_facts(source, definition, &1))
+
+      nil ->
+        []
+    end
+  end
+
+  defp elixir_argument_parameter_facts(source, definition, {argument, position}) do
+    argument
+    |> then(&argument_variables([&1], :elixir))
+    |> Enum.reject(&String.starts_with?(&1, "_"))
+    |> Enum.map(fn variable ->
+      fact(
+        source,
+        :parameter,
+        definition.object,
+        :receives_argument,
+        variable,
+        expression_span(source.path, argument, Span.from_ast(source.path, definition.ast)),
+        %{
+          language: :elixir,
+          position: position,
+          pattern: Expression.describe(argument, :elixir)
+        }
+      )
+    end)
+  end
+
+  defp elixir_guard_facts(source, scopes) do
+    Enum.flat_map(scopes.definitions, &elixir_definition_guard_facts(source, &1))
+  end
+
+  defp elixir_definition_guard_facts(source, definition) do
+    case elixir_definition_parts(definition.ast) do
+      %{guards: guards} ->
+        guards
+        |> Enum.with_index(1)
+        |> Enum.map(&elixir_guard_fact(source, definition, &1))
+
+      nil ->
+        []
+    end
+  end
+
+  defp elixir_guard_fact(source, definition, {guard, position}) do
+    fact(
+      source,
+      :guard,
+      definition.object,
+      :guards_definition,
+      "#{definition.object}#guard/#{position}",
+      expression_span(source.path, guard, Span.from_ast(source.path, definition.ast)),
+      %{
+        language: :elixir,
+        position: position,
+        expression: Expression.describe(guard, :elixir),
+        source_variables: argument_variables([guard], :elixir)
+      }
+    )
+  end
+
+  defp elixir_return_facts(source, scopes) do
+    Enum.flat_map(scopes.definitions, fn definition ->
+      case elixir_definition_parts(definition.ast) do
+        %{body: body} ->
+          expression = final_elixir_expression(body)
+          definition_span = Span.from_ast(source.path, definition.ast)
+          return_span = expression_span(source.path, expression, definition_span)
+          line = return_span.start_line
+          module = enclosing_module(scopes.modules, line)
+
+          [
+            fact(
+              source,
+              :return,
+              definition.object,
+              :returns_expression,
+              "#{definition.object}#return",
+              return_span,
+              %{
+                language: :elixir,
+                expression: Expression.describe(expression, :elixir),
+                expression_target: elixir_expression_target(expression, scopes, line, module),
+                source_variables: argument_variables([expression], :elixir),
+                control_contexts: control_contexts(scopes.controls, line)
+              }
+            )
+          ]
+
+        nil ->
+          []
+      end
+    end)
+  end
+
+  defp erlang_parameter_facts(source, scopes) do
+    Enum.flat_map(source.ast, &erlang_form_parameter_facts(source, scopes, &1))
+  end
+
+  defp erlang_form_parameter_facts(
+         source,
+         scopes,
+         {:function, _annotation, name, arity, clauses}
+       ) do
+    subject = qualified_function(erlang_module_name(scopes), name, arity)
+    clauses |> Enum.with_index(1) |> Enum.flat_map(&erlang_clause_parameters(source, subject, &1))
+  end
+
+  defp erlang_form_parameter_facts(_source, _scopes, _form), do: []
+
+  defp erlang_clause_parameters(
+         source,
+         subject,
+         {{:clause, _annotation, arguments, _guards, _body}, clause}
+       ) do
+    arguments
+    |> Enum.with_index(1)
+    |> Enum.flat_map(&erlang_argument_parameters(source, subject, clause, &1))
+  end
+
+  defp erlang_argument_parameters(source, subject, clause, {argument, position}) do
+    argument
+    |> then(&argument_variables([&1], :erlang))
+    |> Enum.reject(&String.starts_with?(&1, "_"))
+    |> Enum.map(fn variable ->
+      fact(source, :parameter, subject, :receives_argument, variable, argument, %{
+        language: :erlang,
+        position: position,
+        clause: clause,
+        pattern: Expression.describe(argument, :erlang)
       })
     end)
   end
+
+  defp erlang_guard_facts(source, scopes) do
+    Enum.flat_map(source.ast, &erlang_form_guard_facts(source, scopes, &1))
+  end
+
+  defp erlang_form_guard_facts(
+         source,
+         scopes,
+         {:function, _annotation, name, arity, clauses}
+       ) do
+    subject = qualified_function(erlang_module_name(scopes), name, arity)
+    clauses |> Enum.with_index(1) |> Enum.flat_map(&erlang_clause_guards(source, subject, &1))
+  end
+
+  defp erlang_form_guard_facts(_source, _scopes, _form), do: []
+
+  defp erlang_clause_guards(
+         source,
+         subject,
+         {{:clause, _annotation, _arguments, guards, _body}, clause}
+       ) do
+    guards
+    |> List.flatten()
+    |> Enum.with_index(1)
+    |> Enum.map(&erlang_guard_fact(source, subject, clause, &1))
+  end
+
+  defp erlang_guard_fact(source, subject, clause, {guard, position}) do
+    fact(
+      source,
+      :guard,
+      subject,
+      :guards_definition,
+      "#{subject}#clause/#{clause}/guard/#{position}",
+      guard,
+      %{
+        language: :erlang,
+        position: position,
+        clause: clause,
+        expression: Expression.describe(guard, :erlang),
+        source_variables: argument_variables([guard], :erlang)
+      }
+    )
+  end
+
+  defp erlang_return_facts(source, scopes) do
+    Enum.flat_map(source.ast, fn
+      {:function, _annotation, name, arity, clauses} ->
+        subject = qualified_function(erlang_module_name(scopes), name, arity)
+
+        clauses
+        |> Enum.with_index(1)
+        |> Enum.flat_map(fn
+          {{:clause, _annotation, _arguments, _guards, body}, clause} when body != [] ->
+            expression = List.last(body)
+
+            [
+              fact(
+                source,
+                :return,
+                subject,
+                :returns_expression,
+                "#{subject}#clause/#{clause}/return",
+                expression,
+                %{
+                  language: :erlang,
+                  clause: clause,
+                  expression: Expression.describe(expression, :erlang),
+                  expression_target: erlang_expression_target(expression),
+                  source_variables: argument_variables([expression], :erlang),
+                  control_contexts: []
+                }
+              )
+            ]
+
+          {_clause, _position} ->
+            []
+        end)
+
+      _form ->
+        []
+    end)
+  end
+
+  defp erlang_binding_facts(source, scopes) do
+    source.ast
+    |> collect_erlang_bindings([])
+    |> Enum.reverse()
+    |> Enum.flat_map(fn {:match, _annotation, pattern, expression} = ast ->
+      line = Span.from_ast(source.path, ast).start_line
+
+      subject =
+        enclosing_definition(scopes.definitions, line) || erlang_module_name(scopes) ||
+          source.path
+
+      pattern
+      |> then(&argument_variables([&1], :erlang))
+      |> Enum.reject(&String.starts_with?(&1, "_"))
+      |> Enum.map(fn variable ->
+        fact(source, :binding, subject, :binds_expression, variable, ast, %{
+          language: :erlang,
+          expression: Expression.describe(expression, :erlang),
+          expression_target: erlang_expression_target(expression),
+          source_variables: argument_variables([expression], :erlang),
+          control_contexts: []
+        })
+      end)
+    end)
+  end
+
+  defp collect_erlang_bindings({:match, _annotation, _pattern, _expression} = ast, bindings) do
+    walk_erlang_binding_children(ast, [ast | bindings])
+  end
+
+  defp collect_erlang_bindings(ast, bindings), do: walk_erlang_binding_children(ast, bindings)
+
+  defp walk_erlang_binding_children(ast, bindings) when is_list(ast) do
+    Enum.reduce(ast, bindings, &collect_erlang_bindings/2)
+  end
+
+  defp walk_erlang_binding_children(ast, bindings) when is_tuple(ast) do
+    ast
+    |> Tuple.to_list()
+    |> Enum.reduce(bindings, &collect_erlang_bindings/2)
+  end
+
+  defp walk_erlang_binding_children(_ast, bindings), do: bindings
 
   defp binding_facts(source, scopes) do
     {_ast, bindings} =
@@ -413,6 +832,7 @@ defmodule RampartSAST.Inventory do
               fact(source, :binding, subject, :binds_expression, variable, ast, %{
                 language: :elixir,
                 expression: Expression.describe(expression, :elixir),
+                expression_target: elixir_expression_target(expression, scopes, line, module),
                 source_variables: argument_variables([expression], :elixir),
                 control_contexts: control_contexts(scopes.controls, line)
               })

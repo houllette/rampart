@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "challenge_id": "calibration.route-alias-authorization.v1",
+  "hypothesis": {
+    "class": "authorization_equivalent_path",
+    "statement": "The alternate mounted path reaches the state-changing operation without applying the canonical path's anonymous-user denial.",
+    "locus": [
+      "source/route_policy.ex:13",
+      "BlindCalibration.RoutePolicy.handle/1"
+    ]
+  },
+  "validation": {
+    "action_id": "havoc.security-property-reproduces.v1",
+    "contract_id": "calibration.route-policy.v1",
+    "seed": {
+      "actor": "anonymous",
+      "path": "/.well-known/admin/change-email"
+    },
+    "replay_nonce": "calibration-route-alias-1"
+  }
+}

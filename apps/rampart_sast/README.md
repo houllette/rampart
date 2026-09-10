@@ -49,9 +49,9 @@ Inventory facts currently include:
 - one bounded `:call_argument` relationship per remote or unqualified argument,
   including its one-based position, literal classification, expression kind,
   source variables, truncated syntax preview, and parent call fact;
-- syntax-only `:binding` relationships for Elixir assignments, retaining the
-  bounded right-hand expression, variables it mentions, and enclosing control
-  regions;
+- syntax-only Elixir and Erlang `:parameter`, `:guard`, `:binding`, and
+  `:return` relationships, retaining bounded expressions, mentioned variables,
+  enclosing controls, and simple statically resolved expression targets;
 - Elixir `alias`, `import`, `require`, `use`, protocol, behaviour, callback, and
   protocol-implementation relationships, including qualified or explicitly
   ambiguous unqualified calls and syntactic callback implementation edges;
@@ -104,6 +104,13 @@ header_values = RampartSAST.query(result,
 
 # Find assignment expressions that define a named local variable.
 bindings = RampartSAST.query(result, kind: :binding, object: "header")
+
+# Starting from an exact call-argument fact, retain possible assignments,
+# parameters, resolved call returns, guards, ambiguity, and unresolved roots.
+slice = RampartSAST.DataFlow.backward(result.inventory, hd(header_values).id,
+  max_depth: 8,
+  max_nodes: 100
+)
 
 # A bounded page carries stable inventory identity and continuation metadata.
 page = RampartSAST.Inventory.query_page(result.inventory,
@@ -217,8 +224,12 @@ remain candidate lists.
 
 `RampartSAST.Graph` provides finite caller/callee/effect slices, syntactic
 callback edges, same-control-region candidates, and a deliberately weak
-shared-variable slice. Shared variables and shared control regions are candidate
-neighborhoods, not data/control-flow proof. `RampartSAST.Inventory.Artifact`
+shared-variable slice. `RampartSAST.DataFlow.backward/3` adds a bounded
+assignment-, parameter-, return-, guard-, and resolved-call-aware syntax slice.
+It retains multiple reaching definitions/callers/returns and names unresolved
+roots and truncation reasons. Shared variables, shared control regions, and
+backward dependence are candidate neighborhoods, not data/control-flow proof.
+`RampartSAST.Inventory.Artifact`
 creates a content-addressed, size-bounded full inventory payload for host-owned
 storage while normal query pages remain bounded for agent context.
 
@@ -242,17 +253,18 @@ individual provenance. Increase host-selected limits or retrieve the full
 inventory artifact when a slice is truncated. The byte limit covers compact
 JSON from `Graph.Slice.to_map/1`; an adapter must budget its surrounding envelope.
 
-The new expression relationships are high-recall syntax, not a data-flow
-engine. A variable appearing in a right-hand expression or call argument does
-not prove that its value reaches another expression, that a branch executes, or
-that a sanitizer is complete. Their purpose is to let a caller ask focused
-questions such as “which expression supplied this header/codec option?” before
-constructing a separate validation.
+These expression relationships and bounded slices remain high-recall syntax,
+not a taint or vulnerability engine. Lexical order is not branch feasibility; a
+possible assignment/caller/return does not prove runtime reachability, attacker
+control, sanitizer completeness, or exploitability. Their purpose is to let a
+caller ask focused questions such as “which expressions may have supplied this
+header/codec option?” before constructing a separate validation.
 
 Macro-expansion provenance, complete lexical import/alias semantics, runtime
-protocol/callback dispatch, assignment-aware interprocedural data/control flow,
-debug-info call indexing, package archive ingestion, and pure SARIF remain
-roadmap items. Uncertainty must remain explicit rather than hidden behind a
+protocol/callback dispatch, SSA/CFG precision, path feasibility, sanitizer
+semantics, dynamic dispatch, debug-info call indexing, package archive
+ingestion, and pure SARIF remain roadmap items. Uncertainty must remain explicit
+rather than hidden behind a
 confidence score. The repository-local `mix rampart.eval` gate now measures real
 command, deserialization, filesystem, and Plug boundaries; ambiguous static
 localization; explicit refusal of an unsupported OTP process scope; an

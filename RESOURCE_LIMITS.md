@@ -38,7 +38,8 @@ Sources: [scanner limits](https://github.com/houllette/rampart/blob/main/apps/ra
 [isolated limits](https://github.com/houllette/rampart/blob/main/apps/rampart_sast/lib/rampart_sast/isolated/limits.ex),
 [isolated worker boundary](https://github.com/houllette/rampart/blob/main/apps/rampart_sast/lib/rampart_sast/isolated.ex),
 [wire decoder](https://github.com/houllette/rampart/blob/main/apps/rampart_sast/lib/rampart_sast/isolated/wire.ex),
-[graph](https://github.com/houllette/rampart/blob/main/apps/rampart_sast/lib/rampart_sast/graph.ex), and
+[graph](https://github.com/houllette/rampart/blob/main/apps/rampart_sast/lib/rampart_sast/graph.ex),
+[bounded data flow](https://github.com/houllette/rampart/blob/main/apps/rampart_sast/lib/rampart_sast/data_flow.ex), and
 [module ownership](https://github.com/houllette/rampart/blob/main/apps/rampart_sast/lib/rampart_sast/module_owners.ex).
 
 | Control | Default and unit | Enforcement and remaining boundary |
@@ -49,6 +50,7 @@ Sources: [scanner limits](https://github.com/houllette/rampart/blob/main/apps/ra
 | Isolated response | 64,000,000 encoded bytes; 1,000,000 portable terms; depth 64, configurable up to 256 | File-size and wire-byte checks precede portable validation. Term/depth checks happen after JSON decoding, so they do not bound the decoder's initial allocation. Response-file size checks are not a writer disk quota. |
 | Worker VM controls | 8,000,000 heap words/process; 262,144 atom-table entries/VM | Worker startup configures heap-kill and atom-table flags. Heap words do not bound all binaries, native allocations or whole-VM RSS. Use `RampartSAST.Isolated` for untrusted repositories. |
 | Bounded graph traversal | Depth 3; 200 nodes; 500 edges; 10,000 work visits; 256,000 encoded bytes | Traversal returns truncation and limit reasons. Roots/metadata that cannot fit are rejected. Encoding a candidate and building the inventory index can occur before these query limits apply. |
+| Bounded backward syntax dependence | Depth 8; 100 nodes; 200 edges; 2,000 work visits; 256,000 encoded bytes; 8 reaching definitions/variable | Follows possible assignments, parameters, resolved calls and returns and optionally includes guards. Multiple definitions/callers/returns and unresolved boundaries remain explicit. These limits do not turn syntax into branch feasibility, sanitizer knowledge, runtime reachability, taint or exploitability. |
 | Inventory/neighbor pagination | 100 results/page | Counts bound returned entries, not serialized bytes or all predicate/index work. Preserve total/continuation information when available. |
 | BEAM module provenance | 5,000,000 bytes/BEAM; 25,000 modules; 100,000,000 total bytes | File/aggregate checks bound the intended ownership input set. Stat-then-read is not a hard allocation guarantee for concurrently changing files. |
 | Diagnostic message | Fixed 4,096 UTF-8 bytes, including any `...` suffix | Constructor and isolated-failure text normalize only a bounded prefix. Invalid bytes become U+FFFD; direct validation rejects oversized or malformed text without echoing it. Original-message failure hashing remains unchanged. See R1. |
@@ -120,6 +122,7 @@ Sources: [property execution](https://github.com/houllette/rampart/blob/main/app
 [corpus persistence](https://github.com/houllette/rampart/blob/main/apps/havoc/lib/havoc/corpus.ex),
 [term codec](https://github.com/houllette/rampart/blob/main/apps/havoc/lib/havoc/term_codec.ex),
 [generators](https://github.com/houllette/rampart/blob/main/apps/havoc/lib/havoc/gen.ex),
+[stateful harness](https://github.com/houllette/rampart/blob/main/apps/havoc/lib/havoc/harness.ex),
 [guided search](https://github.com/houllette/rampart/blob/main/apps/havoc_proper/lib/havoc_proper/guided.ex), and
 [Muex extension](https://github.com/houllette/rampart/blob/main/apps/muex_security/lib/muex_security.ex).
 
@@ -133,7 +136,9 @@ Sources: [property execution](https://github.com/houllette/rampart/blob/main/app
 | Incremental budget oracles | Explicit retained-byte or work-unit limit | Each completed step is measured by the host adapter. Unknown samples skip unless an observed excess already proves the budget violation; counters do not establish whole-VM memory use or formal complexity. |
 | Corpus file | Fixed 16,777,216 bytes | Load checks file size; save checks encoded size before atomic replacement. Encoding/decoding and stat-then-read are not hard peak-memory boundaries. |
 | Persisted term | Fixed 1,048,576 encoded term bytes; recursive nesting limit 100 | Size is checked after serialization or Base64 decoding; recursive shape is checked before encode and after safe term decode. List tails consume depth too. These checks do not bound initial decode allocations or arbitrary caller terms. |
-| Guided search | 1,000 search steps; 32 coverage archive entries | PropEr owns search; targeted properties do not promise ordinary shrinking. Step count is not a global target-call cap. Cover sessions remain serialized because Cover is node-global. |
+| Stateful harness plan | 64 steps; 65,536 inert JSON bytes | The plan names reviewed operations and exact payload references but contains no callbacks. Host bindings default to 5,000 ms and 1,048,576 cumulative observation bytes. The deadline is checked between callbacks and cannot preempt a callback that never returns; teardown is attempted after step failure. OS isolation remains external. |
+| Guided search | 1,000 search steps; 32 line- or feature-novel archive entries | PropEr owns search; targeted properties do not promise ordinary shrinking. Step count is not a global target-call cap. Cover sessions remain serialized because Cover is node-global. A manifest identifies exact search configuration and covered BEAM bytes, not the stochastic input trajectory. |
+| Guided semantic features | 128 unique IDs; 256 bytes/ID; 8,192 aggregate ID bytes/candidate | A host callback returns stable string labels which contribute fitness and novelty. Labels and exact candidates may be persisted, so they must be non-sensitive. Callback failure fails the search rather than becoming a security confirmation. |
 | Guided generator neighborhoods | 256 bytes for binary neighborhoods; 1,024 bytes for injection neighborhoods | Candidate mutations are truncated to `max_length`. Initial curated injection values are selected separately and are not truncated by that option. |
 | Security mutation | Delegated to Muex configuration | `muex_security` adds operators, not an execution engine or independent process/output budget. The host selects Muex timeout/concurrency/workload options for its installed version. |
 
@@ -166,6 +171,15 @@ positive host output limit. It encodes the projection before checking its byte
 length, then checks an artifact-reference fallback. This limits returned data,
 not the initial encoding allocation. The external adapter must also account
 for its final Lemieux envelope and artifact access policy.
+
+The [OS isolation runner](https://github.com/houllette/rampart/blob/main/evaluation/isolation/run.py) copies admitted
+source trees (50,000 files and 250,000,000 source bytes maximum), scrubs the
+environment, denies network and out-of-workspace data access through
+`sandbox-exec` or bubblewrap, applies available POSIX limits, bounds captured
+output, and kills the child process group. macOS does not truthfully provide the
+address-space or process-count capabilities here; Linux bubblewrap does.
+`RLIMIT_FSIZE` is per file rather than a total disk quota. Commands and profiles
+remain host-owned, reviewed authority.
 
 The [integration runner](https://github.com/houllette/rampart/blob/main/evaluation/integration/run.py) owns subprocess
 deadlines for trusted repository fixtures. The

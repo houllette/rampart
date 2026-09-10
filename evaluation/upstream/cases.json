@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/elixir-mint/mint.git",
+  "package": "mint",
+  "license": "Apache-2.0",
+  "cases": [
+    {
+      "id": "mint-incremental-response-line-budget",
+      "advisory": "CVE-2026-82728",
+      "contract_id": "upstream.mint.incremental-response-line-budget.v1",
+      "mode": "response_line",
+      "vulnerable_revision": "d996244f432ef67fe7556b277da0d697f06e840d",
+      "vulnerable_tree": "9b8f82abedbe33fe494d4d0d63148f42f1f9f528",
+      "fixed_revision": "19be5558b6a317e271c78666498dd78b151e490a",
+      "fixed_tree": "4df878c75c81c68d79571e689782174e50a0fbec"
+    },
+    {
+      "id": "mint-chunk-size-work-budget",
+      "advisory": "CVE-2026-82729",
+      "contract_id": "upstream.mint.chunk-size-work-budget.v1",
+      "mode": "chunk_size",
+      "vulnerable_revision": "19be5558b6a317e271c78666498dd78b151e490a",
+      "vulnerable_tree": "4df878c75c81c68d79571e689782174e50a0fbec",
+      "fixed_revision": "bd2a4e7513594997c140cfef9fe0e968712fb588",
+      "fixed_tree": "dd423ab69b337c7895beaf7d7e1d4b35c5c53b5b"
+    }
+  ]
+}

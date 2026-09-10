@@ -118,14 +118,20 @@ real or replayed application traffic ──────┘
   lifecycle, and resource-budget contracts;
   terminal classification covers captured output bytes. Fixtures still own
   independent expectations, exploit preconditions, controls, and cleanup.
-- **HavocProper** is an opt-in execution driver for coverage-guided research; it
-  does not replace Havoc's oracle verdicts.
+- **HavocProper** is an opt-in execution driver for coverage- and bounded
+  semantic-feature-guided research; it does not replace Havoc's oracle verdicts
+  or PropEr with a custom search loop. Its deterministic manifest identifies the
+  configuration and covered BEAM, while exact candidate inputs remain the replay
+  material because PropEr does not expose a portable RNG seed.
 - **RampartSAST** is the high-recall static reconnaissance and exact signal-
   replay primitive. It parses Elixir and Erlang, inventories definitions, calls,
   directives, dependency declarations/locks, and host-resolved package use, and
-  runs optional rule/provider packs. Sobelow-derived knowledge is one signal
-  pack, not the engine's shape. Inventory facts and rule matches prove syntax,
-  never taint, reachability, abuse, or exploitability.
+  runs optional rule/provider packs. Its bounded backward slices connect
+  possible assignments, parameters, calls, returns, and guards while retaining
+  ambiguity and explicit uncertainty. Sobelow-derived knowledge is one signal
+  pack, not the engine's shape. Inventory facts, slices, and rule matches prove
+  syntax, never taint, branch feasibility, runtime reachability, abuse, or
+  exploitability.
 - **RampartIAST** currently implements the experimental single-process,
   exact-marker trace-session spike plus an analyzer-independent seam for
   reviewed static candidates. It recognizes unchanged markers inside bounded
@@ -252,9 +258,11 @@ never depends on the sensor, a static analyzer, or an agent harness.
    topologies, and higher-concurrency adversarial runs. Keep the OTP 28/29
    semantic compatibility gate green, and keep process-dictionary provenance
    unsupported unless a targeted, bounded observation mechanism is demonstrated.
-7. Keep the transport-neutral binding and wire projection stable, then build an
-   action-scoped Lemieux adapter outside Rampart; Lemieux remains the authority,
-   policy, transcript, and reasoning harness.
+7. Keep the transport-neutral binding and wire projection stable. The external
+   `rampart_lemieux` reference adapter now proves action-scoped descriptors,
+   host rebind on resume, envelope budgeting, and local human-review disclosure
+   drafts; keep it outside Rampart while maturing and publishing it. Lemieux
+   remains the authority, policy, transcript, and reasoning harness.
 
 The later architecture is load-bearing only after oracle determinism, tracing
 overhead, and cross-process feasibility have evidence. Until then, those are

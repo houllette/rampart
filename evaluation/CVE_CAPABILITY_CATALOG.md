@@ -7,9 +7,11 @@ affected-version metadata, exact fix/first-parent pairs, prerequisites,
 uncertainty, and deterministic proof/refutation contracts. The initial review
 added no execution evidence. On 2026-09-10, three reduced Havoc contracts were
 implemented and evaluated: resource-length units, incremental buffer budgets,
-and numeric work budgets. No upstream application has been run or scanned for
-this extension. All three reuse `havoc.security-property-reproduces.v1`; no new
-agent-facing action was registered.
+and numeric work budgets. The separate upstream gate now also builds and runs
+complete pinned Mint revisions for CVE-2026-82728 and CVE-2026-82729 through the
+actual affected package paths. The Ash case remains reduced-only. All three
+reuse `havoc.security-property-reproduces.v1`; no new agent-facing action was
+registered.
 
 The local source review uses Rampart commit
 `d34ab53c363ef26bb4628f8b2015ebeb9934091e`. Existing evaluation results and
@@ -17,17 +19,18 @@ retained performance/integration artifacts keep their original scope.
 
 ## Capability map
 
-The first three contracts have **executed reduced models**; the remaining five
-are proposed. The complete upstream experiments remain unexecuted for all eight.
-Contract IDs in the JSON are research identifiers, not `Core.Validation` action
-IDs; the implemented models use the existing Havoc action explicitly recorded
-in each entry.
+The first three contracts have **executed reduced models**; the two Mint
+contracts additionally have complete upstream package executions. The remaining
+five are proposed, and the Ash upstream experiment remains unexecuted. Contract
+IDs in the JSON are research identifiers, not `Core.Validation` action IDs; the
+implemented models use the existing Havoc action explicitly recorded in each
+entry.
 
 | Advisory | Reusable contract | Required observation | Implementation home |
 | --- | --- | --- | --- |
 | [CVE-2026-82752 — Ash](https://cna.erlef.org/cves/CVE-2026-82752.html) | Resource length uses an explicit unit | Accepted values satisfy the declared byte/codepoint bound at the downstream boundary, including combining characters. | Havoc oracle and bounded StreamData inputs; package fixture in evaluation. |
-| [CVE-2026-82728 — Mint](https://cna.erlef.org/cves/CVE-2026-82728.html) | Every incremental parser state has a buffer budget | Retained incomplete status/chunk metadata respects a byte budget across chunk partitions. | Havoc scenario with a host-owned response driver. |
-| [CVE-2026-82729 — Mint](https://cna.erlef.org/cves/CVE-2026-82729.html) | Numeric parsing bounds work before conversion | Digit limits and measured work hold for complete and fragmented numeric fields. | Havoc oracle; instrumentation and package execution in evaluation. |
+| [CVE-2026-82728 — Mint](https://cna.erlef.org/cves/CVE-2026-82728.html) | Every incremental parser state has a buffer budget | Retained incomplete response-line bytes respect a byte budget, with exact-boundary and fixed controls. | Reduced Havoc scenario plus complete Mint HTTP1 loopback connect/request/stream execution in `mix rampart.upstream`. |
+| [CVE-2026-82729 — Mint](https://cna.erlef.org/cves/CVE-2026-82729.html) | Numeric parsing bounds work before conversion | Hexadecimal digit limits hold before chunk-size integer conversion, with exact-boundary and fixed controls. | Reduced Havoc oracle plus complete execution of Mint's hidden HTTP1 chunk-size parser function via `mix rampart.upstream`. |
 | [CVE-2026-69664 — OTP inets](https://cna.erlef.org/cves/CVE-2026-69664.html) | Segmentation preserves cleanup | Malformed requests release their attributed worker/connection resources within the declared interval. | Bounded Havoc scenarios and disposable httpd fixture. |
 | [CVE-2026-66835 — OTP inets](https://cna.erlef.org/cves/CVE-2026-66835.html) | Equivalent resources retain authorization | Independently equivalent paths to a protected canary retain its authorization requirement. | Havoc relational oracle; complete local httpd fixture. |
 | [CVE-2026-64941 — LiveView](https://cna.erlef.org/cves/CVE-2026-64941.html) | Destination policy matches consumer normalization | An accepted local `redirect/2` destination stays within policy after the actual browser semantics resolve it. | Havoc oracle plus an external consumer driver; no browser dependency in Core. |
@@ -63,8 +66,11 @@ and whether that parent actually exhibits the exact claimed behavior.
 `evidence` deliberately distinguishes advisory/patch review, static scanning,
 reduced-contract implementation and full-package execution. The first three
 entries include reduced-model evidence and links to the retained evaluation
-report. Its runtime identity and source fingerprints identify the evaluated
-implementation. Five entries still have advisory/patch-review evidence only.
+report. The upstream runner separately records full-package evidence for the two
+Mint entries, including exact commit/tree/license/source/BEAM/runtime/input and
+proof-artifact identities. Five entries still have advisory/patch-review
+evidence only. The catalog JSON's original evidence fields are not silently
+rewritten by a local run; interpret them with the generated upstream report.
 `static_facts_to_localize` describes useful inputs, including relationships
 that current SAST may not yet represent. It is not an inventory of implemented
 extractors.
@@ -114,11 +120,13 @@ analysis capability. See the
    pins, complete-line framing, and XML document/result budgets. Each has a
    concrete specification. These four local boundaries were subsequently
    implemented on 2026-09-10; the resource inventory records their verification
-   scope. All eight upstream package experiments remain unexecuted.
+   scope. Two Mint upstream package experiments now execute in the separate
+   gate; the other six remain unexecuted.
 2. Add the explicit-unit and parser-budget contracts to Havoc using ordinary
    StreamData generation/shrinking. The small reduced cases are now implemented
-   and run in `mix rampart.eval`; next execute the exact pinned package pairs.
-   Keep those evidence levels separate.
+   and run in `mix rampart.eval`; the exact pinned Mint package pairs now run in
+   `mix rampart.upstream`. Keep reduced and full-package evidence levels
+   separate, and extend the pattern to the remaining cases.
 3. Extend the existing complete-application evaluation approach to path
    authorization, segmentation/cleanup and authentication-state scenarios.
    Have the host own lifecycle measurements and independent positive controls.

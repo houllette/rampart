@@ -175,6 +175,46 @@ records a length-policy boundary; the oracle independently counts that output.
 See [oracle semantics](ORACLES.md) for unknown measurements, counter attribution,
 positive controls, callback deadlines and limits on the conclusions.
 
+## Reviewed stateful harnesses
+
+`Havoc.Harness` turns a finite inert operation plan into an ordinary Havoc
+target while StreamData continues to own generation and shrinking:
+
+```elixir
+plan = Havoc.Harness.Plan.new!(%{
+  "id" => "auth-state-v1",
+  "description" => "exercise one reviewed pre-authentication sequence",
+  "meta" => %{},
+  "steps" => [
+    %{
+      "id" => "candidate",
+      "operation" => "protected_effect",
+      "role" => "candidate",
+      "arguments" => %{"message" => %{"$payload" => ["message"]}}
+    }
+  ]
+})
+
+binding = Havoc.Harness.Binding.new!(plan,
+  setup: &Fixture.start/1,
+  operations: %{"protected_effect" => &Fixture.protected_effect/2},
+  teardown: &Fixture.stop/1,
+  max_execution_ms: 5_000,
+  max_observation_bytes: 1_048_576
+)
+
+target = Havoc.Harness.target(binding)
+```
+
+Plans carry only string-keyed JSON, semantic step roles, and exact payload
+references. Setup, operation, teardown, environment, and fixture authority stay
+in the host-only binding and must never be restored from a transcript. The
+executor always attempts teardown, records the plan/payload replay identity,
+and raises on callback, reference, deadline, or observation-budget failure so
+ordinary Havoc validation becomes inconclusive rather than confirmed. Its
+soft deadline is checked between callbacks; an external OS sandbox must preempt
+stuck or hostile target code and enforce filesystem/network/memory policy.
+
 ## Tiered CI
 
 Run replay plus random generation with ordinary ExUnit:
@@ -216,10 +256,11 @@ fixtures. Read [TARGETS.md](TARGETS.md) for the fail-closed derivation rules.
 ## Optional coverage-guided backend
 
 The separate `havoc_proper` package uses PropEr targeted PBT with OTP line
-coverage as fitness. It is separate because ordinary Havoc generators remain
-StreamData generators and because PropEr/PropCheck are GPL-3.0 dependencies.
-Use it for serialized (`async: false`) research/nightly properties; standard
-Havoc remains the default deterministic/shrinking path.
+coverage and optional bounded semantic-state feature IDs as fitness and archive
+novelty. It is separate because ordinary Havoc generators remain StreamData
+generators and because PropEr/PropCheck are GPL-3.0 dependencies. Use it for
+serialized (`async: false`) research/nightly properties; standard Havoc remains
+the default deterministic/shrinking path.
 
 ## Generators
 

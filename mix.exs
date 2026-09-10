@@ -37,9 +37,12 @@ defmodule Rampart.MixProject do
         "havoc.replay": :test,
         "rampart.eval": :test,
         "rampart.eval.compare": :test,
+        "rampart.blind": :test,
         "rampart.perf": :test,
         "rampart.perf.compare": :test,
-        "rampart.integration": :test
+        "rampart.integration": :test,
+        "rampart.upstream": :test,
+        "rampart.sandbox": :test
       ]
     ]
   end
@@ -65,6 +68,7 @@ defmodule Rampart.MixProject do
         "NORTH_STAR.md",
         "IAST_RESEARCH.md",
         "LEMIEUX_INTEGRATION.md",
+        "ZERO_DAY_READINESS.md",
         "EVALUATION.md",
         "PERFORMANCE.md",
         "RESOURCE_LIMITS.md",
@@ -72,7 +76,12 @@ defmodule Rampart.MixProject do
         "evaluation/CVE_CAPABILITY_CATALOG.md"
       ],
       groups_for_extras: [
-        Architecture: ["NORTH_STAR.md", "IAST_RESEARCH.md", "LEMIEUX_INTEGRATION.md"],
+        Architecture: [
+          "NORTH_STAR.md",
+          "IAST_RESEARCH.md",
+          "LEMIEUX_INTEGRATION.md",
+          "ZERO_DAY_READINESS.md"
+        ],
         Evaluation: [
           "EVALUATION.md",
           "PERFORMANCE.md",
@@ -100,9 +109,12 @@ defmodule Rampart.MixProject do
         "run --no-halt -e 'Agent.start(fn -> Bandit.start_link(plug: Tidewave, port: 4000) end)'",
       "rampart.eval": &run_evaluation/1,
       "rampart.eval.compare": &compare_evaluations/1,
+      "rampart.blind": &run_blind_evaluation/1,
       "rampart.perf": &run_performance/1,
       "rampart.perf.compare": &compare_performance/1,
       "rampart.integration": &run_integration/1,
+      "rampart.upstream": &run_upstream/1,
+      "rampart.sandbox": &run_sandbox/1,
       precommit: [
         "deps.unlock --check-unused",
         "hex.audit",
@@ -112,6 +124,7 @@ defmodule Rampart.MixProject do
         "credo --strict",
         "rampart.sast --exit",
         "rampart.eval",
+        "rampart.blind",
         "usage_rules.sync --yes",
         "xref graph --label compile-connected --fail-above 0",
         "docs --warnings-as-errors",
@@ -162,6 +175,31 @@ defmodule Rampart.MixProject do
     RampartEvaluation.RuntimeComparator.run!(arguments)
   end
 
+  defp run_blind_evaluation(arguments) do
+    Mix.Task.run("compile", ["--warnings-as-errors"])
+
+    defaults =
+      if arguments == [] do
+        [
+          "--public",
+          "evaluation/blind/calibration/public",
+          "--submission",
+          "evaluation/blind/calibration/submission.json",
+          "--answer-key",
+          "evaluation/blind/calibration/private/answer-key.json"
+        ]
+      else
+        arguments
+      end
+
+    {_output, status} =
+      System.cmd("python3", ["evaluation/blind/run.py" | defaults],
+        into: IO.stream(:stdio, :line)
+      )
+
+    if status != 0, do: Mix.raise("Rampart blind evaluation failed")
+  end
+
   defp run_performance(arguments) do
     Mix.Task.run("app.start")
     Code.require_file("evaluation/performance.exs")
@@ -182,5 +220,27 @@ defmodule Rampart.MixProject do
 
     if status != 0,
       do: Mix.raise("Rampart integration gate failed; inspect the retained report and logs")
+  end
+
+  defp run_upstream(arguments) do
+    {_output, status} =
+      System.cmd("python3", ["evaluation/upstream/run.py" | arguments],
+        into: IO.stream(:stdio, :line)
+      )
+
+    if status != 0,
+      do: Mix.raise("Rampart upstream package gate failed; inspect the retained report and logs")
+  end
+
+  defp run_sandbox(arguments) do
+    defaults = if arguments == [], do: ["--self-test"], else: arguments
+
+    {_output, status} =
+      System.cmd("python3", ["evaluation/isolation/run.py" | defaults],
+        into: IO.stream(:stdio, :line)
+      )
+
+    if status != 0,
+      do: Mix.raise("Rampart OS-isolation gate failed; inspect the retained report")
   end
 end
