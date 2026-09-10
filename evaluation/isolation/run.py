@@ -80,6 +80,11 @@ def capabilities(selected):
 
 
 def mac_profile(workspace):
+    # The self-test and reviewed commands may use a relocatable Python whose
+    # shared library lives beside the interpreter rather than under /usr or
+    # Homebrew. Admit only this process's concrete runtime prefixes instead of
+    # opening all of /opt (which may contain unrelated developer data).
+    runtime_prefixes = [str(Path(sys.prefix).resolve()), str(Path(sys.base_prefix).resolve())]
     allowed_read_roots = [
         "/System",
         "/usr",
@@ -92,6 +97,7 @@ def mac_profile(workspace):
         "/private/etc",
         "/private/var/db",
         "/private/var/select",
+        *runtime_prefixes,
         str(workspace),
     ]
     reads = "\n".join(

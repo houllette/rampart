@@ -19,16 +19,19 @@ three-way validation verdicts, an action-scoped external Lemieux adapter,
 disposable OS isolation, and a scrubbed human-review disclosure draft. The
 trust anchor remains deterministic validation, not an LLM's explanation.
 
-The strongest repository evidence is still retrospective. The upstream gate
-builds and executes complete public Mint revisions around CVE-2026-82728 and
-CVE-2026-82729 and proves vulnerable/fixed separation with the same input
-identity. The external adapter's opt-in `mix live.zai` gate additionally proves
-that a real Z.AI-steered Lemieux session can invoke `RampartSAST.Validator` and
-ground its answer in confirmed, refuted, and inconclusive controls without
-receiving source bodies or validator authority. Those results demonstrate that
-the primitives can express, validate, and survive a real model/tool loop. They
-do **not** show that an agent, without the advisory or answer key, would have
-discovered either defect before disclosure.
+The strongest positive repository evidence is still retrospective. The
+upstream gate builds and executes complete public Mint revisions around
+CVE-2026-82728 and CVE-2026-82729 and proves vulnerable/fixed separation with
+the same input identity. The external adapter's opt-in `mix live.zai` gate
+additionally proves that a real Z.AI-steered Lemieux session can invoke
+`RampartSAST.Validator` and ground its answer in confirmed, refuted, and
+inconclusive controls without receiving source bodies or validator authority.
+A first prospective, answer-key-free Plug pilot completed with a correct
+`NO_CREDIBLE_CANDIDATE` abstention and an isolated 689-test target baseline; it
+produced no candidate to validate or disclose. Together these results show
+that the primitives can survive a real model/tool loop and safely decline weak
+hypotheses. They do **not** yet show successful prospective identification and
+validation of a new defect.
 
 ## P0–P7 implementation status
 
@@ -39,7 +42,7 @@ discovered either defect before disclosure.
 | **P2 — LLM adapter** | External sibling `rampart_lemieux` binds one `Core.Validation.Binding` per Lemieux descriptor, exposes inert IDs only, preserves three verdicts, bounds the complete result, requires host rebind on resume, and provides an opt-in real Z.AI/SAST three-verdict gate | A live LLM can invoke a narrow current capability and ground its final answer without receiving scope, source, resolver, callbacks, validator options, replay values, or artifact authority | The adapter is a companion checkout, not a Rampart dependency or a published integration package; only explicit calibration routing has been evaluated, not open-ended candidate selection or research strategy |
 | **P3 — SAST hypothesis support** | `RampartSAST.DataFlow.backward/3` plus Elixir/Erlang parameter, guard, binding, return, and call-argument facts | Bounded, ambiguity-preserving syntax dependence can reduce a sink candidate to possible lexical/interprocedural contributors | It is not SSA, branch feasibility, sanitizer modeling, runtime reachability, taint, or exploitability |
 | **P4 — stateful validation harness** | `Havoc.Harness.Plan`, `Binding`, and executor implement finite setup/control/candidate/cleanup/observation sequences with payload references, replay identity, teardown, deadlines between callbacks, and observation limits | StreamData can search reviewed protocol/state machines while executable authority stays host-owned; fixture/budget failure is inconclusive | It cannot preempt a stuck callback or provide OS isolation; the host must supply correct independent controls and cleanup |
-| **P5 — isolation** | `evaluation/isolation/run.py` copies admitted source, scrubs identity, denies network and outside filesystem access, applies available OS/POSIX limits, bounds output, kills the process group, and emits a hashed report | Reviewed target execution can be separated from acquisition and run networkless in a disposable workspace | macOS cannot advertise address-space/process-count limits; per-file size is not a disk quota; hostile native code still requires platform hardening and human review |
+| **P5 — isolation** | `evaluation/isolation/run.py` copies admitted source, scrubs identity, denies network and outside filesystem access, admits only concrete runtime prefixes needed by relocatable Python, applies available OS/POSIX limits, bounds output, kills the process group, and emits a hashed report | Reviewed target execution can be separated from acquisition and run networkless in a disposable workspace | macOS cannot advertise address-space/process-count limits; Mix's TCP filesystem lock requires a reviewed direct runtime test entry point under complete network denial; per-file size is not a disk quota; hostile native code still requires platform hardening and human review |
 | **P6 — search feedback** | HavocProper accepts bounded stable feature IDs, archives line- or feature-novel candidates, emits deterministic configuration/BEAM manifests, and the integration search uses explicit depth transitions | PropEr search can use protocol/state progress rather than line coverage alone without replacing PropEr with a custom loop | PropEr's public API still lacks a portable initial RNG seed; exact generated inputs must be retained because the stochastic trajectory is not replayable from the manifest alone |
 | **P7 — disclosure handoff** | External `RampartLemieux.Disclosure.Bundle` accepts confirmed evidence, optional same-action fixed refutation, exact source/runtime identity, scrubbed text artifacts, resealed redacted proof digests, and creates a local draft atomically | Validated evidence can become a structured responsible-disclosure draft without native `raw` terms or concrete seed values; both source-projection and disclosure-projection identities remain explicit | Secret scrubbing is a backstop, and nothing is sent automatically. A human must replay, assess impact/versions, inspect redactions, identify maintainers, and choose timing |
 
@@ -113,8 +116,11 @@ mix rampart.integration
 
 Acquisition and execution should remain separate: fetch and verify pinned source
 under an authorized network policy, then execute the copied snapshot with
-network denied. Do not give a model a shell command, module name, callback,
-scope object, oracle list, corpus path, sandbox profile, or artifact resolver.
+network denied. On macOS, Mix's local TCP filesystem lock is also blocked by
+that policy; use a reviewed direct runtime/ExUnit entry point in the execution
+snapshot rather than silently allowing local networking. Do not give a model a
+shell command, module name, callback, scope object, oracle list, corpus path,
+sandbox profile, or artifact resolver.
 
 ## What would change the answer to an unqualified “yes”
 

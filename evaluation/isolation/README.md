@@ -54,11 +54,18 @@ denial.
   process-group cleanup are independent backstops, not a proof against every
   kernel or child-process failure mode.
 - Runtime system paths are readable on macOS so reviewed interpreters and the
-  BEAM can start. The disposable workspace is writable; other data paths and
-  network operations are denied.
+  BEAM can start. For relocatable Python installations, the generated profile
+  also admits this process's resolved `sys.prefix` and `sys.base_prefix`; it
+  does not broadly admit `/opt`. The disposable workspace is writable; other
+  data paths and network operations are denied.
 - This utility does not install dependencies, grant registry credentials, or
   fetch source. Acquisition and build should be separate, pinned, reviewed
   phases; execute the resulting snapshot with network denied.
+- Current Mix releases use a local TCP socket for filesystem locking. Because
+  the macOS profile denies all networking, `mix test` may fail before tests run.
+  Do not weaken network denial to accommodate that lock. Prepare dependencies
+  during the build phase and use a reviewed direct runtime/ExUnit entry point
+  in the disposable execution snapshot when this applies.
 - A passing report establishes the tested containment controls for one run. It
   does not establish that untrusted native code is harmless or that a candidate
   is a vulnerability.
