@@ -46,6 +46,12 @@ Inventory facts currently include:
 - normalized static/dynamic remote calls and explicitly ambiguous unqualified
   calls, with enclosing function/module, arity, pipeline shape,
   literal/dynamic argument shapes, and exact source spans;
+- one bounded `:call_argument` relationship per remote or unqualified argument,
+  including its one-based position, literal classification, expression kind,
+  source variables, truncated syntax preview, and parent call fact;
+- syntax-only `:binding` relationships for Elixir assignments, retaining the
+  bounded right-hand expression, variables it mentions, and enclosing control
+  regions;
 - Elixir `alias`, `import`, `require`, `use`, protocol, behaviour, callback, and
   protocol-implementation relationships, including qualified or explicitly
   ambiguous unqualified calls and syntactic callback implementation edges;
@@ -90,6 +96,15 @@ plug_usage = RampartSAST.Inventory.package_usage(result.inventory, "plug")
 # Exact resolved versions observed in Mix or Rebar lock data.
 locks = RampartSAST.query(result, relation: :locks_dependency)
 
+# Inspect the value supplied to one package API position without evaluating it.
+header_values = RampartSAST.query(result,
+  kind: :call_argument,
+  object: "Plug.Conn.put_resp_header/3#argument/3"
+)
+
+# Find assignment expressions that define a named local variable.
+bindings = RampartSAST.query(result, kind: :binding, object: "header")
+
 # A bounded page carries stable inventory identity and continuation metadata.
 page = RampartSAST.Inventory.query_page(result.inventory,
   kind: :behavior,
@@ -115,9 +130,33 @@ links.
 
 The scanner bounds file count, individual and total bytes, parser time,
 context-provider time, behavior-classifier time, rule time, and concurrency.
-Parse, context, inventory, rule, and
-limit failures become diagnostics and make the scan incomplete; they never
-become findings or a false clean result. Output order is deterministic.
+Parse, context, inventory, rule, and limit failures become diagnostics and make
+the scan incomplete; they never become findings or a false clean result. Output
+order is deterministic.
+
+The in-process API is intended for trusted snapshots. Elixir and Erlang parsers
+intern source atoms in the VM-global atom table, so task timeouts alone cannot
+protect a long-lived node from hostile input. Use the disposable worker API for
+untrusted repositories:
+
+```elixir
+result = RampartSAST.Isolated.inventory("/authorized/project")
+
+calls = RampartSAST.Isolated.query(result,
+  kind: :call,
+  object_prefix: "Plug.Conn."
+)
+```
+
+The worker parses and inventories in a short-lived OS-level BEAM instance and
+returns only bounded, string-keyed portable facts. Worker timeout, protocol, and
+response-limit failures produce an incomplete result. The ERTS atom-table and
+per-process heap limits are defense in depth, not a portable total-RSS or
+filesystem sandbox; the host still owns outer isolation. Worker metrics include
+sampled BEAM memory/atoms and, on Linux, `/proc` RSS/high-water plus available
+cgroup v2 memory readings. These are measurements, not enforcement. Portable
+output omits native AST, source snapshots, and findings, so exact static replay
+requires an authorized snapshot rather than transcript-restored authority.
 
 ## Signal rules are annotations, not the product
 
@@ -128,11 +167,17 @@ code evaluation. Those rules exist to exercise the signal/revalidation seam and
 to provide useful sink hints. Growing a second hard-coded Sobelow catalog is not
 the north star.
 
-The built-in `RampartSAST.Behavior.BEAM` classifier already emits deliberately
-noisy typed facts for broad API families and boundary-shaped function names.
-Additional packs can cover trust-boundary candidates, parser transitions,
-secret handling, framework configuration, and package-specific API misuse.
-Each classification must still state its syntactic basis and classifier version.
+The built-in `RampartSAST.Behavior.BEAM` classifier emits deliberately noisy
+typed facts for broad API families and boundary-shaped function names. Optional
+`RampartSAST.Behavior.Plug`, `RampartSAST.Behavior.Phoenix`,
+`RampartSAST.Behavior.Ecto`, and `RampartSAST.Behavior.Ash` classifiers add
+versioned, reviewed package API semantics without requiring those packages at
+runtime. The Ash vocabulary marks aggregate/field materialization, resource
+read, authorization-decision, and tenant-context boundaries while leaving
+actors, protected fields, options, and exploitability unknown. Additional packs can
+cover trust-boundary candidates, parser transitions, secret handling, framework
+configuration, and package-specific API misuse. Each classification must still
+state its syntactic basis and classifier version.
 
 Context providers receive parsed sources and return namespaced facts. The
 default Elixir provider records modules, aliases, imports, `use` targets, and
@@ -170,11 +215,30 @@ neighborhoods, not data/control-flow proof. `RampartSAST.Inventory.Artifact`
 creates a content-addressed, size-bounded full inventory payload for host-owned
 storage while normal query pages remain bounded for agent context.
 
+The new expression relationships are high-recall syntax, not a data-flow
+engine. A variable appearing in a right-hand expression or call argument does
+not prove that its value reaches another expression, that a branch executes, or
+that a sanitizer is complete. Their purpose is to let a caller ask focused
+questions such as “which expression supplied this header/codec option?” before
+constructing a separate validation.
+
 Macro-expansion provenance, complete lexical import/alias semantics, runtime
 protocol/callback dispatch, assignment-aware interprocedural data/control flow,
 debug-info call indexing, package archive ingestion, and pure SARIF remain
 roadmap items. Uncertainty must remain explicit rather than hidden behind a
-confidence score.
+confidence score. The repository-local `mix rampart.eval` gate now measures real
+command, deserialization, filesystem, and Plug boundaries; ambiguous static
+localization; explicit refusal of an unsupported OTP process scope; an
+attributed historical Plug regression using exact upstream source snapshots;
+and adapted terminal-control, canonical-codec, quoted HTTP parameter,
+cross-tenant cache, and actor-paired Ash field-policy contracts pinned to
+disclosed vulnerable/fixed revisions. It also measures targeted trace overhead,
+probes
+conditional direct-message, GenServer, Task, and ETS correlation, records the
+process-dictionary limitation, and exercises ID-less casts, Task failures, ETS
+mutations, injected trace loss,
+and worker replacement. It gates patched replay, fail-closed behavior, bounded
+queries, and artifact/evidence budgets; see the root `EVALUATION.md`.
 
 ## Cross-package and graph examples
 

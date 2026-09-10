@@ -109,9 +109,19 @@ defmodule Havoc.Property do
   @spec evaluate(target :: (term() -> term()), payload :: term(), config :: map()) ::
           {:ok, observation :: term()} | {:error, Failure.t()}
   def evaluate(target, payload, config) do
+    case evaluate_with_report(target, payload, config) do
+      {:ok, observation, _report} -> {:ok, observation}
+      {:error, %Failure{} = failure} -> {:error, failure}
+    end
+  end
+
+  @doc "Evaluates one payload and retains pass/skip information for exact validation."
+  @spec evaluate_with_report(target :: (term() -> term()), payload :: term(), config :: map()) ::
+          {:ok, observation :: term(), Havoc.Oracle.Report.t()} | {:error, Failure.t()}
+  def evaluate_with_report(target, payload, config) do
     case invoke_target(target, payload) do
       {:ok, observation} ->
-        evaluate_observation(observation, payload, config)
+        evaluate_observation_with_report(observation, payload, config)
 
       {:oracle_failure, error, stacktrace} ->
         oracle_failure(error, payload, stacktrace)
@@ -130,13 +140,21 @@ defmodule Havoc.Property do
     kind, reason -> {:target_failure, kind, reason, __STACKTRACE__}
   end
 
-  defp evaluate_observation(%Checked{observation: observation}, _payload, _config) do
-    {:ok, observation}
+  defp evaluate_observation_with_report(
+         %Checked{observation: observation, report: %Havoc.Oracle.Report{} = report},
+         _payload,
+         _config
+       ) do
+    {:ok, observation, report}
   end
 
-  defp evaluate_observation(observation, payload, config) do
+  defp evaluate_observation_with_report(%Checked{observation: observation}, payload, config) do
+    evaluate_observation_with_report(observation, payload, config)
+  end
+
+  defp evaluate_observation_with_report(observation, payload, config) do
     config.oracles
-    |> Havoc.Oracle.check_normalized(observation, payload, config.oracle_context)
+    |> Havoc.Oracle.evaluate_normalized(observation, payload, config.oracle_context)
     |> oracle_result(observation, payload)
   rescue
     error -> test_exception(error, :error, __STACKTRACE__, payload)
@@ -144,9 +162,10 @@ defmodule Havoc.Property do
     kind, reason -> test_exception(reason, kind, __STACKTRACE__, payload)
   end
 
-  defp oracle_result(:ok, observation, _payload), do: {:ok, observation}
+  defp oracle_result(%Havoc.Oracle.Report{violations: []} = report, observation, _payload),
+    do: {:ok, observation, report}
 
-  defp oracle_result({:error, violations}, observation, payload) do
+  defp oracle_result(%Havoc.Oracle.Report{violations: violations}, observation, payload) do
     {:error,
      %Failure{
        kind: :violation,

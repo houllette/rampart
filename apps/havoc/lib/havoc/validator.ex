@@ -12,6 +12,7 @@ defmodule Havoc.Validator do
 
   alias Core.Validation
   alias Core.Validation.{Action, Evidence, Request}
+  alias Havoc.Oracle.Report
   alias Havoc.Property.Failure
 
   @action_id "havoc.security-property-reproduces.v1"
@@ -44,15 +45,30 @@ defmodule Havoc.Validator do
     replay_seed = replay_seed!(request.subject, request)
     config = property_config(request, Keyword.get(opts, :property_options, []))
 
-    case Havoc.Property.evaluate(target, replay_seed.value, config) do
-      {:ok, observation} ->
+    case Havoc.Property.evaluate_with_report(target, replay_seed.value, config) do
+      {:ok, observation, %Report{skipped: []} = report} ->
         Validation.refuted(
           request,
           replay_seed,
           %Evidence{
             summary: "the concrete payload satisfied every configured security oracle",
             facts: %{
-              oracle_names: Enum.map(config.oracles, & &1.name),
+              oracle_names: report.passed,
+              property_id: config.property_id
+            },
+            raw: observation
+          }
+        )
+
+      {:ok, observation, %Report{} = report} ->
+        Validation.inconclusive(
+          request,
+          replay_seed,
+          %Evidence{
+            summary: "one or more security oracles lacked the observations needed for a verdict",
+            facts: %{
+              passed_oracle_names: report.passed,
+              skipped_oracle_names: report.skipped,
               property_id: config.property_id
             },
             raw: observation

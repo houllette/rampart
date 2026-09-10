@@ -56,7 +56,10 @@ misreported as a crash in the application under test.
 consumers can build custom ExUnit or non-macro integration. `Havoc.validate/3`
 is the separate hypothesis-validation API: it executes one concrete Core seed,
 performs no random generation, and returns a contract-checked
-`Core.Validation.Result`.
+`Core.Validation.Result`. Exact validation consumes the richer oracle report:
+a result is refuted only when every oracle passes, while any skipped oracle
+makes the verdict inconclusive. This prevents an observation-shape mismatch
+from being reported as evidence that a hypothesis is false.
 
 The macro binds `payload`, records a stable default property ID from module and
 property name, and evaluates either a returned observation or an explicit
@@ -95,6 +98,16 @@ This boundary positions Havoc as Rampart's validation engine and oracle trust
 root. A target/oracle setup error is inconclusive or an ordinary test error,
 never a confirmation. Signal oracles retain their documented confidence and do
 not claim exploitability merely because an agent requested validation.
+
+Relational checks use explicit codec, differential, external-state, parsed HTTP
+parameter, shared-cache, and actor-paired field-policy observations. Terminal
+safety classifies caller-designated output bytes. These are bounded normalized
+evidence shapes rather than package models: fixtures still own independent
+policy expectations, actors/tenants, cache execution, field/path adapters,
+counters, cleanup, and the security claim's preconditions. The repository
+evaluation requires the same oracle to confirm a vulnerable control, refute a
+fixed control, remain inconclusive on harness failure, and replay the concrete
+seed.
 
 ## Research findings applied in v1
 

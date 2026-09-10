@@ -65,18 +65,58 @@ defmodule RampartIAST.Validator do
     replay_seed = replay_seed(hypothesis.seed, hypothesis, request)
     session_id = Core.Finding.dedupe_id(:iast, ["trace_session", request.id])
 
-    trace_result =
-      TraceSession.run(
-        session_id,
-        source,
-        sink,
-        replay_seed.value,
-        execute,
-        limits,
-        trace_backend: Keyword.get(opts, :trace_backend, RampartIAST.TraceBackend.OTP)
-      )
+    case required_process_scope!(hypothesis) do
+      :single_process ->
+        trace_result =
+          TraceSession.run(
+            session_id,
+            source,
+            sink,
+            replay_seed.value,
+            execute,
+            limits,
+            trace_backend: Keyword.get(opts, :trace_backend, RampartIAST.TraceBackend.OTP)
+          )
 
-    verdict(request, hypothesis, replay_seed, static_candidate, source, sink, trace_result)
+        verdict(request, hypothesis, replay_seed, static_candidate, source, sink, trace_result)
+
+      required_scope ->
+        unsupported_scope(
+          request,
+          replay_seed,
+          static_candidate,
+          source,
+          sink,
+          required_scope
+        )
+    end
+  end
+
+  defp unsupported_scope(request, seed, static_candidate, source, sink, required_scope) do
+    facts = %{
+      source_id: source.id,
+      source_provenance: source.provenance,
+      sink_id: sink.id,
+      sink_provenance: sink.provenance,
+      sink_mfa: sink.mfa,
+      observation_level: :exact_marker,
+      required_process_scope: required_scope,
+      supported_process_scope: :single_process,
+      reason: :unsupported_process_scope,
+      execution: :not_started,
+      exploitability: :not_evaluated
+    }
+
+    Validation.inconclusive(
+      request,
+      seed,
+      %Evidence{
+        summary:
+          "the exact-marker action supports only single-process observation and did not execute a #{required_scope} hypothesis",
+        facts: maybe_add_static_candidate(facts, static_candidate)
+      },
+      Map.put(validation_meta(static_candidate), :required_process_scope, required_scope)
+    )
   end
 
   defp verdict(
@@ -314,6 +354,14 @@ defmodule RampartIAST.Validator do
   defp ensure_supported_source!(source) do
     raise ArgumentError,
           "exact-marker validation only supports an in-process first callback argument source, got: #{inspect(source)}"
+  end
+
+  defp required_process_scope!(%Core.Hypothesis{meta: meta}) do
+    scope = Map.get(meta, :required_process_scope, :single_process)
+
+    if named_atom?(scope),
+      do: scope,
+      else: raise(ArgumentError, "IAST required_process_scope must be an atom")
   end
 
   defp replay_seed(%Core.Seed{} = seed, hypothesis, request) do

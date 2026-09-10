@@ -2,6 +2,7 @@ defmodule Havoc.ValidationTest do
   use ExUnit.Case, async: true
 
   alias Core.Validation.Result
+  alias Havoc.Observation.Codec
 
   setup context do
     path =
@@ -56,6 +57,21 @@ defmodule Havoc.ValidationTest do
     assert Havoc.Corpus.load(path: path) == []
   end
 
+  test "does not turn a skipped exact oracle into a false refutation", %{path: path} do
+    assert %Result{verdict: :inconclusive, findings: [], evidence: evidence} =
+             Havoc.validate(seed("input"), fn _payload -> %{body: "missing status"} end,
+               property_id: "Validation:skipped",
+               property_name: "missing required observation",
+               module: __MODULE__,
+               oracles: [:no_crash, :no_500],
+               corpus_path: path
+             )
+
+    assert evidence.facts.skipped_oracle_names == [:no_500]
+    assert evidence.facts.passed_oracle_names == [:no_crash]
+    assert Havoc.Corpus.load(path: path) == []
+  end
+
   test "distinguishes broken test setup from a security confirmation", %{path: path} do
     assert %Result{verdict: :inconclusive, findings: [], evidence: evidence} =
              Havoc.validate(seed("input"), fn _payload -> raise "fixture unavailable" end,
@@ -68,6 +84,22 @@ defmodule Havoc.ValidationTest do
 
     assert evidence.summary =~ "before a security verdict"
     assert evidence.facts.reason =~ "fixture unavailable"
+    assert Havoc.Corpus.load(path: path) == []
+  end
+
+  test "treats a codec payload/observation mismatch as a broken harness", %{path: path} do
+    assert %Result{verdict: :inconclusive, findings: [], evidence: evidence} =
+             Havoc.validate(
+               seed("input"),
+               fn _payload -> Codec.accepted("different", :identity, "different") end,
+               property_id: "Validation:codec-mismatch",
+               property_name: "codec fixture observes the exact payload",
+               module: __MODULE__,
+               oracles: [:canonical_encoding],
+               corpus_path: path
+             )
+
+    assert evidence.facts.reason =~ "does not match"
     assert Havoc.Corpus.load(path: path) == []
   end
 

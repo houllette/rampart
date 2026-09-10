@@ -151,18 +151,48 @@ substrate now includes:
 6. **Ecosystem and agent inputs:** Mix and Rebar manifests/locks, exact locked
    versions, stable inventory IDs, content-addressed bounded artifacts, and
    bounded query pages with continuation metadata.
+7. **Disposable untrusted-source scanning:** `RampartSAST.Isolated` runs the
+   entire source-facing scan in a short-lived OS-level BEAM instance, projects
+   only bounded string-keyed data, and turns worker/response failures into
+   incomplete results. Tests prove source-only atoms do not enter the parent VM.
+8. **Evaluation gate:** the repository-local `mix rampart.eval` task checks
+   real command, deserialization, filesystem, and Plug response boundaries;
+   ambiguous localization; an explicitly unsupported OTP process boundary; an
+   attributed historical Plug regression; and adapted terminal-control,
+   canonical-codec, quoted-parameter, cache-tenancy, and actor-paired Ash field-
+   policy contracts pinned to disclosed vulnerable/fixed revisions. It covers
+   exact-oracle replay, negative controls, injected harness failure,
+   fail-closed verdicts, and broad efficiency/evidence budgets. Metamorphic tests
+   preserve semantic relationships while retaining snapshot-specific identity.
+9. **Package behavior seam:** optional, versioned Plug, Phoenix, Ecto, and Ash
+   classifiers contribute noisy reviewed API semantics without introducing
+   runtime framework dependencies or making the engine application-specific.
+   Ash annotations retain aggregate/field, read, authorization-decision, and
+   tenant-context boundaries while expression facts expose options separately.
+10. **Lexical module restoration:** exact historical `Plug.Static` sources exposed
+    a nested-module scope leak. Module ranges now use parser end metadata, nested
+    module names retain their lexical parent, and definitions after an inner
+    module return to the outer module.
+11. **Bounded expression relationships:** Elixir assignments and Elixir/Erlang
+    call arguments now retain syntax-only expression kind, literal status,
+    source variables, one-based argument position, and a UTF-8-safe 240-byte
+    preview. These facts make literal options, interpolated output, and package
+    API arguments directly queryable without pretending to prove flow.
 
 ## Next gates
 
-1. Isolate untrusted parsing from the long-lived VM so source atom interning
-   cannot exhaust the host node; current byte/time limits do not solve that
-   process-global risk.
+1. Retain the isolated worker's Linux `/proc` RSS/high-water and optional cgroup
+   v2 current/peak/limit measurements in CI history. Define the authority and
+   artifact contract an external host uses for stronger deployment isolation;
+   do not make RampartSAST manage containers. Add isolated exact-static replay
+   without restoring source or executable authority from portable output.
 2. Add scope-correct lexical alias/import semantics, captures, dynamic `apply`,
    macro-expansion provenance, and runtime protocol/callback dispatch candidates
    while preserving ambiguity.
-3. Add assignment-aware intra/interprocedural dependence and real control-flow
-   graphs. Current shared-variable/control-region slices are neighborhoods, not
-   flow proof.
+3. Build assignment-aware intra/interprocedural dependence and real control-flow
+   graphs on top of the bounded binding/argument relationships. The expression
+   facts, shared-variable slices, and control-region slices remain syntax
+   neighborhoods, not flow proof.
 4. Inspect exports/debug info and ingest Hex/Rebar archives under explicit byte,
    file, decompression, and checksum limits; preserve package → application →
    module → version provenance.
@@ -171,8 +201,15 @@ substrate now includes:
    than global engine branches.
 6. Let signal packs advertise compatible proof actions and required fixtures;
    keep actual cross-tool planning in the external adapter/harness.
-7. Add pure JSON/SARIF projections and an evaluation corpus spanning vulnerable,
-   fixed, ambiguous, macro-generated, and dependency-misuse Elixir/Erlang cases.
+7. Expand the versioned evaluation corpus beyond the initial real sinks, package
+   classifiers, trace-overhead measurement, partial direct-message/GenServer/
+   Task/ETS/process-dictionary feasibility matrix, OTP refusal, and digest-pinned
+   historical Plug source. Add macro-generated, protocol/callback dispatch,
+   dependency-misuse, full pinned package/application, adversarial OTP-boundary,
+   and Erlang cases plus reviewed differential observations from Sobelow, Reach,
+   and Credo without treating their output as ground truth.
+8. Add pure JSON/SARIF projections for portable SAST results and stable benchmark
+   history suitable for CI trend analysis.
 
 Sobelow-derived checks remain useful coverage. They are one source of security
 vocabulary feeding this substrate, not the north-star architecture.

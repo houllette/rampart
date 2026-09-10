@@ -1,6 +1,10 @@
 defmodule RampartSAST.InventoryTest do
   use ExUnit.Case, async: true
 
+  alias RampartSAST.Behavior.Ash, as: AshBehavior
+  alias RampartSAST.Behavior.Ecto, as: EctoBehavior
+  alias RampartSAST.Behavior.Phoenix, as: PhoenixBehavior
+  alias RampartSAST.Behavior.Plug, as: PlugBehavior
   alias RampartSAST.Inventory
   alias RampartSAST.Rules.UnsafeAtom
 
@@ -62,6 +66,30 @@ defmodule RampartSAST.InventoryTest do
     refute first_page.id == second_page.id
   end
 
+  test "resolves __MODULE__-qualified aliases and calls without crashing" do
+    source = """
+    defmodule Demo.Relative do
+      alias __MODULE__.FlowState
+
+      def docs, do: __MODULE__.Docs.short_doc()
+      def run(value), do: FlowState.run(value)
+    end
+    """
+
+    result = RampartSAST.inventory_sources([{"lib/demo/relative.ex", source}])
+
+    assert result.status == :complete
+
+    assert [docs_call] = Inventory.calls_to(result.inventory, "Demo.Relative.Docs", "short_doc")
+    assert docs_call.subject == "Demo.Relative.docs/0"
+    assert docs_call.attributes.syntactic_module == "__MODULE__.Docs"
+    assert docs_call.attributes.resolution == :source_alias
+
+    assert [flow_call] = Inventory.calls_to(result.inventory, "Demo.Relative.FlowState", "run")
+    assert flow_call.subject == "Demo.Relative.run/1"
+    assert flow_call.attributes.resolution == :source_alias
+  end
+
   test "resolves explicit imports while preserving ambiguous unqualified calls" do
     source = """
     defmodule Demo.Imported do
@@ -98,6 +126,94 @@ defmodule RampartSAST.InventoryTest do
 
     assert ambiguous.attributes.resolution == :ambiguous_import
     assert ambiguous.attributes.candidate_modules == ["More.Headers", "Other.Headers"]
+  end
+
+  test "indexes bounded expression, binding, and call-argument facts" do
+    source = """
+    defmodule Demo.Output do
+      import Plug.Conn
+
+      def challenge(conn, metadata_url) do
+        header = ~s(Bearer resource_metadata="\#{metadata_url}")
+        put_resp_header(conn, "www-authenticate", header)
+      end
+
+      def aggregate(query) do
+        Ash.aggregate(query, :sum, authorize_fields?: true)
+      end
+    end
+    """
+
+    result = RampartSAST.inventory_sources([{"lib/demo/output.ex", source}])
+
+    assert [binding] =
+             Inventory.query(result.inventory,
+               kind: :binding,
+               object: "header"
+             )
+
+    assert binding.subject == "Demo.Output.challenge/2"
+    assert binding.attributes.expression.kind == :interpolation
+    refute binding.attributes.expression.literal
+    assert binding.attributes.source_variables == ["metadata_url"]
+    assert String.contains?(binding.attributes.expression.preview, "resource_metadata")
+
+    challenge_arguments =
+      Inventory.query(result.inventory,
+        kind: :call_argument,
+        object_prefix: "Plug.Conn.put_resp_header/3#argument/"
+      )
+
+    assert challenge_arguments |> Enum.map(& &1.attributes.position) |> Enum.sort() == [1, 2, 3]
+
+    assert Enum.all?(
+             challenge_arguments,
+             &(&1.attributes.target_call == "Plug.Conn.put_resp_header/3")
+           )
+
+    assert Enum.find(challenge_arguments, &(&1.attributes.position == 2)).attributes.expression ==
+             %{
+               kind: :literal,
+               literal: true,
+               preview: "\"www-authenticate\"",
+               preview_truncated: false
+             }
+
+    assert Enum.find(challenge_arguments, &(&1.attributes.position == 3)).attributes.expression.kind ==
+             :variable
+
+    assert Enum.find(challenge_arguments, &(&1.attributes.position == 3)).attributes.source_variables ==
+             ["header"]
+
+    assert [aggregate_options] =
+             Inventory.query(result.inventory,
+               kind: :call_argument,
+               object: "Ash.aggregate/3#argument/3"
+             )
+
+    assert aggregate_options.attributes.expression.kind == :keyword
+    assert aggregate_options.attributes.expression.literal
+    assert String.contains?(aggregate_options.attributes.expression.preview, "authorize_fields?")
+  end
+
+  test "truncates expression previews without truncating invalid UTF-8" do
+    value = String.duplicate("λ", 180)
+
+    result =
+      RampartSAST.inventory_sources([
+        {"lib/demo/preview.ex",
+         "defmodule Demo.Preview do\n  def run, do: IO.puts(#{inspect(value)})\nend\n"}
+      ])
+
+    assert [argument] =
+             Inventory.query(result.inventory,
+               kind: :call_argument,
+               object: "IO.puts/1#argument/1"
+             )
+
+    assert argument.attributes.expression.preview_truncated
+    assert byte_size(argument.attributes.expression.preview) <= 240
+    assert String.valid?(argument.attributes.expression.preview)
   end
 
   test "indexes behavior callbacks, protocols, and their syntactic implementations" do
@@ -157,6 +273,148 @@ defmodule RampartSAST.InventoryTest do
              )
 
     assert directive.attributes.protocol_types == ["Demo.Item"]
+  end
+
+  test "adds reviewed Plug API semantics through an optional package classifier" do
+    source = """
+    defmodule Demo.PlugResponse do
+      def respond(conn, body) do
+        conn
+        |> Plug.Conn.put_resp_header("x-evaluation", "true")
+        |> Plug.Conn.send_resp(200, body)
+      end
+    end
+    """
+
+    result =
+      RampartSAST.inventory_sources([{"lib/demo/plug_response.ex", source}],
+        behavior_classifiers: [PlugBehavior]
+      )
+
+    assert Enum.map(Inventory.query(result.inventory, kind: :behavior), & &1.object) == [
+             "http_response_header_write",
+             "http_response_write"
+           ]
+
+    assert Enum.all?(Inventory.query(result.inventory, kind: :behavior), fn fact ->
+             fact.attributes.basis == :reviewed_package_api and
+               fact.attributes.classifier_id == "rampart.plug-behaviors.v1"
+           end)
+  end
+
+  test "adds reviewed Ash aggregate, policy, and tenant-context semantics without verdicts" do
+    source = """
+    defmodule Demo.AshBehaviors do
+      def aggregate(query, field), do: Ash.aggregate(query, {:max, field}, authorize_fields?: true)
+      def policy(query, actor), do: Ash.can?(query, actor)
+      def tenant(conn), do: Ash.PlugHelpers.get_tenant(conn)
+    end
+    """
+
+    result =
+      RampartSAST.inventory_sources([{"lib/demo/ash_behaviors.ex", source}],
+        behavior_classifiers: [AshBehavior],
+        module_owners: %{"Ash" => "ash"}
+      )
+
+    behaviors = Inventory.query(result.inventory, kind: :behavior)
+
+    assert Enum.map(behaviors, &{&1.object, &1.attributes.via_object}) == [
+             {"field_aggregate_read", "Ash.aggregate/3"},
+             {"authorization_decision", "Ash.can?/2"},
+             {"tenant_context_read", "Ash.PlugHelpers.get_tenant/1"}
+           ]
+
+    assert Enum.all?(behaviors, fn behavior ->
+             behavior.attributes.basis == :reviewed_package_api and
+               behavior.attributes.contract_family == :ash_authorization and
+               behavior.attributes.classifier_id == "rampart.ash-behaviors.v1"
+           end)
+
+    assert [aggregate_spec] =
+             Inventory.query(result.inventory,
+               kind: :call_argument,
+               object: "Ash.aggregate/3#argument/2"
+             )
+
+    assert aggregate_spec.attributes.expression.kind == :tuple
+    assert aggregate_spec.attributes.source_variables == ["field"]
+
+    assert Enum.map(Inventory.package_usage(result.inventory, "ash"), & &1.subject) == [
+             "Demo.AshBehaviors.aggregate/2",
+             "Demo.AshBehaviors.policy/2",
+             "Demo.AshBehaviors.tenant/1"
+           ]
+  end
+
+  test "keeps Phoenix and Ecto semantics in optional package classifiers" do
+    source = """
+    defmodule Demo.PackageBehaviors do
+      import Ecto.Query, only: [fragment: 1]
+
+      def redirect(conn, destination), do: Phoenix.Controller.redirect(conn, to: destination)
+      def query(repo, sql), do: Ecto.Adapters.SQL.query(repo, sql, [])
+      def fragment_expression(value), do: fragment(value)
+      def cast(data, params), do: Ecto.Changeset.cast(data, params, [:role])
+    end
+    """
+
+    result =
+      RampartSAST.inventory_sources([{"lib/demo/package_behaviors.ex", source}],
+        behavior_classifiers: [PhoenixBehavior, EctoBehavior],
+        module_owners: %{"Phoenix" => "phoenix", "Ecto" => "ecto"}
+      )
+
+    behaviors = Inventory.query(result.inventory, kind: :behavior)
+
+    assert Enum.map(behaviors, &{&1.object, &1.attributes.classifier_id}) == [
+             {"http_redirect", "rampart.phoenix-behaviors.v1"},
+             {"raw_database_query", "rampart.ecto-behaviors.v1"},
+             {"database_query_fragment", "rampart.ecto-behaviors.v1"},
+             {"external_data_cast", "rampart.ecto-behaviors.v1"}
+           ]
+
+    assert Enum.all?(behaviors, &(&1.attributes.basis == :reviewed_package_api))
+
+    assert Enum.map(
+             Inventory.package_usage(result.inventory, "phoenix"),
+             &{&1.object, &1.attributes.target_module}
+           ) == [{"phoenix", "Phoenix.Controller"}]
+
+    assert Enum.map(
+             Inventory.package_usage(result.inventory, "ecto"),
+             &{&1.object, &1.attributes.target_module, &1.attributes.via_kind}
+           ) == [
+             {"ecto", "Ecto.Query", :directive},
+             {"ecto", "Ecto.Adapters.SQL", :call},
+             {"ecto", "Ecto.Query", :unqualified_call},
+             {"ecto", "Ecto.Changeset", :call}
+           ]
+  end
+
+  test "restores the outer lexical module after a nested module" do
+    source = """
+    defmodule Demo.Outer do
+      defmodule Inner do
+        def inner(value), do: String.trim(value)
+      end
+
+      def outer(value), do: String.upcase(value)
+    end
+    """
+
+    result = RampartSAST.inventory_sources([{"lib/demo/outer.ex", source}])
+
+    assert Enum.map(Inventory.query(result.inventory, kind: :module), & &1.object) == [
+             "Demo.Outer",
+             "Demo.Outer.Inner"
+           ]
+
+    assert [%{subject: "Demo.Outer.Inner.inner/1"}] =
+             Inventory.query(result.inventory, kind: :call, object: "String.trim/1")
+
+    assert [%{subject: "Demo.Outer.outer/1"}] =
+             Inventory.query(result.inventory, kind: :call, object: "String.upcase/1")
   end
 
   test "keeps dynamic dispatch as an explicit noisy fact" do

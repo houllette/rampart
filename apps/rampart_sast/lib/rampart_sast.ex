@@ -6,8 +6,9 @@ defmodule RampartSAST do
   high-recall inventory of definitions, calls, callbacks, directives,
   dependencies, typed behaviors, and provenance-backed package use, then runs
   optional host-selected signal rules and context providers. Inventory facts
-  and rule matches are reconnaissance. They
-  do not prove attacker control, reachability, abuse, or exploitability.
+  and rule matches are reconnaissance. They do not prove attacker control,
+  reachability, abuse, or exploitability. Use `RampartSAST.Isolated` for
+  untrusted source so parser-created atoms remain in a disposable VM.
   """
 
   alias RampartSAST.{Discovery, Limits, Result, Rule, Scanner}
@@ -23,7 +24,7 @@ defmodule RampartSAST do
   @spec default_rules() :: [module()]
   def default_rules, do: @default_rules
 
-  @doc "Builds a broad inventory for an authorized project root without signal rules."
+  @doc "Builds a broad inventory for a trusted, authorized project root without signal rules."
   @spec inventory(root :: Path.t(), options :: keyword()) :: Result.t()
   def inventory(root, options \\ []) when is_binary(root) and is_list(options) do
     scan(root, [], options)
@@ -35,7 +36,7 @@ defmodule RampartSAST do
     scan_sources(entries, [], options)
   end
 
-  @doc "Scans an authorized project root with explicit optional static rules."
+  @doc "Scans a trusted, authorized project root with explicit optional static rules."
   @spec scan(root :: Path.t(), rules :: [Rule.specification()], options :: keyword()) ::
           Result.t()
   def scan(root, rules, options \\ []) when is_binary(root) and is_list(options) do

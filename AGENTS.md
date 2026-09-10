@@ -36,7 +36,12 @@ explicit, execution bounded, output deterministic, and suppressions visible.
 Never upgrade a variable name, controller role, dangerous API, package edge, or
 static path into attacker control, runtime reachability, abuse, or
 exploitability. Cross-tool conversion belongs in a separate adapter so sister
-tools remain independent.
+tools remain independent. Use `RampartSAST.Isolated` rather than the in-process
+scanner for untrusted repositories: parser task deadlines do not protect the
+long-lived VM atom table. Keep its output string-keyed and bounded, never decode
+target AST in the parent, and turn worker/protocol failures into incomplete
+results. Run `mix rampart.eval` when changing SAST/IAST integration, graph/query
+behavior, evidence projections, or replay semantics.
 
 The experimental `rampart_iast` sensor is a gated research track. Its first
 action proves only unchanged-marker reachability inside one traced execution
@@ -153,8 +158,11 @@ non-interactive shell. Always pass `--yes` (write the changes) or `--check`
 
 ## Versions
 
-Erlang/Elixir versions are pinned in `.tool-versions` (used by asdf/mise
-locally and by `erlef/setup-beam` in CI). Bump versions there, nowhere else.
+The default Erlang/Elixir versions are pinned in `.tool-versions` (used by
+asdf/mise locally and by `erlef/setup-beam` in CI). Bump the default versions
+there, nowhere else. Compatibility-only evaluation profiles may pin additional
+runtime pairs in the CI evaluation matrix; they do not change the default
+project toolchain.
 
 <!-- usage-rules-start -->
 <!-- usage_rules-start -->

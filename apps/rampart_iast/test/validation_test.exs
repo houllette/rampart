@@ -153,6 +153,62 @@ defmodule RampartIAST.ValidationTest do
              )
   end
 
+  test "recognizes an unchanged marker inside a bounded container argument" do
+    assert %Result{verdict: :confirmed, evidence: evidence} =
+             RampartIAST.validate(hypothesis(),
+               provider: TestProvider,
+               execute: fn marker -> TestSink.consume(request: %{body: marker}) end
+             )
+
+    assert evidence.facts.matched_event_count == 1
+  end
+
+  test "returns inconclusive rather than missing a marker beyond the argument depth limit" do
+    assert %Result{verdict: :inconclusive, evidence: evidence} =
+             RampartIAST.validate(hypothesis(),
+               provider: TestProvider,
+               limits: Limits.new!(max_argument_depth: 1),
+               execute: fn marker -> TestSink.consume([[[marker]]]) end
+             )
+
+    assert :argument_depth in evidence.facts.limit_failures
+    assert evidence.facts.trace_envelope == :incomplete
+  end
+
+  test "returns inconclusive rather than missing a marker beyond the argument term limit" do
+    assert %Result{verdict: :inconclusive, evidence: evidence} =
+             RampartIAST.validate(hypothesis(),
+               provider: TestProvider,
+               limits: Limits.new!(max_argument_terms: 2),
+               execute: fn marker -> TestSink.consume([:one, :two, marker]) end
+             )
+
+    assert :argument_terms in evidence.facts.limit_failures
+    assert evidence.facts.trace_envelope == :incomplete
+  end
+
+  test "does not execute a hypothesis that explicitly requires cross-process observation" do
+    test_process = self()
+
+    hypothesis =
+      RampartIAST.hypothesis!(TestProvider, "test.callback-to-consume.v1", seed(),
+        meta: %{required_process_scope: :cross_process}
+      )
+
+    assert %Result{verdict: :inconclusive, evidence: evidence, meta: meta} =
+             RampartIAST.validate(hypothesis,
+               provider: TestProvider,
+               execute: fn marker -> send(test_process, {:executed, marker}) end
+             )
+
+    assert evidence.facts.reason == :unsupported_process_scope
+    assert evidence.facts.execution == :not_started
+    assert evidence.facts.required_process_scope == :cross_process
+    assert evidence.facts.supported_process_scope == :single_process
+    assert meta.required_process_scope == :cross_process
+    refute_receive {:executed, _marker}
+  end
+
   test "refutes only after a complete execution and intact trace envelope" do
     assert %Result{verdict: :refuted, findings: [], evidence: evidence} =
              RampartIAST.validate(hypothesis(),

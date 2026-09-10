@@ -13,9 +13,11 @@ source and sink declarations, optional provider-reviewed static candidates, a
 host-owned execution callback, bounded OTP trace sessions, delivery barriers,
 exact replay seeds, and fail-closed verdicts.
 
-It remains experimental: transformed values, descendants, cross-process
-provenance, real Phoenix sink knowledge, exploitability, artifacts, and measured
-production safety are not implemented.
+It remains experimental: transformed values, descendant/cross-process
+provenance, broad Phoenix sink knowledge, exploitability, artifact-backed trace
+evidence, and measured production safety are not implemented. Exact markers are
+now found recursively inside bounded list, tuple, and map arguments, but the
+bytes must remain unchanged and the observation is still single-process.
 
 ## Goal of the first spike
 
@@ -104,8 +106,74 @@ equality alone is insufficient when two requests carry the same input. Any
 proposal must preserve per-execution provenance without changing application
 semantics.
 
-The roadmap must stop at intra-process validation if this spike cannot produce
-reliable edges within the overhead budget.
+The repository-local boundary matrix now covers direct messages,
+`GenServer.call/3`, `GenServer.cast/2`, `Task.async/3`, ETS, and the process
+dictionary under the pinned runtime. Eight direct flows from four concurrent
+senders deliberately reuse one marker. Unique IDs in the application message
+envelope support eight exact send/receive joins with no false joins; removing
+those IDs leaves 64 possible value-only pairings and no unique edge. Four
+concurrent GenServer calls also join exactly because OTP already carries a
+unique alias in every call envelope.
+
+The new cases make their narrower preconditions explicit:
+
+- `GenServer.cast/2` has no native request correlation ID. Four casts join only
+  because the fixture already carries a unique application request ID; erasing
+  it leaves value-only ambiguity.
+- The observed `Task.async/3` implementation exposes its unique task reference
+  in both the parent-to-task work message and task-to-owner result, while process
+  tracing supplies spawn lineage. This supports the exact Elixir Task protocol
+  tested here, not every task/supervisor API or future implementation.
+- ETS calls and returns can be correlated across distinct accessors by table,
+  unique key, and an ordered interval with no intervening overwrite or delete.
+  Reusing a key destroys unique provenance even when the stored marker matches.
+- On the pinned runtime, the fixture's targeted `:erlang.get/1` read executes but
+  emits no call-trace event. A full `:erlang.get/0` snapshot is observable, but
+  capturing an entire process dictionary is too broad a data-handling strategy
+  and is deliberately rejected. That boundary remains unresolved.
+
+Adversarial variants now verify those limits instead of only documenting them.
+Four identical casts without IDs produce 16 possible send/receive pairings and
+no unique edge. Task crash and timeout events remain correlated to task
+references but produce inconclusive execution evidence and no value-flow edge.
+Four concurrent ETS overwrites identify the winner only while an explicit write
+version remains in the stored value; projecting that ID away restores ambiguity,
+and deleting the key terminates the edge. An injected missing receive event
+keeps the result incomplete even after the trace delivery barrier completes.
+Finally, an ordinary permanent-worker restart exposes the old exit and new spawn
+but does not transfer process-local state, so provenance terminates at the old
+PID.
+
+The frontier probe now distinguishes that terminating case from explicit
+external restoration. An independently owned ETS record survives the worker
+restart and the replacement can restore one edge only while the application key
+and write version are both retained. PID continuity is not used, and projecting
+away the version returns the result to `:ambiguous`.
+
+A higher-concurrency pressure case sends 64 explicit envelopes from 16 senders
+while 512 unrelated messages stay queued at a selective receiver. Targeted trace
+patterns still capture 64 sends, 64 receives, and 64 exact joins with no false
+joins. Erasing envelope IDs yields 4,096 value-only candidates and no unique
+edge. This is a bounded stress observation, not a production throughput claim.
+
+A two-node handoff case uses one local and one remote trace session, one delivery
+barrier per session, and explicit envelope IDs to join four messages. Remote and
+local monotonic timestamps are deliberately never ordered against each other.
+Distribution is optional in local runs that cannot bind node sockets but is
+required in the pinned runtime CI matrix.
+
+Every case reuses identical marker values and refuses to promote equality to
+provenance. The matrix is therefore explicitly `:partial`; safe targeted
+process-dictionary reads and distributed handoffs without explicit envelopes
+remain unresolved. None of these results changes the production validator,
+which continues to reject all cross-process-required hypotheses before
+execution.
+
+The roadmap must stop at intra-process validation if the remaining spikes cannot
+produce reliable edges within the overhead budget. CI now compares the same
+semantic checks on OTP 28.3.1/Elixir 1.20.2-otp-28 and OTP 29.0.2/Elixir
+1.20.2-otp-29. Runtime timings and reductions are retained as observations;
+case/check parity and zero false confirmations are the compatibility gate.
 
 ## Static-knowledge extraction requirements
 
@@ -184,6 +252,28 @@ Before a sensor package is called v1:
   deliberately rejected broad configuration; and
 - context-provider tests prove a Phoenix assumption cannot leak into OTP,
   Nerves, or plain-library operation.
+
+The repository-local `mix rampart.eval` gate now exercises real
+`System.cmd/2`, `:erlang.binary_to_term/2`, `File.write!/2`, and
+`Plug.Conn.send_resp/3` boundaries. Checksummed composed cases confirm in
+vulnerable executions, refute in patched executions, remain inconclusive on
+callback failure, and reproduce verdicts from the same seeds. An ambiguous
+static localization remains ambiguous after runtime confirmation. A GenServer
+case requires cross-process scope and proves the validator refuses execution
+with an explicit inconclusive result. An attributed historical Plug regression
+separately demonstrates why an unchanged noisy static candidate needs a concrete
+vulnerable/fixed oracle.
+
+The gate also records seven interleaved disabled/targeted samples around a
+controlled boundary and rejects a broader process scope before execution. This
+is an initial fixed-cost measurement, not production overhead evidence.
+
+This satisfies more of the fixture diversity gate, not the full claim. The Plug
+provider is intentionally narrow, the historical case executes an adapted
+predicate while statically scanning exact upstream source files rather than a
+full application revision, and realistic workload overhead, more cleanup faults,
+framework/provider isolation, and reliable cross-process provenance remain
+required.
 
 Only after these gates should an external adapter register the sensor validator
 as a callable agent tool. It may reuse Core's transport-neutral Binding/Wire

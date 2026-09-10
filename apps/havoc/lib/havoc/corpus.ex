@@ -19,7 +19,8 @@ defmodule Havoc.Corpus do
     :path_traversal,
     :ssrf,
     :command_injection,
-    :template_injection
+    :template_injection,
+    :http_parameter_injection
   ]
 
   @builtins %{
@@ -61,6 +62,12 @@ defmodule Havoc.Corpus do
       "${7*7}HAVOC",
       "<%= 7 * 7 %>HAVOC",
       "\#{7*7}HAVOC"
+    ],
+    http_parameter_injection: [
+      "HAVOC\"",
+      "HAVOC\\",
+      "HAVOC\", scope=\"admin",
+      "HAVOC\r\nx-havoc: marker"
     ],
     null_byte: ["HAVOC\0", "\0HAVOC", "HAVOC\0.txt"],
     malformed_utf8: [<<255>>, <<192, 175>>, <<237, 160, 128>>, <<"HAVOC", 255>>],

@@ -99,6 +99,17 @@ jobs:
       - name: Rampart static reconnaissance integrity
         run: mix rampart.sast --exit
 
+      - name: Rampart accuracy, efficiency, and usefulness evaluation
+        run: mix rampart.eval --json --output tmp/rampart-evaluation.json
+
+      - name: Retain Rampart evaluation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rampart-evaluation
+          path: tmp/rampart-evaluation.json
+          if-no-files-found: warn
+
       # AGENTS.md's usage-rules block is generated from deps; fail if a dep
       # bump left it stale rather than letting agents read outdated rules.
       # Needs usage_rules in the :test env — see README.
@@ -131,6 +142,102 @@ jobs:
       - name: Run distributed tests
         if: needs.detect.outputs.has_local_cluster == 'true'
         run: mix test.distributed
+
+  runtime-evaluation:
+    name: Evaluation (${{ matrix.profile }})
+    runs-on: ubuntu-latest
+    needs: detect
+    if: needs.detect.outputs.has_project == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: otp-28-elixir-1.20
+            otp: 28.3.1
+            elixir: 1.20.2-otp-28
+          - profile: otp-29-elixir-1.20
+            otp: 29.0.2
+            elixir: 1.20.2-otp-29
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up pinned BEAM runtime
+        id: beam
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.elixir }}
+          version-type: strict
+
+      - name: Cache deps and build
+        uses: actions/cache@v6
+        with:
+          path: |
+            deps
+            _build
+          key: evaluation-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            evaluation-${{ runner.os }}-${{ steps.beam.outputs.otp-version }}-${{ steps.beam.outputs.elixir-version }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile (warnings as errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Run required distributed evaluation
+        env:
+          RAMPART_REQUIRE_DISTRIBUTED: "1"
+          RAMPART_RUNTIME_PROFILE: ${{ matrix.profile }}
+        run: >-
+          mix rampart.eval --json
+          --output tmp/rampart-evaluation-${{ matrix.profile }}.json
+
+      - name: Retain pinned runtime evaluation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rampart-evaluation-${{ matrix.profile }}
+          path: tmp/rampart-evaluation-${{ matrix.profile }}.json
+          if-no-files-found: warn
+
+  compare-runtime-evaluations:
+    name: Compare pinned runtime evaluations
+    runs-on: ubuntu-latest
+    needs: [detect, runtime-evaluation]
+    if: >-
+      needs.detect.outputs.has_project == 'true' &&
+      needs.runtime-evaluation.result == 'success'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up BEAM
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Download pinned runtime evaluations
+        uses: actions/download-artifact@v4
+        with:
+          pattern: rampart-evaluation-otp-*
+          path: tmp/runtime-evaluations
+          merge-multiple: true
+
+      - name: Compare semantic results and retain observations
+        run: >-
+          mix rampart.eval.compare tmp/runtime-evaluations/*.json
+          --output tmp/rampart-runtime-comparison.json
+
+      - name: Retain runtime comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rampart-runtime-comparison
+          path: tmp/rampart-runtime-comparison.json
+          if-no-files-found: warn
 
   # Dependency and application security live in their own job so a red build
   # here reads as "audit this", not "your code is broken".

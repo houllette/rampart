@@ -56,6 +56,7 @@ defmodule RampartSAST.AST do
       when type in [:atom, :char, :float, :integer, :string], do: true
 
   def literal?({nil, _annotation}), do: true
+  def literal?({key, value}), do: literal?(key) and literal?(value)
 
   def literal?({:tuple, _annotation, values}) when is_list(values),
     do: Enum.all?(values, &literal?/1)
@@ -72,6 +73,12 @@ defmodule RampartSAST.AST do
   end
 
   def literal?(_ast), do: false
+
+  @doc "Returns a stable syntax-only name for Elixir alias segments."
+  @spec alias_name(parts :: [Macro.t()]) :: String.t()
+  def alias_name(parts) when is_list(parts) do
+    Enum.map_join(parts, ".", &alias_segment/1)
+  end
 
   @doc "Returns a stable printable name for a normalized call."
   @spec call_name(Call.t()) :: String.t()
@@ -164,11 +171,23 @@ defmodule RampartSAST.AST do
   end
 
   defp module_name({:__aliases__, _, parts}) when is_list(parts) do
-    {:alias, Enum.map_join(parts, ".", &Atom.to_string/1)}
+    name = alias_name(parts)
+
+    if String.contains?(name, "<dynamic-module>"),
+      do: {:dynamic, name},
+      else: {:alias, name}
   end
 
   defp module_name(module) when is_atom(module), do: {:atom, module}
   defp module_name(_module), do: {:dynamic, "<dynamic-module>"}
+
+  defp alias_segment(segment) when is_atom(segment), do: Atom.to_string(segment)
+
+  defp alias_segment({:__MODULE__, metadata, context})
+       when is_list(metadata) and is_atom(context),
+       do: "__MODULE__"
+
+  defp alias_segment(_segment), do: "<dynamic-module>"
 
   defp erlang_module_name({:atom, _annotation, module}), do: {:atom, module}
   defp erlang_module_name(_module_ast), do: {:dynamic, "<dynamic-module>"}

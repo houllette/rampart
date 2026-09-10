@@ -14,9 +14,11 @@ must remain correct and useful without an LLM.
 runtime.** Every tool remains independently versioned, publishable to Hex, and
 useful without its sister tools. Read [NORTH_STAR.md](NORTH_STAR.md) before a
 component brief; [IAST_RESEARCH.md](IAST_RESEARCH.md) records the sensor's honest
-pre-implementation gates. [LEMIEUX_INTEGRATION.md](LEMIEUX_INTEGRATION.md)
-records the concrete boundary with the external agent harness after review of
-its current tool, policy, transcript, and evidence contracts.
+pre-implementation gates. [EVALUATION.md](EVALUATION.md) defines the
+repository-local accuracy, efficiency, usefulness, and fail-closed evaluation
+lab. [LEMIEUX_INTEGRATION.md](LEMIEUX_INTEGRATION.md) records the concrete
+boundary with the external agent harness after review of its current tool,
+policy, transcript, and evidence contracts.
 
 > Rampart and the component names are working names until the first packages are
 > published.
@@ -124,6 +126,8 @@ authorization/lifecycle behavior.
 mix deps.get
 mix test
 mix rampart.sast --exit
+mix rampart.eval
+mix rampart.eval.compare report-otp-28.json report-otp-29.json
 mix precommit
 mix dialyzer
 ```

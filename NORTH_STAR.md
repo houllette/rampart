@@ -67,8 +67,10 @@ confirmed finding becomes a fact a consumer may safely chain
 
 The trust chain ends at deterministic code. An oracle or sensor must never turn
 an implementation failure into a confirmation, and a signal must not claim
-more than it proves. In particular, a reflected marker is not automatically XSS
-and a database error is not automatically SQL execution.
+more than it proves. Exact validation distinguishes pass, skip, violation, and
+harness failure: missing observations are inconclusive rather than false
+refutations. In particular, a reflected marker is not automatically XSS and a
+database error is not automatically SQL execution.
 
 ## Lemieux seam, grounded in its implementation
 
@@ -110,6 +112,11 @@ real or replayed application traffic ──────┘
   controls.
 - **Havoc** is the in-process validation engine. Its conservative oracles,
   exact-payload validation, generators, and durable corpus are the trust anchor.
+  Codec, parsed HTTP parameter, shared-cache, actor-paired field-policy,
+  differential, and external-state observations support narrowly stated
+  canonicalization, grammar, policy/noninterference, and lifecycle contracts;
+  terminal classification covers captured output bytes. Fixtures still own
+  independent expectations, exploit preconditions, controls, and cleanup.
 - **HavocProper** is an opt-in execution driver for coverage-guided research; it
   does not replace Havoc's oracle verdicts.
 - **RampartSAST** is the high-recall static reconnaissance and exact signal-
@@ -120,10 +127,12 @@ real or replayed application traffic ──────┘
   never taint, reachability, abuse, or exploitability.
 - **RampartIAST** currently implements the experimental single-process,
   exact-marker trace-session spike plus an analyzer-independent seam for
-  reviewed static candidates. Static provenance, dependence type, sanitizer
-  observations, and ambiguous spans qualify evidence but never override the
-  runtime verdict. Future levels consume richer context-specific knowledge only
-  after their research gates.
+  reviewed static candidates. It recognizes unchanged markers inside bounded
+  container arguments and explicitly refuses hypotheses requiring cross-process
+  scope. Static provenance, dependence type, sanitizer observations, and
+  ambiguous spans qualify evidence but never override the runtime verdict.
+  Future levels consume richer context-specific knowledge only after their
+  research gates.
 - **Core** owns interchange and action contracts only. It never owns tool logic,
   sink knowledge, or harness reasoning.
 
@@ -151,8 +160,21 @@ depends on its sister.
 - `:erlang.trace` can efficiently observe selected calls, arguments, sends, and
   receives, but it does not magically attach taint labels to transformed terms.
 - Cross-process taint through messages, ETS, the process dictionary, and OTP
-  topology is the line-of-death. Intra-process/single-node reachability must ship
-  first; cross-process reconstruction remains a gated spike.
+  topology is the line-of-death. The partial boundary matrix supports direct
+  messages and GenServer casts only with existing application IDs, GenServer
+  calls with OTP aliases, the tested `Task.async/3` protocol with task references
+  plus spawn lineage, and ETS only with unique keys and an overwrite-free
+  interval. Concurrent value equality remains ambiguous. Adversarial probes keep
+  ID-less casts ambiguous, Task crash/timeout inconclusive, overwrite without a
+  write version ambiguous, delete and ordinary worker replacement terminating,
+  and injected event loss incomplete. Versioned external records can restore an
+  edge across replacement without treating PIDs as continuous. A bounded
+  64-flow/16-sender/512-noise mailbox probe and a separate-session two-node
+  handoff preserve exact explicit-envelope joins, but still reject value-only or
+  cross-node-clock correlation. Targeted process-dictionary reads are not
+  call-trace visible on the pinned runtime, and full snapshots are rejected as
+  overbroad. Intra-process/single-node reachability must ship first, and broader
+  cross-process reconstruction remains a gated spike.
 - A traced sink MFA does not by itself identify a unique source call site. The
   static map, debug information, or narrowly inserted instrumentation must
   provide localization.
@@ -193,17 +215,41 @@ never depends on the sensor, a static analyzer, or an agent harness.
 1. Keep the current Core, Portico, Foray, Havoc, guided-generation, target-
    derivation, and Muex work independently shippable.
 2. Mature the validation contract and adversarially review Havoc's oracles
-   against real vulnerable/fixed examples.
+   against real vulnerable/fixed examples. Keep the terminal, canonical-codec,
+   quoted-parameter, cache-tenancy, and actor-paired field-policy historical
+   controls green while adding IP-policy, route-topology, and state-lifecycle
+   cases.
 3. Mature RampartSAST's project/package inventory, graph queries, and
    Elixir/Erlang resolution before expanding rule count. Harden the initial
    artifact-derived module ownership, checksummed cross-package source indexing,
-   callback/protocol facts, typed behavior vocabulary, and bounded graph slices;
-   then add parser isolation and extract provenance-carrying Sobelow and Reach
-   signal adapters without turning either into a verdict engine.
-4. Mature the intra-process exact-marker trace-session spike with real sink
-   fixtures, measured overhead, and exact replay evidence.
-5. Gate any cross-process taint roadmap on a dedicated feasibility result.
-6. Keep the transport-neutral binding and wire projection stable, then build an
+   callback/protocol facts, typed behavior vocabulary, bounded graph slices, and
+   disposable-VM untrusted-source scanner; then extract provenance-carrying
+   Sobelow and Reach signal adapters without turning either into a verdict
+   engine.
+4. Expand the repository-local evaluation corpus beyond its current real
+   command/deserialization/filesystem/Plug boundaries, package classifiers,
+   ambiguous localization, targeted-overhead measurement, conditional boundary
+   correlation, adversarial fail-closed probes, OTP process-scope refusal, exact
+   historical Plug source, and adapted vulnerable/fixed terminal-control,
+   canonical-codec, quoted-parameter, cache-tenancy, and Ash field-policy
+   contracts. Add macro-generated, protocol/callback,
+   dependency-misuse, full pinned package/
+   application, remaining OTP-boundary, and Erlang examples. Track false
+   confirmations, explicit uncertainty, query/evidence budgets, and exact replay
+   before optimizing candidate volume.
+5. Mature the intra-process exact-marker trace-session spike beyond its current
+   real sink fixtures, bounded nested-container matching, exact replay, and
+   seven-sample fixed-cost overhead baseline. Add representative workloads,
+   scheduler/memory measurements, and more teardown/fault evidence.
+6. Gate any cross-process taint roadmap on adversarial boundary evidence. The
+   current direct-message, GenServer, Task, ETS, external-restart, mailbox, and
+   distributed results are valid only under their explicit envelope/reference/
+   key/version preconditions; they do not establish general taint. Extend the
+   bounded frontier into sustained pressure, less cooperative distributed
+   topologies, and higher-concurrency adversarial runs. Keep the OTP 28/29
+   semantic compatibility gate green, and keep process-dictionary provenance
+   unsupported unless a targeted, bounded observation mechanism is demonstrated.
+7. Keep the transport-neutral binding and wire projection stable, then build an
    action-scoped Lemieux adapter outside Rampart; Lemieux remains the authority,
    policy, transcript, and reasoning harness.
 

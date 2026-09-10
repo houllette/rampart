@@ -132,7 +132,9 @@ defmodule RampartSAST.SlowRuleFixture do
 
   @impl true
   def run_source(_source, _context, _options) do
-    Process.sleep(:infinity)
+    receive do
+      :continue_slow_rule -> []
+    end
   end
 end
 
@@ -155,7 +157,11 @@ defmodule RampartSAST.SlowBehaviorFixture do
   def id, do: "test.slow-behavior.v1"
 
   @impl true
-  def classify(_fact, _options), do: Process.sleep(:infinity)
+  def classify(_fact, _options) do
+    receive do
+      :continue_slow_behavior -> []
+    end
+  end
 end
 
 defmodule RampartSAST.SlowContextFixture do
@@ -166,5 +172,9 @@ defmodule RampartSAST.SlowContextFixture do
   def id, do: "test.slow-context.v1"
 
   @impl true
-  def build(_sources, _options), do: Process.sleep(:infinity)
+  def build(_sources, _options) do
+    receive do
+      :continue_slow_context -> {:error, "slow context fixture released"}
+    end
+  end
 end

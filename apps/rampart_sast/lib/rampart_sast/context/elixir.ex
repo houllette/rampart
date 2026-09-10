@@ -8,7 +8,7 @@ defmodule RampartSAST.Context.Elixir do
 
   @behaviour RampartSAST.ContextProvider
 
-  alias RampartSAST.Source
+  alias RampartSAST.{AST, Source}
 
   @id "rampart.elixir-context.v1"
 
@@ -64,7 +64,7 @@ defmodule RampartSAST.Context.Elixir do
   end
 
   defp collect({:alias, _, [{:__aliases__, _, parts}]} = ast, facts) do
-    aliases = Map.put(facts.aliases, List.last(parts) |> Atom.to_string(), module_name(parts))
+    aliases = Map.put(facts.aliases, alias_short_name(parts), module_name(parts))
     {ast, %{facts | aliases: aliases}}
   end
 
@@ -91,8 +91,9 @@ defmodule RampartSAST.Context.Elixir do
   defp roles(_module, _arguments), do: []
 
   defp alias_name(_parts, {:__aliases__, _, as_parts}), do: module_name(as_parts)
-  defp alias_name(parts, _as), do: List.last(parts) |> Atom.to_string()
-  defp module_name(parts), do: Enum.map_join(parts, ".", &Atom.to_string/1)
+  defp alias_name(parts, _as), do: alias_short_name(parts)
+  defp alias_short_name(parts), do: parts |> List.last() |> then(&AST.alias_name([&1]))
+  defp module_name(parts), do: AST.alias_name(parts)
 
   defp paths_with_role(source_facts, role) do
     source_facts

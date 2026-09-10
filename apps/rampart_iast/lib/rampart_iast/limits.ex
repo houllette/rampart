@@ -6,6 +6,8 @@ defmodule RampartIAST.Limits do
           delivery_timeout_ms: pos_integer(),
           max_events: pos_integer(),
           max_argument_bytes: pos_integer(),
+          max_argument_depth: pos_integer(),
+          max_argument_terms: pos_integer(),
           max_mailbox_messages: pos_integer()
         }
 
@@ -13,6 +15,8 @@ defmodule RampartIAST.Limits do
             delivery_timeout_ms: 250,
             max_events: 100,
             max_argument_bytes: 4_096,
+            max_argument_depth: 64,
+            max_argument_terms: 4_096,
             max_mailbox_messages: 1_000
 
   @doc "Builds bounded trace limits from a keyword list."
@@ -26,6 +30,8 @@ defmodule RampartIAST.Limits do
         :delivery_timeout_ms,
         :max_events,
         :max_argument_bytes,
+        :max_argument_depth,
+        :max_argument_terms,
         :max_mailbox_messages
       ])
 
@@ -44,6 +50,8 @@ defmodule RampartIAST.Limits do
           limits.delivery_timeout_ms,
           limits.max_events,
           limits.max_argument_bytes,
+          limits.max_argument_depth,
+          limits.max_argument_terms,
           limits.max_mailbox_messages
         ],
         &(is_integer(&1) and &1 > 0)

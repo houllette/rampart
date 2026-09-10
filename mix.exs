@@ -31,13 +31,21 @@ defmodule Rampart.MixProject do
   end
 
   def cli do
-    [preferred_envs: [precommit: :test, "havoc.replay": :test]]
+    [
+      preferred_envs: [
+        precommit: :test,
+        "havoc.replay": :test,
+        "rampart.eval": :test,
+        "rampart.eval.compare": :test
+      ]
+    ]
   end
 
   defp deps do
     [
       {:tidewave, "~> 0.8", only: :dev},
       {:bandit, "~> 1.0", only: :dev},
+      {:plug, "~> 1.18", only: [:dev, :test]},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
@@ -49,9 +57,17 @@ defmodule Rampart.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ["README.md", "NORTH_STAR.md", "IAST_RESEARCH.md", "LEMIEUX_INTEGRATION.md"],
+      extras: [
+        "README.md",
+        "NORTH_STAR.md",
+        "IAST_RESEARCH.md",
+        "LEMIEUX_INTEGRATION.md",
+        "EVALUATION.md",
+        "evaluation/HISTORICAL_CVE_FRONTIER.md"
+      ],
       groups_for_extras: [
-        Architecture: ["NORTH_STAR.md", "IAST_RESEARCH.md", "LEMIEUX_INTEGRATION.md"]
+        Architecture: ["NORTH_STAR.md", "IAST_RESEARCH.md", "LEMIEUX_INTEGRATION.md"],
+        Evaluation: ["EVALUATION.md", "evaluation/HISTORICAL_CVE_FRONTIER.md"]
       ],
       groups_for_modules: [
         "Shared spine": [~r/^Core(?:\.|$)/],
@@ -70,6 +86,8 @@ defmodule Rampart.MixProject do
     [
       tidewave:
         "run --no-halt -e 'Agent.start(fn -> Bandit.start_link(plug: Tidewave, port: 4000) end)'",
+      "rampart.eval": &run_evaluation/1,
+      "rampart.eval.compare": &compare_evaluations/1,
       precommit: [
         "deps.unlock --check-unused",
         "hex.audit",
@@ -78,11 +96,51 @@ defmodule Rampart.MixProject do
         "format",
         "credo --strict",
         "rampart.sast --exit",
+        "rampart.eval",
         "usage_rules.sync --yes",
         "xref graph --label compile-connected --fail-above 0",
         "docs --warnings-as-errors",
         "test --warnings-as-errors"
       ]
     ]
+  end
+
+  defp run_evaluation(arguments) do
+    Mix.Task.run("compile", ["--warnings-as-errors"])
+
+    for application <- [:security_core, :havoc, :rampart_sast, :rampart_iast, :plug] do
+      {:ok, _started} = Application.ensure_all_started(application)
+    end
+
+    files = [
+      "evaluation/fixtures/composed/dependency.ex",
+      "evaluation/fixtures/composed/handler.ex",
+      "evaluation/fixtures/composed/target.ex",
+      "evaluation/fixtures/otp/server.ex",
+      "evaluation/fixtures/otp/target.ex",
+      "evaluation/fixtures/plug/target.ex",
+      "evaluation/fixtures/overhead/target.ex",
+      "evaluation/fixtures/historical/plug_static_null_byte/vulnerable.ex",
+      "evaluation/fixtures/historical/plug_static_null_byte/fixed.ex",
+      "evaluation/fixtures/historical/terminal_control/fixture.ex",
+      "evaluation/fixtures/historical/ulid_canonical/fixture.ex",
+      "evaluation/fixtures/historical/http_quoted_parameter/fixture.ex",
+      "evaluation/fixtures/historical/cache_tenancy/fixture.ex",
+      "evaluation/fixtures/historical/ash_field_policy/fixture.ex",
+      "evaluation/support/provider.exs",
+      "evaluation/support/cross_process_adversarial_probe.exs",
+      "evaluation/support/cross_process_frontier_probe.exs",
+      "evaluation/support/cross_process_probe.exs",
+      "evaluation/corpus.exs",
+      "evaluation/runner.exs"
+    ]
+
+    Enum.each(files, &Code.require_file/1)
+    RampartEvaluation.Runner.run!(arguments)
+  end
+
+  defp compare_evaluations(arguments) do
+    Code.require_file("evaluation/runtime_comparator.exs")
+    RampartEvaluation.RuntimeComparator.run!(arguments)
   end
 end

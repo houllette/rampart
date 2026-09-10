@@ -82,10 +82,63 @@ result =
 ```
 
 A reproduced oracle violation returns `:confirmed`, persists the exact payload,
-and emits normalized findings. A completed execution on which all oracles pass
-returns `:refuted`. Broken fixtures or oracle implementations return
-`:inconclusive` rather than laundering a test failure into a security finding.
-Every result has structured evidence and a replay seed.
+and emits normalized findings. A completed execution returns `:refuted` only
+when **every** configured oracle actually passes. If an oracle skips because its
+required observation is absent, the exact result is `:inconclusive`; missing
+evidence is never a false refutation. Broken fixtures or oracle implementations
+are likewise inconclusive rather than laundering a test failure into a security
+finding. Every result has structured evidence and a replay seed.
+
+Reusable observations and contracts cover more than response matching:
+
+```elixir
+alias Havoc.Observation.{Cache, Codec, Differential, FieldPolicy, HTTPParameter, State}
+
+canonical =
+  Havoc.validate(seed, fn input ->
+    decoded = MyCodec.decode!(input)
+    Codec.accepted(input, decoded, MyCodec.encode(decoded))
+  end,
+    property_id: "MyCodec:canonical",
+    property_name: "accepted identifiers have one encoding",
+    module: MyCodecSecurityTest,
+    oracles: [:canonical_encoding]
+  )
+
+policy_oracle =
+  Havoc.Oracle.differential(
+    :protected_data_noninterference,
+    fn control, treatment, _case ->
+      control.protected_fields == [] and treatment.protected_fields == []
+    end,
+    category: :authz_bypass
+  )
+
+state_oracle =
+  Havoc.Oracle.bounded_state_growth(
+    max_delta: 5,
+    require_reclaimed: true,
+    reclaimed_tolerance: 0
+  )
+
+header_observation =
+  HTTPParameter.authentication(header, "resource_metadata", intended_url,
+    input: tenant,
+    scheme: "Bearer"
+  )
+
+cache_observation = Cache.new!(two_tenant_measurements)
+field_observation = FieldPolicy.new!(actor_paired_path_measurements)
+```
+
+`%Differential{}` and `%State{}` normalize paired and lifecycle observations.
+`%HTTPParameter{}`, `%Cache{}`, and `%FieldPolicy{}` add bounded parsed-header,
+shared-cache replay, and actor/path visibility evidence. The application fixture
+still owns independent actors, tenants, effects, controls, cache behavior,
+counters, cleanup, and preconditions. `:terminal_safety` accepts captured
+terminal output, and `:canonical_encoding` accepts `%Codec{}`. These actions
+confirm only their precisely stated effect/invariant—not a generic claim of
+exploitability.
 
 `Havoc.validation_actions/0` advertises
 `havoc.security-property-reproduces.v1` for transport-independent clients. The
@@ -142,6 +195,7 @@ Havoc remains the default deterministic/shrinking path.
 
 ```elixir
 Havoc.Gen.injection([:sqli, :xss])
+Havoc.Gen.injection([:http_parameter_injection])
 Havoc.Gen.malformed()
 Havoc.Gen.boundary(max_length: 16_384)
 Havoc.Gen.all()
@@ -178,9 +232,19 @@ are intentionally conservative:
   skips unknown content types;
 - `:no_injection_signal` uses specific database-error signatures;
 - missing status/body fields are skipped unless the oracle is configured to
-  fail closed; and
+  fail closed, and a skipped oracle makes exact validation inconclusive;
 - `:authz_invariant` cannot be named as a bare atom—it requires an independent
-  policy/result predicate rather than trusting the implementation under test.
+  policy/result predicate rather than trusting the implementation under test;
+- `:terminal_safety` classifies captured bytes rather than guessing data origin;
+- `:canonical_encoding` requires an explicit decode/re-encode observation;
+- `:quoted_parameter_integrity` parses the emitted authentication header and
+  checks one independently intended value;
+- `:cache_partition_noninterference` confirms only exact first-partition replay
+  against a differing uncached second control;
+- `:field_policy_noninterference` requires privileged controls for every paired
+  restricted actor/path observation; and
+- differential and state-growth contracts require fixture-owned controls,
+  counters, cleanup, and security thresholds.
 
 Read [ORACLES.md](ORACLES.md) before treating a signal as a vulnerability.
 

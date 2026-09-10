@@ -23,9 +23,12 @@ The initial source envelope is intentionally narrow:
 - boundary: `:in_process`;
 - extraction: `%{type: :callback_argument, position: 1}`;
 - execution scope: the dedicated callback process only; and
-- marker: one non-empty binary `Core.Seed.value`.
+- marker: one non-empty binary `Core.Seed.value`, unchanged either directly or
+  inside bounded list, tuple, or map sink arguments.
 
-Sink calls in spawned tasks or other descendants are not observed.
+Sink calls in spawned tasks or other descendants are not observed. A hypothesis
+whose metadata requires any scope other than `:single_process` is refused before
+callback execution and returns explicit inconclusive evidence.
 
 Providers may also expose reviewed `RampartIAST.StaticCandidate` declarations.
 This analyzer-independent seam preserves source spans, analyzer/rule/plugin
@@ -151,7 +154,8 @@ Each invocation:
 
 - uses an OTP trace session rather than legacy global trace configuration;
 - loads one exact sink MFA and traces one execution process;
-- bounds wall time, event count, argument bytes, and tracer mailbox size;
+- bounds wall time, event count, argument bytes, nested argument depth/term
+  traversal, and tracer mailbox size;
 - waits for the trace-delivery barrier before taking a snapshot;
 - stores bounded metadata rather than raw sink arguments; and
 - destroys the session after success, callback failure, timeout, limit failure,

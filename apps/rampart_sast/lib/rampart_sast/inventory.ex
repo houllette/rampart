@@ -8,7 +8,7 @@ defmodule RampartSAST.Inventory do
   a separate validator to prove or refute each security-relevant claim.
   """
 
-  alias RampartSAST.{AST, Behavior, Fact, Source, Span}
+  alias RampartSAST.{AST, Behavior, Expression, Fact, Source, Span}
   alias RampartSAST.Inventory.Page
 
   @elixir_control_forms [:case, :cond, :for, :if, :receive, :try, :unless, :with]
@@ -200,6 +200,7 @@ defmodule RampartSAST.Inventory do
 
     module_facts(source, scopes) ++
       definition_facts(source, scopes) ++
+      binding_facts(source, scopes) ++
       elixir_callback_facts(source, scopes) ++
       protocol_callback_facts(source, scopes) ++
       elixir_directive_facts(source, scopes) ++
@@ -224,9 +225,15 @@ defmodule RampartSAST.Inventory do
     declarations = Enum.reverse(declarations)
 
     modules =
-      for {:module, node, name, module_kind} <- declarations do
-        scope(:module, name, module_kind, node)
-      end
+      Enum.reduce(declarations, [], fn
+        {:module, node, name, module_kind, nesting}, modules ->
+          parent = if nesting == :relative, do: enclosing_module(modules, ast_line(node))
+          qualified_name = qualify_nested_module(parent, name)
+          modules ++ [scope(:module, qualified_name, module_kind, node)]
+
+        _declaration, modules ->
+          modules
+      end)
 
     definitions =
       for {:definition, node, name, arity, visibility} <- declarations do
@@ -253,8 +260,11 @@ defmodule RampartSAST.Inventory do
 
   defp collect_elixir_declaration({:defimpl, _, _arguments} = ast, declarations) do
     case protocol_implementation_module(ast) do
-      nil -> {ast, declarations}
-      module -> {ast, [{:module, ast, module, :protocol_implementation} | declarations]}
+      nil ->
+        {ast, declarations}
+
+      module ->
+        {ast, [{:module, ast, module, :protocol_implementation, :absolute} | declarations]}
     end
   end
 
@@ -264,8 +274,9 @@ defmodule RampartSAST.Inventory do
        )
        when kind in [:defmodule, :defprotocol] do
     module_kind = if kind == :defprotocol, do: :protocol, else: :module
-    name = Enum.map_join(parts, ".", &Atom.to_string/1)
-    {ast, [{:module, ast, name, module_kind} | declarations]}
+    {nesting, parts} = module_nesting(parts)
+    name = AST.alias_name(parts)
+    {ast, [{:module, ast, name, module_kind, nesting} | declarations]}
   end
 
   defp collect_elixir_declaration({kind, _metadata, _arguments} = ast, declarations)
@@ -335,7 +346,7 @@ defmodule RampartSAST.Inventory do
       qualifier: qualifier,
       ast: ast,
       start_line: start_line,
-      end_line: max_ast_line(ast, start_line)
+      end_line: ast_end_line(ast, start_line)
     }
   end
 
@@ -357,6 +368,41 @@ defmodule RampartSAST.Inventory do
         visibility: scope.qualifier
       })
     end)
+  end
+
+  defp binding_facts(source, scopes) do
+    {_ast, bindings} =
+      Macro.prewalk(source.ast, [], fn
+        {:=, _metadata, [pattern, expression]} = ast, bindings ->
+          line = ast_line(ast)
+          module = enclosing_module(scopes.modules, line)
+          subject = enclosing_definition(scopes.definitions, line) || module || source.path
+
+          facts =
+            pattern
+            |> binding_variables()
+            |> Enum.map(fn variable ->
+              fact(source, :binding, subject, :binds_expression, variable, ast, %{
+                language: :elixir,
+                expression: Expression.describe(expression, :elixir),
+                source_variables: argument_variables([expression], :elixir),
+                control_contexts: control_contexts(scopes.controls, line)
+              })
+            end)
+
+          {ast, Enum.reverse(facts, bindings)}
+
+        ast, bindings ->
+          {ast, bindings}
+      end)
+
+    Enum.reverse(bindings)
+  end
+
+  defp binding_variables(pattern) do
+    pattern
+    |> then(&argument_variables([&1], :elixir))
+    |> Enum.reject(&String.starts_with?(&1, "_"))
   end
 
   defp elixir_callback_facts(source, scopes) do
@@ -432,7 +478,7 @@ defmodule RampartSAST.Inventory do
   defp call_facts(source, scopes) do
     source
     |> AST.calls()
-    |> Enum.map(fn call ->
+    |> Enum.flat_map(fn call ->
       line = Span.from_ast(source.path, call.ast).start_line
       module = enclosing_module(scopes.modules, line)
       subject = enclosing_definition(scopes.definitions, line) || module || source.path
@@ -441,18 +487,44 @@ defmodule RampartSAST.Inventory do
       target = "#{target_module}.#{target_function}/#{length(call.arguments)}"
       resolution = call_resolution(call, syntactic_module, target_module)
 
-      fact(source, :call, subject, :calls, target, call.ast, %{
-        language: source.language,
-        syntactic_module: syntactic_module,
-        target_module: target_module,
-        target_function: target_function,
-        arity: length(call.arguments),
-        argument_shapes: Enum.map(call.arguments, &argument_shape/1),
-        argument_variables: argument_variables(call.arguments, source.language),
-        control_contexts: control_contexts(scopes.controls, line),
-        piped: call.piped?,
-        resolution: resolution
-      })
+      call_fact =
+        fact(source, :call, subject, :calls, target, call.ast, %{
+          language: source.language,
+          syntactic_module: syntactic_module,
+          target_module: target_module,
+          target_function: target_function,
+          arity: length(call.arguments),
+          argument_shapes: Enum.map(call.arguments, &argument_shape/1),
+          argument_variables: argument_variables(call.arguments, source.language),
+          control_contexts: control_contexts(scopes.controls, line),
+          piped: call.piped?,
+          resolution: resolution
+        })
+
+      [call_fact | call_argument_facts(source, call_fact, call.arguments)]
+    end)
+  end
+
+  defp call_argument_facts(source, call_fact, arguments) do
+    arguments
+    |> Enum.with_index(1)
+    |> Enum.map(fn {argument, position} ->
+      fact(
+        source,
+        :call_argument,
+        call_fact.subject,
+        :passes_argument,
+        "#{call_fact.object}#argument/#{position}",
+        expression_span(source.path, argument, call_fact.span),
+        %{
+          language: source.language,
+          via_fact_id: call_fact.id,
+          target_call: call_fact.object,
+          position: position,
+          expression: Expression.describe(argument, source.language),
+          source_variables: argument_variables([argument], source.language)
+        }
+      )
     end)
   end
 
@@ -478,7 +550,8 @@ defmodule RampartSAST.Inventory do
     if function in @elixir_non_calls or MapSet.member?(function_heads, ast) do
       {ast, facts}
     else
-      {ast, [elixir_unqualified_call_fact(ast, source, scopes) | facts]}
+      call_facts = elixir_unqualified_call_facts(ast, source, scopes)
+      {ast, Enum.reverse(call_facts, facts)}
     end
   end
 
@@ -486,7 +559,11 @@ defmodule RampartSAST.Inventory do
     {ast, facts}
   end
 
-  defp elixir_unqualified_call_fact({function, _metadata, arguments} = ast, source, scopes) do
+  defp elixir_unqualified_call_facts(
+         {function, _metadata, arguments} = ast,
+         source,
+         scopes
+       ) do
     line = Span.from_ast(source.path, ast).start_line
     module = enclosing_module(scopes.modules, line)
     subject = enclosing_definition(scopes.definitions, line) || module || source.path
@@ -508,7 +585,8 @@ defmodule RampartSAST.Inventory do
     }
 
     object = qualified_or_unqualified_call(target_module, function, arity)
-    fact(source, :unqualified_call, subject, :invokes, object, ast, attributes)
+    call_fact = fact(source, :unqualified_call, subject, :invokes, object, ast, attributes)
+    [call_fact | call_argument_facts(source, call_fact, arguments)]
   end
 
   defp qualified_or_unqualified_call(nil, function, arity), do: "#{function}/#{arity}"
@@ -537,29 +615,32 @@ defmodule RampartSAST.Inventory do
     source.ast
     |> collect_erlang_unqualified_calls([])
     |> Enum.reverse()
-    |> Enum.map(fn ast ->
+    |> Enum.flat_map(fn ast ->
       {:call, _annotation, {:atom, _, function}, arguments} = ast
       line = Span.from_ast(source.path, ast).start_line
       module = enclosing_module(scopes.modules, line)
       subject = enclosing_definition(scopes.definitions, line) || module || source.path
 
-      fact(
-        source,
-        :unqualified_call,
-        subject,
-        :invokes,
-        "#{function}/#{length(arguments)}",
-        ast,
-        %{
-          language: :erlang,
-          target_function: Atom.to_string(function),
-          arity: length(arguments),
-          argument_shapes: Enum.map(arguments, &argument_shape/1),
-          argument_variables: argument_variables(arguments, :erlang),
-          control_contexts: [],
-          resolution: :local_or_auto_imported
-        }
-      )
+      call_fact =
+        fact(
+          source,
+          :unqualified_call,
+          subject,
+          :invokes,
+          "#{function}/#{length(arguments)}",
+          ast,
+          %{
+            language: :erlang,
+            target_function: Atom.to_string(function),
+            arity: length(arguments),
+            argument_shapes: Enum.map(arguments, &argument_shape/1),
+            argument_variables: argument_variables(arguments, :erlang),
+            control_contexts: [],
+            resolution: :local_or_auto_imported
+          }
+        )
+
+      [call_fact | call_argument_facts(source, call_fact, arguments)]
     end)
   end
 
@@ -592,7 +673,7 @@ defmodule RampartSAST.Inventory do
           line = Span.from_ast(source.path, ast).start_line
           module = enclosing_module(scopes.modules, line)
           subject = module || source.path
-          syntactic_target = Enum.map_join(parts, ".", &Atom.to_string/1)
+          syntactic_target = AST.alias_name(parts)
           target = resolve_alias(syntactic_target, scopes.aliases, line, module)
           attributes = %{language: :elixir, target_module: target}
 
@@ -600,7 +681,7 @@ defmodule RampartSAST.Inventory do
            [fact(source, :directive, subject, :implements, target, ast, attributes) | directives]}
 
         {:defimpl, _, [{:__aliases__, _, parts} | rest]} = ast, directives ->
-          target = Enum.map_join(parts, ".", &Atom.to_string/1)
+          target = AST.alias_name(parts)
           line = Span.from_ast(source.path, ast).start_line
           subject = enclosing_module(scopes.modules, line) || source.path
           protocol_types = protocol_types(rest)
@@ -620,7 +701,7 @@ defmodule RampartSAST.Inventory do
           line = Span.from_ast(source.path, ast).start_line
           module = enclosing_module(scopes.modules, line)
           subject = module || source.path
-          syntactic_target = Enum.map_join(parts, ".", &Atom.to_string/1)
+          syntactic_target = AST.alias_name(parts)
           target = resolve_alias(syntactic_target, scopes.aliases, line, module)
           attributes = %{language: :elixir, target_module: target}
           {ast, [fact(source, :directive, subject, kind, target, ast, attributes) | directives]}
@@ -635,7 +716,7 @@ defmodule RampartSAST.Inventory do
   defp protocol_implementation_module({:defimpl, _, [{:__aliases__, _, protocol_parts} | rest]}) do
     case protocol_types(rest) do
       [protocol_type] ->
-        Enum.map_join(protocol_parts, ".", &Atom.to_string/1) <> "." <> protocol_type
+        AST.alias_name(protocol_parts) <> "." <> protocol_type
 
       _other ->
         nil
@@ -662,7 +743,7 @@ defmodule RampartSAST.Inventory do
   end
 
   defp protocol_type({:__aliases__, _, parts}) do
-    [Enum.map_join(parts, ".", &Atom.to_string/1)]
+    [AST.alias_name(parts)]
   end
 
   defp protocol_type(type) when is_atom(type), do: [Atom.to_string(type)]
@@ -1003,17 +1084,46 @@ defmodule RampartSAST.Inventory do
     raise ArgumentError, "SAST module owners must be a map"
   end
 
-  defp fact(source, kind, subject, relation, object, ast, attributes) do
+  defp fact(source, kind, subject, relation, object, ast_or_span, attributes) do
     Fact.new!(
       kind: kind,
       subject: subject,
       relation: relation,
       object: object,
-      span: Span.from_ast(source.path, ast),
+      span: fact_span(source.path, ast_or_span),
       source_hash: source.hash,
       attributes: Map.put(attributes, :origin, source.origin)
     )
   end
+
+  defp fact_span(_path, %Span{} = span), do: span
+  defp fact_span(path, ast), do: Span.from_ast(path, ast)
+
+  defp expression_span(path, {_form, metadata, _arguments} = ast, fallback)
+       when is_list(metadata) do
+    if positive_integer?(Keyword.get(metadata, :line)),
+      do: Span.from_ast(path, ast),
+      else: fallback
+  end
+
+  defp expression_span(path, ast, fallback) when is_tuple(ast) and tuple_size(ast) >= 2 do
+    annotation = elem(ast, 1)
+
+    if :erl_anno.is_anno(annotation) and positive_erlang_line?(annotation),
+      do: Span.from_ast(path, ast),
+      else: fallback
+  end
+
+  defp expression_span(_path, _ast, fallback), do: fallback
+
+  defp positive_erlang_line?(annotation) do
+    case :erl_anno.location(annotation) do
+      {line, _column} -> positive_integer?(line)
+      line -> positive_integer?(line)
+    end
+  end
+
+  defp positive_integer?(value), do: is_integer(value) and value > 0
 
   defp call_target(%AST.Call{module: {:alias, module}, function: function}) do
     {module, Atom.to_string(function)}
@@ -1038,13 +1148,13 @@ defmodule RampartSAST.Inventory do
       Macro.prewalk(ast, [], fn
         {:alias, _, [{:__aliases__, _, parts}, options]} = node, aliases
         when is_list(options) ->
-          target = Enum.map_join(parts, ".", &Atom.to_string/1)
+          target = AST.alias_name(parts)
           short = alias_short_name(parts, Keyword.get(options, :as))
           {node, [alias_scope(node, short, target, modules) | aliases]}
 
         {:alias, _, [{:__aliases__, _, parts}]} = node, aliases ->
-          target = Enum.map_join(parts, ".", &Atom.to_string/1)
-          short = List.last(parts) |> Atom.to_string()
+          target = AST.alias_name(parts)
+          short = parts |> List.last() |> alias_part_name()
           {node, [alias_scope(node, short, target, modules) | aliases]}
 
         node, aliases ->
@@ -1056,7 +1166,9 @@ defmodule RampartSAST.Inventory do
 
   defp alias_scope(node, short, target, modules) do
     line = ast_line(node)
-    %{short: short, target: target, line: line, module: enclosing_module(modules, line)}
+    module = enclosing_module(modules, line)
+    target = expand_current_module(target, module)
+    %{short: short, target: target, line: line, module: module}
   end
 
   defp elixir_imports(ast, modules, aliases) do
@@ -1066,7 +1178,7 @@ defmodule RampartSAST.Inventory do
           line = ast_line(node)
 
           module = enclosing_module(modules, line)
-          target = Enum.map_join(parts, ".", &Atom.to_string/1)
+          target = AST.alias_name(parts)
 
           import = %{
             target: resolve_alias(target, aliases, line, module),
@@ -1095,10 +1207,20 @@ defmodule RampartSAST.Inventory do
   defp import_filter(_options, _key), do: nil
 
   defp alias_short_name(_parts, {:__aliases__, _, as_parts}) do
-    Enum.map_join(as_parts, ".", &Atom.to_string/1)
+    AST.alias_name(as_parts)
   end
 
-  defp alias_short_name(parts, _as), do: List.last(parts) |> Atom.to_string()
+  defp alias_short_name(parts, _as), do: parts |> List.last() |> alias_part_name()
+
+  defp alias_part_name(part), do: AST.alias_name([part])
+
+  defp resolve_alias(module, _aliases, _line, enclosing_module)
+       when module == "__MODULE__" and is_binary(enclosing_module),
+       do: enclosing_module
+
+  defp resolve_alias("__MODULE__." <> tail, _aliases, _line, enclosing_module)
+       when is_binary(enclosing_module),
+       do: enclosing_module <> "." <> tail
 
   defp resolve_alias(module, aliases, line, enclosing_module) do
     [head | tail] = String.split(module, ".")
@@ -1114,6 +1236,15 @@ defmodule RampartSAST.Inventory do
       nil -> module
     end
   end
+
+  defp expand_current_module("__MODULE__", enclosing_module) when is_binary(enclosing_module),
+    do: enclosing_module
+
+  defp expand_current_module("__MODULE__." <> tail, enclosing_module)
+       when is_binary(enclosing_module),
+       do: enclosing_module <> "." <> tail
+
+  defp expand_current_module(module, _enclosing_module), do: module
 
   defp resolve_unqualified(function, arity, line, module, scopes) do
     local =
@@ -1153,6 +1284,10 @@ defmodule RampartSAST.Inventory do
 
   defp collect_variables({:var, _annotation, name}, :erlang, variables) when is_atom(name) do
     MapSet.put(variables, Atom.to_string(name))
+  end
+
+  defp collect_variables({:"::", _metadata, [value, _type]}, :elixir, variables) do
+    collect_variables(value, :elixir, variables)
   end
 
   defp collect_variables({name, metadata, context}, :elixir, variables)
@@ -1207,6 +1342,13 @@ defmodule RampartSAST.Inventory do
   defp qualified_function(nil, name, arity), do: "#{name}/#{arity}"
   defp qualified_function(module, name, arity), do: "#{module}.#{name}/#{arity}"
 
+  defp module_nesting([:"Elixir" | parts]), do: {:absolute, parts}
+  defp module_nesting(parts), do: {:relative, parts}
+
+  defp qualify_nested_module(nil, name), do: name
+  defp qualify_nested_module(_parent, ""), do: ""
+  defp qualify_nested_module(parent, name), do: "#{parent}.#{name}"
+
   defp ast_line({_form, metadata, _arguments}) when is_list(metadata),
     do: Keyword.get(metadata, :line, 1)
 
@@ -1216,6 +1358,15 @@ defmodule RampartSAST.Inventory do
   end
 
   defp ast_line(_ast), do: 1
+
+  defp ast_end_line({_form, metadata, _arguments} = ast, initial) when is_list(metadata) do
+    case Keyword.get(metadata, :end) do
+      end_metadata when is_list(end_metadata) -> Keyword.get(end_metadata, :line, initial)
+      _no_end_metadata -> max_ast_line(ast, initial)
+    end
+  end
+
+  defp ast_end_line(ast, initial), do: max_ast_line(ast, initial)
 
   defp max_ast_line(ast, initial), do: walk_max_line(ast, initial)
 

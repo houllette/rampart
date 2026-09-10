@@ -42,6 +42,18 @@ defmodule Havoc.GenTest do
     assert Enum.all?(format_values, &String.contains?(&1, ["%", "~"]))
   end
 
+  test "quoted-parameter corpus includes quote, escape, auth-param, and line-break probes" do
+    values = Enum.map(Havoc.Corpus.builtin(:http_parameter_injection), & &1.value)
+
+    assert Enum.any?(values, &String.contains?(&1, "\""))
+    assert Enum.any?(values, &String.contains?(&1, "\\"))
+    assert Enum.any?(values, &String.contains?(&1, "scope="))
+    assert Enum.any?(values, &String.contains?(&1, "\r\n"))
+
+    generated = Enum.take(Havoc.Gen.injection([:http_parameter_injection], mutate: false), 20)
+    assert Enum.all?(generated, &(&1 in values))
+  end
+
   test "exports arbitrary payload enumerables as suite seeds" do
     seeds = Havoc.Corpus.export(["one", "two"], classes: [:xss], provenance: :generated)
 

@@ -405,15 +405,21 @@ defmodule RampartIAST.TraceSession do
 
   defp inspect_argument({:ok, argument}, position, marker, limits, {sizes, matched, failures}) do
     size = argument_size(argument)
-    oversized? = size > limits.max_argument_bytes
+
+    {marker_present?, argument_failures} =
+      if size > limits.max_argument_bytes do
+        {false, [:argument_bytes]}
+      else
+        case marker_present?(argument, marker, limits) do
+          {:ok, present?} -> {present?, []}
+          {:error, failure} -> {false, [failure]}
+        end
+      end
 
     {
       Map.put(sizes, position, size),
-      if(not oversized? and marker_present?(argument, marker),
-        do: [position | matched],
-        else: matched
-      ),
-      if(oversized?, do: [:argument_bytes | failures], else: failures)
+      if(marker_present?, do: [position | matched], else: matched),
+      argument_failures ++ failures
     }
   end
 
@@ -421,11 +427,60 @@ defmodule RampartIAST.TraceSession do
     {sizes, matched, [:invalid_argument_position | failures]}
   end
 
-  defp marker_present?(argument, marker) when is_binary(argument) do
-    :binary.match(argument, marker) != :nomatch
+  defp marker_present?(argument, marker, limits) do
+    find_marker(
+      [{argument, 0}],
+      marker,
+      limits.max_argument_depth,
+      limits.max_argument_terms,
+      0
+    )
   end
 
-  defp marker_present?(_argument, _marker), do: false
+  defp find_marker([], _marker, _max_depth, _max_terms, _visited), do: {:ok, false}
+
+  defp find_marker(_stack, _marker, _max_depth, max_terms, visited)
+       when visited >= max_terms,
+       do: {:error, :argument_terms}
+
+  defp find_marker([{_term, depth} | _rest], _marker, max_depth, _max_terms, _visited)
+       when depth > max_depth,
+       do: {:error, :argument_depth}
+
+  defp find_marker([{argument, _depth} | rest], marker, max_depth, max_terms, visited)
+       when is_binary(argument) do
+    if :binary.match(argument, marker) == :nomatch,
+      do: find_marker(rest, marker, max_depth, max_terms, visited + 1),
+      else: {:ok, true}
+  end
+
+  defp find_marker([{[head | tail], depth} | rest], marker, max_depth, max_terms, visited) do
+    find_marker(
+      [{head, depth + 1}, {tail, depth} | rest],
+      marker,
+      max_depth,
+      max_terms,
+      visited + 1
+    )
+  end
+
+  defp find_marker([{argument, depth} | rest], marker, max_depth, max_terms, visited)
+       when is_tuple(argument) do
+    children = Enum.map(Tuple.to_list(argument), &{&1, depth + 1})
+    find_marker(children ++ rest, marker, max_depth, max_terms, visited + 1)
+  end
+
+  defp find_marker([{argument, depth} | rest], marker, max_depth, max_terms, visited)
+       when is_map(argument) do
+    children =
+      Enum.flat_map(argument, fn {key, value} -> [{key, depth + 1}, {value, depth + 1}] end)
+
+    find_marker(children ++ rest, marker, max_depth, max_terms, visited + 1)
+  end
+
+  defp find_marker([_argument | rest], marker, max_depth, max_terms, visited) do
+    find_marker(rest, marker, max_depth, max_terms, visited + 1)
+  end
 
   defp argument_size(argument) when is_binary(argument), do: byte_size(argument)
   defp argument_size(argument), do: :erlang.external_size(argument)
